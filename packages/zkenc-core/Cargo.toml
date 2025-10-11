@@ -10,12 +10,12 @@ license = "MIT/Apache-2.0"
 edition = "2021"
 
 [dependencies]
-# Arkworks algebra - 數學基礎庫
+# Arkworks algebra - 數學基礎庫 (統一使用 git)
 ark-ff = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
 ark-ec = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
 ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "derive" ] }
 ark-poly = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
-ark-std = { version = "0.5.0", default-features = false }
+ark-std = { git = "https://github.com/arkworks-rs/std.git", default-features = false }
 
 # Arkworks SNARK - R1CS 與 SNARK 抽象層
 ark-relations = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }

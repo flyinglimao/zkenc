@@ -13,3 +13,17 @@ codegen-units = 1
 
 [profile.dev]
 opt-level = 0
+
+# Patch all crates.io arkworks dependencies to git versions
+# This ensures version consistency across the entire dependency tree
+[patch.crates-io]
+ark-ff = { git = "https://github.com/arkworks-rs/algebra.git" }
+ark-ec = { git = "https://github.com/arkworks-rs/algebra.git" }
+ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git" }
+ark-poly = { git = "https://github.com/arkworks-rs/algebra.git" }
+ark-std = { git = "https://github.com/arkworks-rs/std.git" }
+ark-relations = { git = "https://github.com/arkworks-rs/snark.git" }
+ark-snark = { git = "https://github.com/arkworks-rs/snark.git" }
+ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git" }
+ark-crypto-primitives = { git = "https://github.com/arkworks-rs/crypto-primitives.git" }
+ark-bls12-381 = { git = "https://github.com/arkworks-rs/algebra.git" }

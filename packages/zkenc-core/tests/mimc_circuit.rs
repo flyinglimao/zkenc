@@ -1,7 +1,7 @@
 // MiMC hash circuit for testing
 // Based on arkworks-rs/groth16/tests/mimc.rs
 
-use ark_ff::Field;
+use ark_ff::{PrimeField, Zero};
 use ark_relations::gr1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 
 pub const MIMC_ROUNDS: usize = 322;
@@ -15,14 +15,14 @@ pub const MIMC_ROUNDS: usize = 322;
 /// Public input: output (hash result)
 /// Witness: xL, xR (preimage)
 #[derive(Clone)]
-pub struct MiMCCircuit<F: Field> {
+pub struct MiMCCircuit<F: PrimeField> {
     pub xl: Option<F>,
     pub xr: Option<F>,
     pub output: Option<F>,
     pub constants: Vec<F>,
 }
 
-impl<F: Field> MiMCCircuit<F> {
+impl<F: PrimeField> MiMCCircuit<F> {
     pub fn new(xl: Option<F>, xr: Option<F>, output: Option<F>, constants: Vec<F>) -> Self {
         assert_eq!(constants.len(), MIMC_ROUNDS);
         Self {
@@ -49,9 +49,13 @@ impl<F: Field> MiMCCircuit<F> {
     }
 }
 
-impl<F: Field> ConstraintSynthesizer<F> for MiMCCircuit<F> {
+impl<F: PrimeField> ConstraintSynthesizer<F> for MiMCCircuit<F> {
     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
-        use ark_r1cs_std::{alloc::AllocVar, eq::EqGadget, fields::fp::FpVar};
+        use ark_r1cs_std::{
+            alloc::AllocVar,
+            eq::EqGadget,
+            fields::{fp::FpVar, FieldVar},
+        };
 
         assert_eq!(self.constants.len(), MIMC_ROUNDS);
 

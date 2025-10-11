@@ -5,7 +5,8 @@
 
 mod mimc_circuit;
 
-use ark_bls12_381::{Bls12_381, Fr};
+use ark_bls12_381::Fr;
+use ark_relations::gr1cs::ConstraintSynthesizer;
 use ark_std::rand::{Rng, SeedableRng};
 use mimc_circuit::{MiMCCircuit, MIMC_ROUNDS};
 
