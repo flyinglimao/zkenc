@@ -1,0 +1,17 @@
+{
+  "name": "zkenc-workspace",
+  "private": true,
+  "workspaces": [
+    "packages/zkenc-core",
+    "packages/zkenc-cli",
+    "packages/zkenc-js"
+  ],
+  "scripts": {
+    "build": "pnpm --filter zkenc-core build && pnpm --filter zkenc-cli build && pnpm --filter zkenc-js build",
+    "test": "pnpm --filter zkenc-core test && pnpm --filter zkenc-cli test && pnpm --filter zkenc-js test",
+    "lint": "pnpm --filter zkenc-core lint && pnpm --filter zkenc-cli lint && pnpm --filter zkenc-js lint"
+  },
+  "devDependencies": {
+    "typescript": "^4.0.0"
+  }
+}

@@ -1,0 +1,10 @@
+[package]
+name = "zkenc-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# 在此添加核心演算法所需的依賴項
+
+[lib]
+crate-type = ["cdylib", "rlib"]

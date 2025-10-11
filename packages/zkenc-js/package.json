@@ -1,0 +1,30 @@
+{
+  "name": "zkenc-js",
+  "version": "1.0.0",
+  "description": "JavaScript interface for zkenc algorithm wrapped in WASM.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest"
+  },
+  "dependencies": {
+    "wasm-bindgen": "^0.2.78"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4",
+    "jest": "^27.0.6",
+    "ts-jest": "^27.0.6"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "zkenc",
+    "wasm",
+    "javascript"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}
