@@ -1,0 +1,31 @@
+[package]
+name = "zkenc-js"
+version = "0.1.0"
+authors = [ "flyinglimao <hi@limaois.me>" ]
+description = "WASM bindings for zkenc-core"
+repository = "https://github.com/flyinglimao/zkenc"
+categories = ["cryptography", "wasm"]
+license = "MIT/Apache-2.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+zkenc-core = { path = "../zkenc-core", default-features = false, features = ["wasm"] }
+
+# WASM 相關
+wasm-bindgen = "0.2"
+getrandom = { version = "0.2", features = ["js"] }
+console_error_panic_hook = { version = "0.1", optional = true }
+wee_alloc = { version = "0.4", optional = true }
+
+# 序列化支援
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[features]
+default = ["console_error_panic_hook"]

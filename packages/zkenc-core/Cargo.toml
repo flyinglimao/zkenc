@@ -1,10 +1,81 @@
 [package]
 name = "zkenc-core"
 version = "0.1.0"
+authors = [ "flyinglimao <hi@limaois.me>" ]
+description = "An implementation of a witness encryption for QAP"
+repository = "https://github.com/flyinglimao/zkenc"
+documentation = "https://zkenc.limaois.me/"
+categories = ["cryptography"]
+license = "MIT/Apache-2.0"
 edition = "2021"
 
 [dependencies]
-# 在此添加核心演算法所需的依賴項
+# Arkworks algebra - 數學基礎庫
+ark-ff = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
+ark-ec = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
+ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, features = [ "derive" ] }
+ark-poly = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false }
+ark-std = { version = "0.5.0", default-features = false }
+
+# Arkworks SNARK - R1CS 與 SNARK 抽象層
+ark-relations = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
+ark-snark = { git = "https://github.com/arkworks-rs/snark.git", default-features = false }
+
+# Arkworks gadgets - 可選功能（電路元件）
+ark-r1cs-std = { git = "https://github.com/arkworks-rs/r1cs-std.git", default-features = false, optional = true }
+ark-crypto-primitives = { git = "https://github.com/arkworks-rs/crypto-primitives.git", default-features = false, features = [ "snark", "sponge" ] }
+
+# 輔助工具
+tracing = { version = "0.1", default-features = false, features = ["attributes"], optional = true }
+educe = { version = "0.6.0", default-features = false, features = [ "Clone" ], optional = true }
+
+# 並行支援（optional，wasm 不使用）
+rayon = { version = "1", optional = true }
+
+# WASM 支援
+wasm-bindgen = { version = "0.2", optional = true }
+getrandom = { version = "0.2", features = ["js"], optional = true }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["std"]
+
+# 標準庫支援
+std = [
+    "ark-ff/std",
+    "ark-ec/std",
+    "ark-poly/std",
+    "ark-relations/std",
+    "ark-crypto-primitives/std",
+    "ark-std/std",
+]
+
+# 並行計算（僅 native）
+parallel = [
+    "std",
+    "ark-ff/parallel",
+    "ark-poly/parallel",
+    "ark-ec/parallel",
+    "ark-crypto-primitives/parallel",
+    "ark-std/parallel",
+    "rayon",
+]
+
+# R1CS gadgets 支援
+r1cs = [
+    "ark-crypto-primitives/constraints",
+    "ark-r1cs-std",
+    "tracing",
+    "educe",
+]
+
+# WASM 支援
+wasm = [
+    "wasm-bindgen",
+    "getrandom",
+]
+
+# 除錯追蹤
+print-trace = ["ark-std/print-trace"]

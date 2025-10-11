@@ -1,0 +1,54 @@
+# Rust
+/target/
+**/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# WASM / Node.js
+**/node_modules/
+**/pkg/
+**/dist/
+*.wasm
+*.js.map
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+*.o
+*.so
+*.dylib
+*.dll
+*.exe
+
+# Test outputs
+*.profdata
+*.profraw
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Package manager
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Output files (examples from CLI)
+*.bin
+params.bin
+proof.bin
+witness.bin
+test.bin

@@ -1,6 +1,15 @@
 [workspace]
+resolver = "2"
 members = [
     "packages/zkenc-core",
     "packages/zkenc-cli",
     "packages/zkenc-js",
 ]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0

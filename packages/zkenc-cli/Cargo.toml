@@ -1,7 +1,27 @@
 [package]
 name = "zkenc-cli"
 version = "0.1.0"
+authors = [ "flyinglimao <hi@limaois.me>" ]
+description = "CLI tool for zkenc-core"
+repository = "https://github.com/flyinglimao/zkenc"
+categories = ["cryptography", "command-line-utilities"]
+license = "MIT/Apache-2.0"
 edition = "2021"
 
+[[bin]]
+name = "zkenc"
+path = "src/main.rs"
+
 [dependencies]
-zkenc-core = { path = "../zkenc-core" }
+zkenc-core = { path = "../zkenc-core", features = ["std", "parallel"] }
+
+# CLI 相關
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+
+# 序列化/反序列化
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# 檔案操作
+hex = "0.4"
