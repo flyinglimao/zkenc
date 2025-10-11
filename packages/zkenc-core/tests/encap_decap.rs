@@ -105,7 +105,10 @@ fn test_encap_different_public_inputs() {
     );
 
     // Keys will also be different due to different randomness
-    assert_ne!(key1, key2, "Different encap calls should produce different keys");
+    assert_ne!(
+        key1, key2,
+        "Different encap calls should produce different keys"
+    );
 
     println!("✅ Different public inputs test passed");
 }

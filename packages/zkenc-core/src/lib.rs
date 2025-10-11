@@ -19,12 +19,3 @@ mod r1cs_to_qap;
 // Re-export commonly used types
 pub use algorithm::{decap, encap, verify_ciphertext, Error};
 pub use data_structures::{Ciphertext, EncapKey, Key};
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_basic() {
-        // 基本測試
-        assert!(true);
-    }
-}

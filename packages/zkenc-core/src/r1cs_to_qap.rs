@@ -31,6 +31,8 @@ pub fn num_constraints<F: PrimeField>(cs: &ConstraintSystemRef<F>) -> usize {
 /// Create an evaluation domain for QAP
 ///
 /// The domain size must be at least the number of constraints.
+/// This function is reserved for future full QAP conversion implementation.
+#[allow(dead_code)]
 pub fn create_domain<F: PrimeField>(num_constraints: usize) -> GeneralEvaluationDomain<F> {
     GeneralEvaluationDomain::<F>::new(num_constraints).expect("Failed to create evaluation domain")
 }
