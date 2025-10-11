@@ -36,6 +36,9 @@ rayon = { version = "1", optional = true }
 wasm-bindgen = { version = "0.2", optional = true }
 getrandom = { version = "0.2", features = ["js"], optional = true }
 
+# Optional concrete curve for integration tests/examples
+ark-bls12-381 = { git = "https://github.com/arkworks-rs/algebra.git", default-features = false, optional = true, features = ["curve"] }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
@@ -79,3 +82,6 @@ wasm = [
 
 # 除錯追蹤
 print-trace = ["ark-std/print-trace"]
+
+# Optional feature to enable tests/examples that require a pairing curve
+with_curves = ["ark-bls12-381", "std"]
