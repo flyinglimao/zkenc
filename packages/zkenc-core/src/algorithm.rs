@@ -257,7 +257,7 @@ where
     let witness_assignment = cs_borrowed
         .witness_assignment()
         .map_err(|e| Error::SynthesisError(format!("{:?}", e)))?;
-    
+
     // Combine public inputs and witness into full assignment
     let mut full_assignment = full_assignment_slice.to_vec();
     full_assignment.extend_from_slice(witness_assignment);
