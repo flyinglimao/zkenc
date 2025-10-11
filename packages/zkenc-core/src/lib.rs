@@ -1,21 +1,21 @@
 //! zkenc-core
 //!
-//! 核心演算法實作，支援 native 與 WASM 環境
+//! WKEM (Witness Key Encapsulation Mechanism) for QAP
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![warn(future_incompatible, nonstandard_style, rust_2018_idioms)]
 #![allow(clippy::many_single_char_names, clippy::op_ref)]
 #![forbid(unsafe_code)]
 
-/// 資料結構模組
+/// Data structures module
 pub mod data_structures;
 
-/// 核心演算法模組
+/// Core algorithms module
 pub mod algorithm;
 
-// 重新匯出常用型別
-pub use algorithm::ZkEncAlgorithm;
-pub use data_structures::{Proof, PublicParameters};
+// Re-export commonly used types
+pub use algorithm::{decap, encap, verify_ciphertext, Error};
+pub use data_structures::{Ciphertext, EncapKey, Key};
 
 #[cfg(test)]
 mod tests {

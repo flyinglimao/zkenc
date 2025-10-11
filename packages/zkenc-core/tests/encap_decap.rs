@@ -5,16 +5,13 @@
 
 mod mimc_circuit;
 
-use ark_bls12_381::Fr;
+use ark_bls12_381::{Bls12_381, Fr};
 use ark_relations::gr1cs::ConstraintSynthesizer;
 use ark_std::rand::{Rng, SeedableRng};
 use mimc_circuit::{MiMCCircuit, MIMC_ROUNDS};
-
-// TODO: These will be implemented in zkenc_core
-// use zkenc_core::{encap, decap, Ciphertext, Key};
+use zkenc_core::{decap, encap};
 
 #[test]
-#[ignore] // Remove this once encap/decap are implemented
 fn test_encap_decap_correctness() {
     // Setup: Generate MiMC constants
     let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(0u64);
@@ -35,18 +32,18 @@ fn test_encap_decap_correctness() {
     let circuit_encap = MiMCCircuit::new(None, None, Some(output), constants.clone());
 
     // Encap: Generate ciphertext and key
-    // let (ciphertext, key1) = encap::<Bls12_381, _, _>(circuit_encap, &public_inputs, &mut rng).unwrap();
+    let (ciphertext, key1) = encap::<Bls12_381, _, _>(circuit_encap, &mut rng).unwrap();
 
     // Create circuit for Decap (with full assignment)
     let circuit_decap = MiMCCircuit::new(Some(xl), Some(xr), Some(output), constants.clone());
 
     // Decap: Recover key using witness
-    // let key2 = decap::<Bls12_381, _>(circuit_decap, &witness, &ciphertext).unwrap();
+    let key2 = decap::<Bls12_381, _>(circuit_decap, &ciphertext).unwrap();
 
     // Assert: Both keys should be identical
-    // assert_eq!(key1, key2, "Decap should recover the same key as Encap");
+    assert_eq!(key1, key2, "Decap should recover the same key as Encap");
 
-    println!("✅ Correctness test passed (placeholder)");
+    println!("✅ Correctness test passed");
 }
 
 #[test]
