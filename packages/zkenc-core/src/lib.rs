@@ -13,6 +13,9 @@ pub mod data_structures;
 /// Core algorithms module
 pub mod algorithm;
 
+/// R1CS to QAP conversion utilities
+mod r1cs_to_qap;
+
 // Re-export commonly used types
 pub use algorithm::{decap, encap, verify_ciphertext, Error};
 pub use data_structures::{Ciphertext, EncapKey, Key};
