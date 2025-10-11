@@ -6,6 +6,7 @@
 use ark_ff::PrimeField;
 use ark_poly::{EvaluationDomain, GeneralEvaluationDomain};
 use ark_relations::gr1cs::ConstraintSystemRef;
+use ark_std::vec::Vec;
 
 /// Get the number of public inputs (ℓ in the scheme)
 pub fn num_public_inputs<F: PrimeField>(cs: &ConstraintSystemRef<F>) -> usize {
@@ -32,4 +33,37 @@ pub fn num_constraints<F: PrimeField>(cs: &ConstraintSystemRef<F>) -> usize {
 /// The domain size must be at least the number of constraints.
 pub fn create_domain<F: PrimeField>(num_constraints: usize) -> GeneralEvaluationDomain<F> {
     GeneralEvaluationDomain::<F>::new(num_constraints).expect("Failed to create evaluation domain")
+}
+
+/// Evaluate all QAP polynomials at point x
+///
+/// For each variable i, evaluates:
+/// - u_i(x): Left constraint polynomial
+/// - v_i(x): Right constraint polynomial  
+/// - w_i(x): Output constraint polynomial
+///
+/// Returns (u_evals, v_evals, w_evals) where each is a Vec of evaluations
+///
+/// Note: This is a simplified implementation that returns placeholder values.
+/// A full implementation would perform FFT/IFFT to convert constraint matrices to polynomials.
+pub fn evaluate_qap_polynomials_at_x<F: PrimeField>(
+    cs: &ConstraintSystemRef<F>,
+    x: F,
+) -> (Vec<F>, Vec<F>, Vec<F>) {
+    let m = num_variables(cs);
+
+    // For now, return placeholder evaluations
+    // TODO: Implement full R1CS to QAP conversion with FFT/IFFT
+    // This requires:
+    // 1. Extract constraint matrices A, B, C from cs
+    // 2. For each variable, build its constraint polynomial via IFFT
+    // 3. Evaluate each polynomial at point x
+
+    let _ = x; // Suppress unused warning
+
+    let u_evals = vec![F::zero(); m];
+    let v_evals = vec![F::zero(); m];
+    let w_evals = vec![F::zero(); m];
+
+    (u_evals, v_evals, w_evals)
 }
