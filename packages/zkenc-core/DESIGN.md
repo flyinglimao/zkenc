@@ -108,6 +108,7 @@ A·B - C·[δ]₂
 ### ✅ Phase 1: Data Structures (packages/zkenc-core/src/data_structures.rs)
 
 Complete. All data structures implemented with serialization support:
+
 - `EncapKey<E>`: CRS containing alpha_g1, beta_g2, delta_g2, query vectors
 - `Ciphertext<E>`: Contains EncapKey and public_inputs
 - `Key`: 32-byte symmetric key with Zeroize trait
@@ -117,6 +118,7 @@ Complete. All data structures implemented with serialization support:
 Complete. Both core algorithms fully implemented:
 
 **`encap<E, C, R>(circuit, rng)`**:
+
 - Samples random parameters (α, β, δ, r, x)
 - Synthesizes circuit with public inputs
 - Evaluates QAP polynomials at x
@@ -125,6 +127,7 @@ Complete. Both core algorithms fully implemented:
 - Derives key from pairing result
 
 **`decap<E, C>(circuit, ciphertext)`**:
+
 - Synthesizes circuit with full assignment (public + witness)
 - Verifies circuit is satisfied
 - Computes A, B, C using MSM
@@ -134,6 +137,7 @@ Complete. Both core algorithms fully implemented:
 ### ✅ Phase 3: Test Circuit (packages/zkenc-core/tests/mimc_circuit.rs)
 
 Complete. MiMC-322 hash circuit implementation:
+
 - 322 rounds of MiMC permutation
 - xL, xR := xR + (xL + Cᵢ)³, xL
 - Public input: output
@@ -142,6 +146,7 @@ Complete. MiMC-322 hash circuit implementation:
 ### ✅ Phase 4: Integration Tests (packages/zkenc-core/tests/encap_decap.rs)
 
 Complete. All 8 tests passing:
+
 1. ✅ **Correctness**: Valid witness → same key
 2. ✅ **Wrong witness**: Invalid witness → different key or error
 3. ✅ **Different public inputs**: Different inputs → different ciphertext
@@ -171,12 +176,14 @@ Complete. All 8 tests passing:
 ## Current Status
 
 **Production-ready core functionality** with the following characteristics:
+
 - All 8 integration tests + 3 MiMC unit tests passing
 - Zero compilation warnings
 - Clean codebase with comprehensive documentation
 - Complete API reference in English
 
 **Known Limitations**:
+
 - QAP polynomial evaluation uses placeholder (returns zeros)
 - Key derivation uses simple truncation (not full KDF)
 - Circuit synthesis shows 0 constraints without witness (expected)
@@ -199,6 +206,7 @@ Complete. All 8 tests passing:
 ## Next Steps
 
 The core WKEM implementation is complete. Future work includes:
+
 1. Implementing full FFT/IFFT-based R1CS to QAP conversion in `evaluate_qap_polynomials_at_x`
 2. Proper cryptographic KDF (HKDF/Blake3) for key derivation
 3. CLI and JavaScript bindings (zkenc-cli, zkenc-js)

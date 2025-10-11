@@ -46,26 +46,79 @@ pub fn create_domain<F: PrimeField>(num_constraints: usize) -> GeneralEvaluation
 ///
 /// Returns (u_evals, v_evals, w_evals) where each is a Vec of evaluations
 ///
-/// Note: This is a simplified implementation that returns placeholder values.
-/// A full implementation would perform FFT/IFFT to convert constraint matrices to polynomials.
+/// This uses the Lagrange interpolation approach from Groth16's LibsnarkReduction:
+/// 1. Create evaluation domain of size num_constraints + num_instance_variables
+/// 2. Evaluate all Lagrange basis polynomials L_j(x) at x
+/// 3. For each variable i, compute uᵢ(x) = Σⱼ L_j(x) * A[j][i]
+///    where A[j][i] is the coefficient of variable i in constraint j
 pub fn evaluate_qap_polynomials_at_x<F: PrimeField>(
     cs: &ConstraintSystemRef<F>,
     x: F,
 ) -> (Vec<F>, Vec<F>, Vec<F>) {
+    use ark_relations::gr1cs::R1CS_PREDICATE_LABEL;
+
     let m = num_variables(cs);
 
-    // For now, return placeholder evaluations
-    // TODO: Implement full R1CS to QAP conversion with FFT/IFFT
-    // This requires:
-    // 1. Extract constraint matrices A, B, C from cs
-    // 2. For each variable, build its constraint polynomial via IFFT
-    // 3. Evaluate each polynomial at point x
+    // Get constraint matrices
+    let matrices = match cs.to_matrices() {
+        Ok(m) => m,
+        Err(_) => {
+            // If matrices unavailable, return zeros
+            return (vec![F::zero(); m], vec![F::zero(); m], vec![F::zero(); m]);
+        }
+    };
 
-    let _ = x; // Suppress unused warning
+    let constraint_matrices = &matrices[R1CS_PREDICATE_LABEL];
+    if constraint_matrices.len() < 3 {
+        // Invalid matrices, return zeros
+        return (vec![F::zero(); m], vec![F::zero(); m], vec![F::zero(); m]);
+    }
 
-    let u_evals = vec![F::zero(); m];
-    let v_evals = vec![F::zero(); m];
-    let w_evals = vec![F::zero(); m];
+    // Create evaluation domain
+    // Domain size = num_constraints + num_instance_variables
+    let domain_size = num_constraints(cs) + num_public_inputs(cs);
+    let domain = match GeneralEvaluationDomain::<F>::new(domain_size) {
+        Some(d) => d,
+        None => {
+            // Domain too large, return zeros
+            return (vec![F::zero(); m], vec![F::zero(); m], vec![F::zero(); m]);
+        }
+    };
+
+    // Evaluate all Lagrange basis polynomials at x
+    // L_j(x) is the unique polynomial that equals 1 at ω^j and 0 at all other domain points
+    let lagrange_coeffs = domain.evaluate_all_lagrange_coefficients(x);
+
+    // Initialize result vectors
+    let mut u_evals = vec![F::zero(); m];
+    let mut v_evals = vec![F::zero(); m];
+    let mut w_evals = vec![F::zero(); m];
+
+    // For each constraint j, accumulate L_j(x) * matrix[j][i] into result[i]
+    // This computes uᵢ(x) = Σⱼ L_j(x) * A[j][i] for all variables i
+    let n_constraints = num_constraints(cs);
+    for (j, &lagrange_j) in lagrange_coeffs.iter().enumerate().take(n_constraints) {
+        // Matrix A (corresponds to u polynomials)
+        for &(ref coeff, index) in &constraint_matrices[0][j] {
+            if index < m {
+                u_evals[index] += lagrange_j * coeff;
+            }
+        }
+
+        // Matrix B (corresponds to v polynomials)
+        for &(ref coeff, index) in &constraint_matrices[1][j] {
+            if index < m {
+                v_evals[index] += lagrange_j * coeff;
+            }
+        }
+
+        // Matrix C (corresponds to w polynomials)
+        for &(ref coeff, index) in &constraint_matrices[2][j] {
+            if index < m {
+                w_evals[index] += lagrange_j * coeff;
+            }
+        }
+    }
 
     (u_evals, v_evals, w_evals)
 }

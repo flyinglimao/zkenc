@@ -7,6 +7,7 @@
 **Output**: `packages/zkenc-core/DESIGN.md`
 
 **Key Findings**:
+
 - WKEM and Groth16 share R1CS→QAP conversion logic
 - Main difference: CRS regenerated per Encap vs Groth16 fixed setup
 - Different role of randomness `r` (encryption randomness vs zero-knowledge blinding)
@@ -17,6 +18,7 @@
 **File**: `packages/zkenc-core/tests/mimc_circuit.rs`
 
 **Implementation**:
+
 - `MiMCCircuit<F>` struct (contains xl, xr witness and output public input)
 - `mimc_native()` function (native computation for test vector generation)
 - `ConstraintSynthesizer` implementation (322 rounds, each round: xL, xR := xR + (xL + Cᵢ)³, xL)
@@ -32,6 +34,7 @@
 **File**: `packages/zkenc-core/tests/encap_decap.rs`
 
 **Test Cases** (All passing):
+
 1. ✅ **`test_encap_decap_correctness`**: Valid witness → same key
 2. ✅ **`test_encap_decap_wrong_witness`**: Wrong witness → different key or error
 3. ✅ **`test_encap_different_public_inputs`**: Different public inputs → different ciphertext
@@ -43,6 +46,7 @@
 **File**: `packages/zkenc-core/src/data_structures.rs`
 
 **Implemented**:
+
 - `EncapKey<E>`: CRS with all query vectors
 - `Ciphertext<E>`: Contains EncapKey and public inputs
 - `Key`: 32-byte key with Zeroize trait
@@ -53,6 +57,7 @@
 **File**: `packages/zkenc-core/src/algorithm.rs`
 
 **Completed**:
+
 1. ✅ Sample random α, β, δ, r, x
 2. ✅ Synthesize circuit → R1CS
 3. ✅ R1CS → QAP (evaluate polynomials at x)
@@ -65,6 +70,7 @@
 **File**: `packages/zkenc-core/src/algorithm.rs`
 
 **Completed**:
+
 1. ✅ Parse EncapKey from Ciphertext
 2. ✅ Synthesize circuit with witness → R1CS
 3. ✅ Verify circuit satisfaction
@@ -77,6 +83,7 @@
 ### 7. Test-Driven Development Iteration ✅
 
 **Completed**:
+
 1. ✅ All test ignore markers removed
 2. ✅ `cargo test -p zkenc-core --features with_curves` - All passing
 3. ✅ Iterative refinement based on test failures
@@ -111,6 +118,7 @@ parallel = ["ark-ff/parallel", "ark-ec/parallel"]
 ```
 
 **Includes**:
+
 - BLS12-381 curve for testing
 - R1CS constraint system
 - Standard library support
@@ -152,6 +160,7 @@ cargo test -p zkenc-core
 ## 🎯 Next Steps
 
 The core WKEM implementation is complete. Future improvements:
+
 1. **Complete QAP Evaluation**: Implement FFT/IFFT-based `evaluate_qap_polynomials_at_x` (currently returns zeros)
 2. **Proper KDF**: Replace truncation with HKDF or Blake3
 3. **Performance**: Optimize MSM and pairing operations
