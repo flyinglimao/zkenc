@@ -1,30 +1,25 @@
-# zkenc-core# zkenc-core
+# zkenc-core
 
-**Witness Key Encapsulation Mechanism (WKEM) for Quadratic Arithmetic Programs (QAP)**這是 zkenc-core 專案，包含核心演算法的實作。該專案提供了主要的邏輯和功能，並可供其他子專案（如 zkenc-cli 和 zkenc-js）使用。
+**Witness Key Encapsulation Mechanism (WKEM) for Quadratic Arithmetic Programs (QAP)**
 
-A cryptographic library implementing a witness encryption scheme based on QAP satisfiability. This library provides key encapsulation and decapsulation functions that bind encryption keys to the satisfiability of constraint systems.## 安裝
+A cryptographic library implementing a witness encryption scheme based on QAP satisfiability. This library provides key encapsulation and decapsulation functions that bind encryption keys to the satisfiability of constraint systems.
 
-## Overview 要安裝該專案，請確保您已安裝 Rust 和 Cargo。然後，您可以使用以下命令來克隆該專案並編譯：
+## Overview
 
-zkenc-core implements a WKEM scheme where:```bash
+zkenc-core implements a WKEM scheme where:
 
-- **Encapsulation** generates a fresh CRS (Common Reference String) and derives a symmetric key from a circuit with only public inputs assignedgit clone <repository-url>
+- **Encapsulation** generates a fresh CRS (Common Reference String) and derives a symmetric key from a circuit with only public inputs assigned
+- **Decapsulation** recovers the same key by providing a valid witness that satisfies the circuit constraints
 
-- **Decapsulation** recovers the same key by providing a valid witness that satisfies the circuit constraintscd zkenc-core
+The security relies on pairing-based cryptography over elliptic curves, similar to zkSNARK constructions like Groth16.
 
-cargo build
+## Installation
 
-The security relies on pairing-based cryptography over elliptic curves, similar to zkSNARK constructions like Groth16.```
+Add to your `Cargo.toml`:
 
-## Installation## 使用
-
-Add to your `Cargo.toml`:在成功編譯後，您可以在其他專案中將其作為依賴項使用，或直接在命令行中調用。
-
-```toml## 貢獻
-
+```toml
 [dependencies]
-
-zkenc-core = { path = "../zkenc-core", features = ["std"] }歡迎任何形式的貢獻！請查看貢獻指南以獲取更多信息。
+zkenc-core = { path = "../zkenc-core", features = ["std"] }
 
 # For testing with concrete curves
 [dev-dependencies]
