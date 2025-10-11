@@ -84,4 +84,4 @@ wasm = [
 print-trace = ["ark-std/print-trace"]
 
 # Optional feature to enable tests/examples that require a pairing curve
-with_curves = ["ark-bls12-381", "std"]
+with_curves = ["ark-bls12-381", "std", "r1cs"]

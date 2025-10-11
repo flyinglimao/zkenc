@@ -3,7 +3,7 @@
 //! Implementation of Encap, Decap, and Verify algorithms.
 
 use ark_ec::pairing::Pairing;
-use ark_ec::{CurveGroup, PrimeGroup, VariableBaseMSM};
+use ark_ec::{AffineRepr, CurveGroup, PrimeGroup, VariableBaseMSM};
 use ark_ff::{Field, One, UniformRand};
 use ark_relations::gr1cs::{ConstraintSynthesizer, ConstraintSystem};
 use ark_std::rand::RngCore;
@@ -249,9 +249,130 @@ where
     #[cfg(feature = "std")]
     println!("  ✓ Circuit synthesized and satisfied");
 
-    // TODO: Implement key recovery
-    let _ = ciphertext;
-    todo!("Decap implementation in progress")
+    // Step 2: Extract full assignment (public inputs + witness)
+    let cs_borrowed = cs.borrow().unwrap();
+    let full_assignment_slice = cs_borrowed
+        .instance_assignment()
+        .map_err(|e| Error::SynthesisError(format!("{:?}", e)))?;
+    let witness_assignment = cs_borrowed
+        .witness_assignment()
+        .map_err(|e| Error::SynthesisError(format!("{:?}", e)))?;
+    
+    // Combine public inputs and witness into full assignment
+    let mut full_assignment = full_assignment_slice.to_vec();
+    full_assignment.extend_from_slice(witness_assignment);
+    drop(cs_borrowed);
+
+    #[cfg(feature = "std")]
+    println!(
+        "  ✓ Extracted full assignment: {} values",
+        full_assignment.len()
+    );
+
+    // Verify public inputs match ciphertext
+    if full_assignment.len() < 1 + ciphertext.public_inputs.len() {
+        return Err(Error::InvalidPublicInputs);
+    }
+    for (i, expected) in ciphertext.public_inputs.iter().enumerate() {
+        if &full_assignment[i + 1] != expected {
+            // Skip index 0 (constant 1)
+            #[cfg(feature = "std")]
+            eprintln!("  ✗ Public input mismatch at index {}", i);
+            return Err(Error::InvalidPublicInputs);
+        }
+    }
+
+    // Step 3: Compute A = Σᵢ aᵢ·[r·uᵢ(x)]₁
+    #[cfg(feature = "std")]
+    println!("  ⏳ Computing A from witness and CRS...");
+
+    let mut a_bases = Vec::new();
+    let mut a_scalars = Vec::new();
+
+    for (i, &a_i) in full_assignment.iter().enumerate() {
+        if i < ciphertext.encap_key.r_u_query_g1.len() {
+            a_bases.push(ciphertext.encap_key.r_u_query_g1[i]);
+            a_scalars.push(a_i);
+        }
+    }
+
+    let a_sum = if !a_bases.is_empty() {
+        E::G1::msm(&a_bases, &a_scalars).map_err(|_| Error::SerializationError)?
+    } else {
+        return Err(Error::InvalidWitness);
+    };
+
+    // A = [α]₁ + Σᵢ aᵢ·[r·uᵢ(x)]₁
+    let a_point = ciphertext.encap_key.alpha_g1.into_group() + a_sum;
+
+    // Step 4: Compute B = Σᵢ aᵢ·[r·vᵢ(x)]₂
+    #[cfg(feature = "std")]
+    println!("  ⏳ Computing B from witness and CRS...");
+
+    let mut b_bases = Vec::new();
+    let mut b_scalars = Vec::new();
+
+    for (i, &a_i) in full_assignment.iter().enumerate() {
+        if i < ciphertext.encap_key.r_v_query_g2.len() {
+            b_bases.push(ciphertext.encap_key.r_v_query_g2[i]);
+            b_scalars.push(a_i);
+        }
+    }
+
+    let b_sum = if !b_bases.is_empty() {
+        E::G2::msm(&b_bases, &b_scalars).map_err(|_| Error::SerializationError)?
+    } else {
+        return Err(Error::InvalidWitness);
+    };
+
+    // B = [β]₂ + Σᵢ aᵢ·[r·vᵢ(x)]₂
+    let b_point = ciphertext.encap_key.beta_g2.into_group() + b_sum;
+
+    // Step 5: Compute C = Σᵢ aᵢ·[φᵢ(x)/δ]₁
+    #[cfg(feature = "std")]
+    println!("  ⏳ Computing C from witness and CRS...");
+
+    let mut c_bases = Vec::new();
+    let mut c_scalars = Vec::new();
+
+    for (i, &a_i) in full_assignment.iter().enumerate() {
+        if i < ciphertext.encap_key.phi_delta_query_g1.len() {
+            c_bases.push(ciphertext.encap_key.phi_delta_query_g1[i]);
+            c_scalars.push(a_i);
+        }
+    }
+
+    let c_point = if !c_bases.is_empty() {
+        E::G1::msm(&c_bases, &c_scalars).map_err(|_| Error::SerializationError)?
+    } else {
+        return Err(Error::InvalidWitness);
+    };
+
+    // Step 6: Compute pairing s = A·B - C·[δ]₂
+    #[cfg(feature = "std")]
+    println!("  ⏳ Computing pairing for key recovery...");
+
+    // s = e(A, B) - e(C, [δ]₂)
+    let pairing_ab = E::pairing(a_point, b_point);
+    let pairing_c_delta = E::pairing(c_point, ciphertext.encap_key.delta_g2);
+    let s = pairing_ab - pairing_c_delta;
+
+    // Step 7: Derive key using same KDF as encap
+    use ark_serialize::CanonicalSerialize;
+    let mut s_bytes = Vec::new();
+    s.serialize_compressed(&mut s_bytes)
+        .map_err(|_| Error::SerializationError)?;
+
+    let mut key_bytes = [0u8; 32];
+    let len = core::cmp::min(32, s_bytes.len());
+    key_bytes[..len].copy_from_slice(&s_bytes[..len]);
+
+    let key = Key::new(key_bytes);
+
+    #[cfg(feature = "std")]
+    println!("  ✓ Successfully recovered key");
+
+    Ok(key)
 }
 
 /// Verify that a ciphertext is well-formed
