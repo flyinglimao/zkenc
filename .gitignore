@@ -52,3 +52,6 @@ params.bin
 proof.bin
 witness.bin
 test.bin
+
+# allow testing assets
+!packages/zkenc-cli/tests/r1cs/*.wasm
