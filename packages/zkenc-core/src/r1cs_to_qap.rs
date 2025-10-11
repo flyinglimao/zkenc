@@ -31,6 +31,5 @@ pub fn num_constraints<F: PrimeField>(cs: &ConstraintSystemRef<F>) -> usize {
 ///
 /// The domain size must be at least the number of constraints.
 pub fn create_domain<F: PrimeField>(num_constraints: usize) -> GeneralEvaluationDomain<F> {
-    GeneralEvaluationDomain::<F>::new(num_constraints)
-        .expect("Failed to create evaluation domain")
+    GeneralEvaluationDomain::<F>::new(num_constraints).expect("Failed to create evaluation domain")
 }
