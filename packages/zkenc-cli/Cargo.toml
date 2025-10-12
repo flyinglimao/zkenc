@@ -37,10 +37,15 @@ ctr = "0.9"
 cipher = { version = "0.4", features = ["std"] }
 rand = "0.8"
 
-# Circom integration (placeholder for now, will add proper integration in Phase 2/3)
-# ark-circom will be added when we implement witness generation
+# Circom integration
+# Note: ark-circom git version has internal dependency conflicts:
+# - Its Cargo.toml uses crates.io ark-bn254 0.5.0 (for dependencies)
+# - But git versions for dev-dependencies
+# - crates.io ark-bn254 0.5.0 is incompatible with git ark-ec (missing ZeroFlag trait)
+# 
+# Options:
+# 1. Wait for ark-circom to fully migrate to git versions OR crates.io 0.5 stable release
+# 2. Fork ark-circom and fix dependency sources
+# 3. Use separate architecture (Node.js circom + Rust zkenc-core)
 #
-# Note: Full integration deferred due to arkworks version conflicts:
-# - zkenc-core uses git versions (0.5 pre-release)
-# - ark-circom/stable arkworks use crates.io 0.4
-# This will be resolved in future when versions stabilize
+# For now, continuing with Phases 4-5 (AES + CLI) without full Circom integration

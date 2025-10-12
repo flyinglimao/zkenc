@@ -1,9 +1,9 @@
-use anyhow::{Context, Result};
+use aes::Aes256;
 use aes_gcm::{
     aead::{Aead, AeadCore, KeyInit, OsRng},
     Aes256Gcm, Nonce,
 };
-use aes::Aes256;
+use anyhow::{Context, Result};
 use cipher::{KeyIvInit, StreamCipher};
 use ctr::Ctr64BE;
 
@@ -29,8 +29,7 @@ pub fn encrypt_gcm(key: &[u8], plaintext: &[u8]) -> Result<Vec<u8>> {
     }
 
     // Create cipher
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .context("Failed to create AES-GCM cipher")?;
+    let cipher = Aes256Gcm::new_from_slice(key).context("Failed to create AES-GCM cipher")?;
 
     // Generate random nonce (12 bytes for GCM)
     let nonce = Aes256Gcm::generate_nonce(&mut OsRng);
@@ -67,8 +66,7 @@ pub fn decrypt_gcm(key: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     }
 
     // Create cipher
-    let cipher = Aes256Gcm::new_from_slice(key)
-        .context("Failed to create AES-GCM cipher")?;
+    let cipher = Aes256Gcm::new_from_slice(key).context("Failed to create AES-GCM cipher")?;
 
     // Extract nonce (first 12 bytes)
     let nonce = Nonce::from_slice(&data[..12]);
@@ -77,9 +75,12 @@ pub fn decrypt_gcm(key: &[u8], data: &[u8]) -> Result<Vec<u8>> {
     let ciphertext = &data[12..];
 
     // Decrypt
-    let plaintext = cipher
-        .decrypt(nonce, ciphertext)
-        .map_err(|e| anyhow::anyhow!("Decryption failed (authentication failed or corrupted data): {}", e))?;
+    let plaintext = cipher.decrypt(nonce, ciphertext).map_err(|e| {
+        anyhow::anyhow!(
+            "Decryption failed (authentication failed or corrupted data): {}",
+            e
+        )
+    })?;
 
     Ok(plaintext)
 }

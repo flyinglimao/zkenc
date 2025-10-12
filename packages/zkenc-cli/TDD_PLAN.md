@@ -42,14 +42,24 @@
 
 ## Phase 3: Encap/Decap Integration (Test-First) ⚠️ Blocked
 
-**Goal**: Integrate with zkenc-core
+**Goal**: Integrate with zkenc-core using ark-circom
 
-**Status**: Design completed, implementation blocked by version conflict
+**Status**: ⚠️ **Blocked** - ark-circom internal dependency conflict
 
-### Blocker: Arkworks Version Mismatch
-- zkenc-core: uses arkworks 0.5 (git versions)
-- ark-circom: requires arkworks 0.4 (crates.io)
-- Cannot use both in same binary due to trait incompatibility
+### Blocker: ark-circom Mixed Dependency Sources
+
+**Root Cause**: ark-circom (git version) has conflicting internal dependencies:
+- `dependencies`: Uses crates.io ark-bn254 0.5.0
+- `dev-dependencies`: Uses git versions
+- **Problem**: crates.io ark-bn254 0.5.0 is incompatible with git ark-ec (missing `ZeroFlag` trait)
+
+**Compilation Error**:
+```
+error[E0046]: not all trait items implemented, missing: `ZeroFlag`
+ --> ark-bn254-0.5.0/src/curves/g1.rs:27:1
+27 | impl SWCurveConfig for Config {
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `ZeroFlag` in implementation
+```
 
 ### Architecture Design ✅
 
@@ -58,13 +68,19 @@
 - [x] **API**: Defined how to bridge Circom ↔ zkenc-core
 - See `src/circom.rs` for detailed integration architecture
 
+### Resolution Options
+
+1. **Option A**: Fork ark-circom and change all dependencies to git versions
+2. **Option B**: Wait for arkworks 0.5 stable crates.io release
+3. **Option C**: Separate architecture - Node.js for Circom, Rust for zkenc-core
+
 ### Test 3.1: Encap with circom circuit (Deferred)
 
-- [ ] Test: `test_encap_with_circom` 
-- [ ] Load circuit with public inputs only
+- [ ] Test: `test_encap_with_circom`
+- [ ] Load circuit with CircomBuilder
+- [ ] Setup circuit without witness
 - [ ] Call zkenc-core encap
 - [ ] Verify key generation
-- **Status**: Architecture documented, awaiting version resolution
 
 ### Test 3.2: Decap with circom circuit (Deferred)
 
@@ -72,20 +88,13 @@
 - [ ] Load circuit with full witness
 - [ ] Call zkenc-core decap
 - [ ] Verify key recovery
-- **Status**: Architecture documented, awaiting version resolution
 
 ### Implementation 3.1: Circuit wrapper (Design Complete)
 
 - [x] Create CircomCircuitWrapper struct (placeholder)
 - [x] Document ConstraintSynthesizer implementation plan
-- [x] Document full integration workflow
-- [ ] Implement when versions align
-
-### Resolution Path
-
-1. **Option A**: Wait for arkworks 0.5 stable release
-2. **Option B**: Port zkenc-core to use arkworks 0.4 from crates.io
-3. **Option C**: Use separate binaries (encap/decap in Rust, circom in Node.js)
+- [x] Document actual blocker with compilation error
+- [ ] Implementation requires resolving ark-circom dependency conflict
 
 ---
 
@@ -111,6 +120,7 @@
 - [x] Support GCM and CTR modes
 
 **Results**: 4 unit tests + 2 integration tests passing
+
 - `crypto::tests::test_gcm_roundtrip` ✅
 - `crypto::tests::test_ctr_roundtrip` ✅
 - `crypto::tests::test_gcm_wrong_key` ✅
@@ -145,10 +155,18 @@
 
 ## Progress Tracker
 
-- Phase 1: ✅ Complete (Circom loading)
-- Phase 2: ✅ Complete (Input parsing)
-- Phase 3: ⚠️ Blocked (Integration with zkenc-core - version conflict documented)
+- Phase 1: ✅ Complete (Circom loading - file validation)
+- Phase 2: ✅ Complete (Input parsing - JSON flattening)
+- Phase 3: ⚠️ **Blocked** (ark-circom has internal dependency conflicts with git arkworks)
 - Phase 4: ✅ Complete (AES encryption - GCM/CTR modes)
-- Phase 5: ⏸️ Not started (CLI commands)
-- Phase 4: ⏸️ Not started
-- Phase 5: ⏸️ Not started
+- Phase 5: ⏸️ Not started (CLI commands - blocked by Phase 3)
+
+## Current Status
+
+**All independent components complete**. Further progress requires resolving Phase 3 blocker:
+- ✅ File I/O (Phase 1)
+- ✅ JSON parsing (Phase 2)  
+- ✅ AES encryption (Phase 4)
+- ⚠️ **Cannot proceed with Phase 5 CLI** without zkenc-core integration
+
+**Next Steps**: Choose a resolution path for Phase 3 before continuing

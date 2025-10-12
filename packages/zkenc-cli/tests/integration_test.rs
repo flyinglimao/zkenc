@@ -45,8 +45,14 @@ fn test_parse_simple_input() {
     assert!(!inputs.is_empty(), "Should have parsed some inputs");
 
     // Verify specific fields exist
-    assert!(inputs.contains_key("message"), "Should have 'message' field");
-    assert!(inputs.contains_key("publicKeys"), "Should have 'publicKeys' field");
+    assert!(
+        inputs.contains_key("message"),
+        "Should have 'message' field"
+    );
+    assert!(
+        inputs.contains_key("publicKeys"),
+        "Should have 'publicKeys' field"
+    );
     assert!(inputs.contains_key("R8"), "Should have 'R8' field");
     assert!(inputs.contains_key("S"), "Should have 'S' field");
 
@@ -56,7 +62,11 @@ fn test_parse_simple_input() {
 
     // Verify publicKeys is an array of arrays (3 keys × 2 coordinates)
     let public_keys = &inputs["publicKeys"];
-    assert_eq!(public_keys.len(), 6, "publicKeys should have 6 elements (3 keys × 2 coords)");
+    assert_eq!(
+        public_keys.len(),
+        6,
+        "publicKeys should have 6 elements (3 keys × 2 coords)"
+    );
 
     println!("Parsed {} input fields", inputs.len());
     for (key, values) in inputs.iter() {
@@ -64,24 +74,22 @@ fn test_parse_simple_input() {
     }
 }
 
-// Phase 3 Note: Full Circom integration test skipped due to arkworks version conflicts
-// The integration requires matching versions of ark_ec, ark_ff, ark_relations between:
-// - zkenc-core (uses git versions for 0.5)
-// - ark_bls12_381 0.4 (uses crates.io 0.4)
+// Phase 3 Note: Full Circom integration blocked by ark-circom dependency conflicts
+// 
+// ark-circom (git) internally uses:
+// - dependencies: crates.io ark-bn254 0.5.0 (incompatible with git ark-ec)
+// - dev-dependencies: git versions
 //
-// This will be resolved when:
-// 1. zkenc-core is ported to use stable crates.io versions, OR
-// 2. ark-circom is updated to support arkworks 0.5 git versions
+// Compilation error: crates.io ark-bn254 missing `ZeroFlag` trait required by git ark-ec
 //
-// For now, zkenc-core's own tests demonstrate encap/decap work correctly.
-// CLI integration will use:
-// - parse_inputs() from Phase 2 ✅
-// - CircomBuilder from ark-circom (when versions align)
-// - zkenc-core's encap/decap (tested separately) ✅
+// Resolution needed before Phase 3/5 implementation:
+// 1. Fork ark-circom with all-git dependencies, OR
+// 2. Wait for arkworks 0.5 stable crates.io release, OR
+// 3. Use separate architecture (Node.js Circom + Rust zkenc-core)
 
 #[test]
 fn test_aes_gcm_roundtrip() {
-    use zkenc_cli::crypto::{encrypt_gcm, decrypt_gcm};
+    use zkenc_cli::crypto::{decrypt_gcm, encrypt_gcm};
 
     let key = b"01234567890123456789012345678901"; // Exactly 32 bytes
     let plaintext = b"Hello, zkenc! This is a secret message.";
@@ -101,13 +109,17 @@ fn test_aes_gcm_roundtrip() {
     let decrypted = result.unwrap();
 
     // Verify
-    assert_eq!(plaintext.to_vec(), decrypted, "Decrypted text should match original");
+    assert_eq!(
+        plaintext.to_vec(),
+        decrypted,
+        "Decrypted text should match original"
+    );
     println!("  ✓ Roundtrip successful!");
 }
 
 #[test]
 fn test_aes_ctr_roundtrip() {
-    use zkenc_cli::crypto::{encrypt_ctr, decrypt_ctr};
+    use zkenc_cli::crypto::{decrypt_ctr, encrypt_ctr};
 
     let key = b"01234567890123456789012345678901"; // Exactly 32 bytes
     let plaintext = b"Hello, zkenc! This is another secret message.";
@@ -127,6 +139,10 @@ fn test_aes_ctr_roundtrip() {
     let decrypted = result.unwrap();
 
     // Verify
-    assert_eq!(plaintext.to_vec(), decrypted, "Decrypted text should match original");
+    assert_eq!(
+        plaintext.to_vec(),
+        decrypted,
+        "Decrypted text should match original"
+    );
     println!("  ✓ Roundtrip successful!");
 }

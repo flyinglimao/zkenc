@@ -39,18 +39,14 @@ pub fn load_circom_circuit<P: AsRef<Path>>(
 ///
 /// Returns a map of input names to their values (as strings)
 /// Handles nested arrays by flattening them
-pub fn parse_inputs<P: AsRef<Path>>(
-    input_path: P,
-) -> Result<HashMap<String, Vec<String>>> {
+pub fn parse_inputs<P: AsRef<Path>>(input_path: P) -> Result<HashMap<String, Vec<String>>> {
     // Read and parse JSON file
     let content = fs::read_to_string(input_path.as_ref())
         .with_context(|| format!("Failed to read input file: {:?}", input_path.as_ref()))?;
 
-    let json: Value = serde_json::from_str(&content)
-        .context("Failed to parse JSON")?;
+    let json: Value = serde_json::from_str(&content).context("Failed to parse JSON")?;
 
-    let obj = json.as_object()
-        .context("Input JSON must be an object")?;
+    let obj = json.as_object().context("Input JSON must be an object")?;
 
     let mut result = HashMap::new();
 
@@ -115,11 +111,10 @@ pub fn parse_inputs<P: AsRef<Path>>(
 ///
 /// # Current Status
 ///
-/// **Blocked**: Arkworks version mismatch between:
-/// - zkenc-core: uses git versions (0.5 pre-release)
-/// - ark-circom: requires crates.io 0.4
-///
-/// **Resolution**: Wait for arkworks 0.5 stable release, or port zkenc-core to 0.4
+/// **Blocked**: ark-circom (git) has internal dependency conflicts:
+/// - Uses crates.io ark-bn254 0.5.0 in dependencies
+/// - crates.io ark-bn254 0.5.0 is incompatible with git ark-ec (missing ZeroFlag trait)
+/// - Requires either forking ark-circom or waiting for stable 0.5 release
 pub struct CircomCircuitWrapper;
 
 impl CircomCircuitWrapper {
@@ -134,11 +129,7 @@ fn flatten_value(value: &Value) -> Vec<String> {
     match value {
         Value::String(s) => vec![s.clone()],
         Value::Number(n) => vec![n.to_string()],
-        Value::Array(arr) => {
-            arr.iter()
-                .flat_map(flatten_value)
-                .collect()
-        }
+        Value::Array(arr) => arr.iter().flat_map(flatten_value).collect(),
         Value::Bool(b) => vec![if *b { "1".to_string() } else { "0".to_string() }],
         Value::Null => vec!["0".to_string()],
         Value::Object(_) => {
