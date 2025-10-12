@@ -20,20 +20,23 @@
 
 ---
 
-## Phase 2: Input Parsing (Test-First)
+## Phase 2: Input Parsing (Test-First) ✅
 
 **Goal**: Parse JSON input files to field elements
 
-### Test 2.1: Parse simple inputs
+### Test 2.1: Parse simple inputs ✅
 
-- [ ] Test: `test_parse_simple_input`
-- [ ] Parse signature_basic.json
-- [ ] Verify field element conversion
+- [x] Test: `test_parse_simple_input`
+- [x] Parse signature_basic.json
+- [x] Verify field element conversion
+- **Result**: Successfully parsed 5 fields (message, publicKeys, R8, S, signerIndices)
 
-### Implementation 2.1: Input parsing
+### Implementation 2.1: Input parsing ✅
 
-- [ ] Implement `parse_inputs()`
-- [ ] Handle strings, numbers, arrays
+- [x] Implement `parse_inputs()` - returns HashMap<String, Vec<String>>
+- [x] Handle strings, numbers, arrays
+- [x] Recursive flattening of nested arrays
+- Note: Flattens 2D arrays (e.g., publicKeys: 3×2 → 6 values)
 
 ---
 
