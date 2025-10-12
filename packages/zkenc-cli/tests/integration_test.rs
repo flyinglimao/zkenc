@@ -63,3 +63,70 @@ fn test_parse_simple_input() {
         println!("  {}: {} values", key, values.len());
     }
 }
+
+// Phase 3 Note: Full Circom integration test skipped due to arkworks version conflicts
+// The integration requires matching versions of ark_ec, ark_ff, ark_relations between:
+// - zkenc-core (uses git versions for 0.5)
+// - ark_bls12_381 0.4 (uses crates.io 0.4)
+//
+// This will be resolved when:
+// 1. zkenc-core is ported to use stable crates.io versions, OR
+// 2. ark-circom is updated to support arkworks 0.5 git versions
+//
+// For now, zkenc-core's own tests demonstrate encap/decap work correctly.
+// CLI integration will use:
+// - parse_inputs() from Phase 2 ✅
+// - CircomBuilder from ark-circom (when versions align)
+// - zkenc-core's encap/decap (tested separately) ✅
+
+#[test]
+fn test_aes_gcm_roundtrip() {
+    use zkenc_cli::crypto::{encrypt_gcm, decrypt_gcm};
+
+    let key = b"01234567890123456789012345678901"; // Exactly 32 bytes
+    let plaintext = b"Hello, zkenc! This is a secret message.";
+
+    // Encrypt
+    let result = encrypt_gcm(key, plaintext);
+    assert!(result.is_ok(), "Encryption failed: {:?}", result.err());
+    let ciphertext = result.unwrap();
+
+    println!("AES-GCM Encryption:");
+    println!("  Plaintext: {} bytes", plaintext.len());
+    println!("  Ciphertext: {} bytes", ciphertext.len());
+
+    // Decrypt
+    let result = decrypt_gcm(key, &ciphertext);
+    assert!(result.is_ok(), "Decryption failed: {:?}", result.err());
+    let decrypted = result.unwrap();
+
+    // Verify
+    assert_eq!(plaintext.to_vec(), decrypted, "Decrypted text should match original");
+    println!("  ✓ Roundtrip successful!");
+}
+
+#[test]
+fn test_aes_ctr_roundtrip() {
+    use zkenc_cli::crypto::{encrypt_ctr, decrypt_ctr};
+
+    let key = b"01234567890123456789012345678901"; // Exactly 32 bytes
+    let plaintext = b"Hello, zkenc! This is another secret message.";
+
+    // Encrypt
+    let result = encrypt_ctr(key, plaintext);
+    assert!(result.is_ok(), "Encryption failed: {:?}", result.err());
+    let ciphertext = result.unwrap();
+
+    println!("AES-CTR Encryption:");
+    println!("  Plaintext: {} bytes", plaintext.len());
+    println!("  Ciphertext: {} bytes", ciphertext.len());
+
+    // Decrypt
+    let result = decrypt_ctr(key, &ciphertext);
+    assert!(result.is_ok(), "Decryption failed: {:?}", result.err());
+    let decrypted = result.unwrap();
+
+    // Verify
+    assert_eq!(plaintext.to_vec(), decrypted, "Decrypted text should match original");
+    println!("  ✓ Roundtrip successful!");
+}

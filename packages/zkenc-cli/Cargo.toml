@@ -30,5 +30,17 @@ serde_json = "1.0"
 # 檔案操作
 hex = "0.4"
 
+# AES encryption
+aes-gcm = "0.10"
+aes = "0.8"
+ctr = "0.9"
+cipher = { version = "0.4", features = ["std"] }
+rand = "0.8"
+
 # Circom integration (placeholder for now, will add proper integration in Phase 2/3)
 # ark-circom will be added when we implement witness generation
+#
+# Note: Full integration deferred due to arkworks version conflicts:
+# - zkenc-core uses git versions (0.5 pre-release)
+# - ark-circom/stable arkworks use crates.io 0.4
+# This will be resolved in future when versions stabilize

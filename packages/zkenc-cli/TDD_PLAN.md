@@ -40,49 +40,83 @@
 
 ---
 
-## Phase 3: Encap/Decap Integration (Test-First)
+## Phase 3: Encap/Decap Integration (Test-First) ⚠️ Blocked
 
 **Goal**: Integrate with zkenc-core
 
-### Test 3.1: Encap with circom circuit
+**Status**: Design completed, implementation blocked by version conflict
 
-- [ ] Test: `test_encap_with_circom`
+### Blocker: Arkworks Version Mismatch
+- zkenc-core: uses arkworks 0.5 (git versions)
+- ark-circom: requires arkworks 0.4 (crates.io)
+- Cannot use both in same binary due to trait incompatibility
+
+### Architecture Design ✅
+
+- [x] **Design**: CircomCircuitWrapper structure
+- [x] **Documentation**: Integration plan with code examples
+- [x] **API**: Defined how to bridge Circom ↔ zkenc-core
+- See `src/circom.rs` for detailed integration architecture
+
+### Test 3.1: Encap with circom circuit (Deferred)
+
+- [ ] Test: `test_encap_with_circom` 
 - [ ] Load circuit with public inputs only
 - [ ] Call zkenc-core encap
 - [ ] Verify key generation
+- **Status**: Architecture documented, awaiting version resolution
 
-### Test 3.2: Decap with circom circuit
+### Test 3.2: Decap with circom circuit (Deferred)
 
 - [ ] Test: `test_decap_with_circom`
 - [ ] Load circuit with full witness
 - [ ] Call zkenc-core decap
 - [ ] Verify key recovery
+- **Status**: Architecture documented, awaiting version resolution
 
-### Implementation 3.1: Circuit wrapper
+### Implementation 3.1: Circuit wrapper (Design Complete)
 
-- [ ] Create CircomCircuitWrapper
-- [ ] Implement ConstraintSynthesizer
+- [x] Create CircomCircuitWrapper struct (placeholder)
+- [x] Document ConstraintSynthesizer implementation plan
+- [x] Document full integration workflow
+- [ ] Implement when versions align
+
+### Resolution Path
+
+1. **Option A**: Wait for arkworks 0.5 stable release
+2. **Option B**: Port zkenc-core to use arkworks 0.4 from crates.io
+3. **Option C**: Use separate binaries (encap/decap in Rust, circom in Node.js)
 
 ---
 
 ## Phase 4: AES Encryption (Test-First)
 
+**Status**: ✅ Complete
+
 **Goal**: Encrypt/decrypt with derived key
 
 ### Test 4.1: AES-GCM roundtrip
 
-- [ ] Test: `test_aes_gcm_roundtrip`
-- [ ] Encrypt plaintext
-- [ ] Decrypt and verify
+- [x] Test: `test_aes_gcm_roundtrip`
+- [x] Encrypt plaintext
+- [x] Decrypt and verify
 
 ### Test 4.2: AES-CTR roundtrip
 
-- [ ] Test: `test_aes_ctr_roundtrip`
+- [x] Test: `test_aes_ctr_roundtrip`
 
 ### Implementation 4.1: Crypto module
 
-- [ ] Implement `encrypt()` and `decrypt()`
-- [ ] Support GCM and CTR modes
+- [x] Implement `encrypt()` and `decrypt()`
+- [x] Support GCM and CTR modes
+
+**Results**: 4 unit tests + 2 integration tests passing
+- `crypto::tests::test_gcm_roundtrip` ✅
+- `crypto::tests::test_ctr_roundtrip` ✅
+- `crypto::tests::test_gcm_wrong_key` ✅
+- `crypto::tests::test_invalid_key_length` ✅
+- `test_aes_gcm_roundtrip` ✅
+- `test_aes_ctr_roundtrip` ✅
 
 ---
 
@@ -111,8 +145,10 @@
 
 ## Progress Tracker
 
-- Phase 1: ⏳ Starting
-- Phase 2: ⏸️ Not started
-- Phase 3: ⏸️ Not started
+- Phase 1: ✅ Complete (Circom loading)
+- Phase 2: ✅ Complete (Input parsing)
+- Phase 3: ⚠️ Blocked (Integration with zkenc-core - version conflict documented)
+- Phase 4: ✅ Complete (AES encryption - GCM/CTR modes)
+- Phase 5: ⏸️ Not started (CLI commands)
 - Phase 4: ⏸️ Not started
 - Phase 5: ⏸️ Not started

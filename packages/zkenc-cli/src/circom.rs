@@ -63,6 +63,72 @@ pub fn parse_inputs<P: AsRef<Path>>(
     Ok(result)
 }
 
+/// Future: Circuit wrapper for zkenc-core integration
+///
+/// This struct will wrap a Circom circuit to implement `ConstraintSynthesizer`
+/// for use with zkenc-core's encap/decap functions.
+///
+/// # Architecture Plan
+///
+/// ```ignore
+/// use ark_circom::{CircomBuilder, CircomConfig};
+/// use ark_relations::r1cs::ConstraintSynthesizer;
+///
+/// pub struct CircomCircuitWrapper<F: PrimeField> {
+///     circuit: CircomCircuit<F>,
+/// }
+///
+/// impl<F: PrimeField> ConstraintSynthesizer<F> for CircomCircuitWrapper<F> {
+///     fn generate_constraints(self, cs: ConstraintSystemRef<F>) -> Result<(), SynthesisError> {
+///         // Delegate to the inner circom circuit
+///         self.circuit.generate_constraints(cs)
+///     }
+/// }
+/// ```
+///
+/// # Integration with zkenc-core
+///
+/// ```ignore
+/// // 1. Load circuit
+/// let (num_constraints, num_public, num_variables) = load_circom_circuit(r1cs_path, wasm_path)?;
+///
+/// // 2. Parse inputs
+/// let inputs = parse_inputs(input_json_path)?;
+///
+/// // 3. Build circuit with ark-circom
+/// let cfg = CircomConfig::<Bn254>::new(wasm_path, r1cs_path)?;
+/// let mut builder = CircomBuilder::new(cfg);
+/// for (key, values) in inputs {
+///     for value in values {
+///         builder.push_input(&key, value);
+///     }
+/// }
+///
+/// // 4. For encap: setup without witness
+/// let circuit = builder.setup();
+/// let (ciphertext, key) = zkenc_core::encap(circuit, &mut rng)?;
+///
+/// // 5. For decap: build with full witness
+/// let circuit = builder.build()?;
+/// let key = zkenc_core::decap(circuit, &ciphertext)?;
+/// ```
+///
+/// # Current Status
+///
+/// **Blocked**: Arkworks version mismatch between:
+/// - zkenc-core: uses git versions (0.5 pre-release)
+/// - ark-circom: requires crates.io 0.4
+///
+/// **Resolution**: Wait for arkworks 0.5 stable release, or port zkenc-core to 0.4
+pub struct CircomCircuitWrapper;
+
+impl CircomCircuitWrapper {
+    /// Placeholder for future implementation
+    pub fn new() -> Self {
+        Self
+    }
+}
+
 /// Recursively flatten a JSON value into a list of strings
 fn flatten_value(value: &Value) -> Vec<String> {
     match value {
