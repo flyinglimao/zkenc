@@ -8,6 +8,10 @@ categories = ["cryptography", "command-line-utilities"]
 license = "MIT/Apache-2.0"
 edition = "2021"
 
+[lib]
+name = "zkenc_cli"
+path = "src/lib.rs"
+
 [[bin]]
 name = "zkenc"
 path = "src/main.rs"
@@ -25,3 +29,6 @@ serde_json = "1.0"
 
 # 檔案操作
 hex = "0.4"
+
+# Circom integration (placeholder for now, will add proper integration in Phase 2/3)
+# ark-circom will be added when we implement witness generation
