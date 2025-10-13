@@ -30,6 +30,12 @@ serde_json = "1.0"
 # 檔案操作
 hex = "0.4"
 
+# Arkworks - matching zkenc-core versions
+ark-bls12-381 = { git = "https://github.com/arkworks-rs/algebra.git", features = ["curve"] }
+ark-ff = { git = "https://github.com/arkworks-rs/algebra.git" }
+ark-relations = { git = "https://github.com/arkworks-rs/snark.git" }
+ark-std = { git = "https://github.com/arkworks-rs/std.git" }
+
 # AES encryption
 aes-gcm = "0.10"
 aes = "0.8"
