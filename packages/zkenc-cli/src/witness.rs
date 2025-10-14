@@ -158,7 +158,7 @@ fn read_u64_le<R: Read>(reader: &mut R) -> Result<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_bls12_381::Fr;
+    use ark_bn254::Fr; // Use BN254 (alt_bn128) - Circom's default curve
 
     #[test]
     #[ignore] // Only run when witness files are available

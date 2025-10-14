@@ -94,7 +94,7 @@ impl<F: PrimeField> ConstraintSynthesizer<F> for MiMCCircuit<F> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_bls12_381::Fr;
+    use ark_bn254::Fr; // Use BN254 (alt_bn128) for consistency
     use ark_relations::gr1cs::{ConstraintSystem, OptimizationGoal};
     use ark_std::rand::{Rng, SeedableRng};
 

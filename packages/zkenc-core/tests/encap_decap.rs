@@ -5,7 +5,7 @@
 
 mod mimc_circuit;
 
-use ark_bls12_381::{Bls12_381, Fr};
+use ark_bn254::{Bn254, Fr}; // Use BN254 (alt_bn128) for consistency with Circom
 use ark_relations::gr1cs::ConstraintSynthesizer;
 use ark_std::rand::{Rng, SeedableRng};
 use mimc_circuit::{MiMCCircuit, MIMC_ROUNDS};
@@ -32,13 +32,13 @@ fn test_encap_decap_correctness() {
     let circuit_encap = MiMCCircuit::new(None, None, Some(output), constants.clone());
 
     // Encap: Generate ciphertext and key
-    let (ciphertext, key1) = encap::<Bls12_381, _, _>(circuit_encap, &mut rng).unwrap();
+    let (ciphertext, key1) = encap::<Bn254, _, _>(circuit_encap, &mut rng).unwrap();
 
     // Create circuit for Decap (with full assignment)
     let circuit_decap = MiMCCircuit::new(Some(xl), Some(xr), Some(output), constants.clone());
 
     // Decap: Recover key using witness
-    let key2 = decap::<Bls12_381, _>(circuit_decap, &ciphertext).unwrap();
+    let key2 = decap::<Bn254, _>(circuit_decap, &ciphertext).unwrap();
 
     // Assert: Both keys should be identical
     assert_eq!(key1, key2, "Decap should recover the same key as Encap");
@@ -61,7 +61,7 @@ fn test_encap_decap_wrong_witness() {
     let wrong_xr = Fr::from(200u64);
 
     let circuit_encap = MiMCCircuit::new(None, None, Some(output), constants.clone());
-    let (ciphertext, _key1) = encap::<Bls12_381, _, _>(circuit_encap, &mut rng).unwrap();
+    let (ciphertext, _key1) = encap::<Bn254, _, _>(circuit_encap, &mut rng).unwrap();
 
     let circuit_decap = MiMCCircuit::new(
         Some(wrong_xl),
@@ -71,7 +71,7 @@ fn test_encap_decap_wrong_witness() {
     );
 
     // Decap with wrong witness should fail because circuit won't be satisfied
-    let result = decap::<Bls12_381, _>(circuit_decap, &ciphertext);
+    let result = decap::<Bn254, _>(circuit_decap, &ciphertext);
 
     assert!(
         result.is_err(),
@@ -94,8 +94,8 @@ fn test_encap_different_public_inputs() {
     let circuit1 = MiMCCircuit::new(None, None, Some(output1), constants.clone());
     let circuit2 = MiMCCircuit::new(None, None, Some(output2), constants.clone());
 
-    let (ct1, key1) = encap::<Bls12_381, _, _>(circuit1, &mut rng).unwrap();
-    let (ct2, key2) = encap::<Bls12_381, _, _>(circuit2, &mut rng).unwrap();
+    let (ct1, key1) = encap::<Bn254, _, _>(circuit1, &mut rng).unwrap();
+    let (ct2, key2) = encap::<Bn254, _, _>(circuit2, &mut rng).unwrap();
 
     // With different random parameters, CRS should be different
     // (alpha, beta, delta, r, x are sampled fresh each time)
@@ -124,7 +124,7 @@ fn test_ciphertext_serialization() {
 
     let circuit = MiMCCircuit::new(None, None, Some(output), constants);
 
-    let (ciphertext, _key) = encap::<Bls12_381, _, _>(circuit, &mut rng).unwrap();
+    let (ciphertext, _key) = encap::<Bn254, _, _>(circuit, &mut rng).unwrap();
 
     // Serialize and deserialize
     use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -132,7 +132,7 @@ fn test_ciphertext_serialization() {
     ciphertext
         .serialize_compressed(&mut bytes)
         .expect("Serialization should succeed");
-    let ciphertext2 = zkenc_core::Ciphertext::<Bls12_381>::deserialize_compressed(&bytes[..])
+    let ciphertext2 = zkenc_core::Ciphertext::<Bn254>::deserialize_compressed(&bytes[..])
         .expect("Deserialization should succeed");
 
     assert_eq!(
