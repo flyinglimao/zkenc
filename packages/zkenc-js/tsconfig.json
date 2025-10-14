@@ -1,14 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
-    "lib": ["dom", "es6"],
+    "target": "ES2020",
+    "module": "ES2020",
+    "lib": ["ES2020", "DOM"],
     "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "**/*.spec.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "pkg", "**/*.test.ts", "**/*.spec.ts"]
 }
