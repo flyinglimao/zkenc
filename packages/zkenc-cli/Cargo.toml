@@ -26,6 +26,7 @@ anyhow = "1.0"
 # 序列化/反序列化
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+bincode = "1.3"
 
 # 檔案操作
 hex = "0.4"

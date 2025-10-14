@@ -5,3 +5,4 @@ pub mod circom;
 pub mod circuit;
 pub mod crypto;
 pub mod r1cs;
+pub mod serializable;
