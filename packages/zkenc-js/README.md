@@ -23,7 +23,7 @@ yarn install
 Import and use `zkenc-js` in your TypeScript or JavaScript files:
 
 ```typescript
-import init, { WasmEncryptor } from 'zkenc-js';
+import init, { WasmEncryptor } from "zkenc-js";
 
 // Initialize WASM module
 await init();
