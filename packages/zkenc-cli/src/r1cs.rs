@@ -2,9 +2,12 @@ use anyhow::{bail, Context, Result};
 use std::fs::File;
 use std::io::{BufReader, Read, Seek};
 use std::path::Path;
+use crate::serializable::{
+    SerializableCircuit, SerializableConstraint, SerializableFactor, SerializableLC,
+};
 
 /// R1CS file parser
-/// 
+///
 /// Parses Circom R1CS binary format according to:
 /// https://github.com/iden3/r1csfile/blob/master/doc/r1cs_bin_format.md
 #[derive(Debug)]
@@ -34,6 +37,61 @@ pub struct LinearCombination {
 }
 
 impl R1csFile {
+    /// Convert to SerializableCircuit for testing/export
+    pub fn to_serializable(&self) -> SerializableCircuit {
+        let constraints = self
+            .constraints
+            .iter()
+            .map(|c| SerializableConstraint {
+                a: SerializableLC {
+                    factors: c
+                        .a
+                        .factors
+                        .iter()
+                        .map(|(wire_id, coef_bytes)| SerializableFactor {
+                            wire_id: *wire_id,
+                            coefficient_bytes: coef_bytes.clone(),
+                        })
+                        .collect(),
+                },
+                b: SerializableLC {
+                    factors: c
+                        .b
+                        .factors
+                        .iter()
+                        .map(|(wire_id, coef_bytes)| SerializableFactor {
+                            wire_id: *wire_id,
+                            coefficient_bytes: coef_bytes.clone(),
+                        })
+                        .collect(),
+                },
+                c: SerializableLC {
+                    factors: c
+                        .c
+                        .factors
+                        .iter()
+                        .map(|(wire_id, coef_bytes)| SerializableFactor {
+                            wire_id: *wire_id,
+                            coefficient_bytes: coef_bytes.clone(),
+                        })
+                        .collect(),
+                },
+            })
+            .collect();
+
+        SerializableCircuit {
+            field_size: self.field_size,
+            prime_bytes: self.prime.clone(),
+            n_wires: self.n_wires,
+            n_pub_out: self.n_pub_out,
+            n_pub_in: self.n_pub_in,
+            n_prv_in: self.n_prv_in,
+            n_constraints: self.n_constraints,
+            constraints,
+            wire_labels: None, // We don't parse labels for now
+        }
+    }
+
     /// Parse an R1CS file from disk
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
         let file = File::open(path.as_ref())
@@ -68,7 +126,8 @@ impl R1csFile {
 
         // Second pass: parse header first
         let header = {
-            let header_section = sections.iter()
+            let header_section = sections
+                .iter()
                 .find(|(t, _, _)| *t == 0x01)
                 .context("Header section not found")?;
             reader.seek(std::io::SeekFrom::Start(header_section.2))?;
@@ -77,7 +136,8 @@ impl R1csFile {
 
         // Parse constraints section
         let constraints = {
-            let constraints_section = sections.iter()
+            let constraints_section = sections
+                .iter()
                 .find(|(t, _, _)| *t == 0x02)
                 .context("Constraints section not found")?;
             reader.seek(std::io::SeekFrom::Start(constraints_section.2))?;
@@ -89,13 +149,14 @@ impl R1csFile {
         };
 
         // Parse wire2label section (optional)
-        let wire2label = if let Some(wire2label_section) = sections.iter().find(|(t, _, _)| *t == 0x03) {
-            reader.seek(std::io::SeekFrom::Start(wire2label_section.2))?;
-            Self::parse_wire2label(&mut reader, header.n_wires as usize)?
-        } else {
-            // Generate default wire2label if not present
-            (0..header.n_wires as u64).collect()
-        };
+        let wire2label =
+            if let Some(wire2label_section) = sections.iter().find(|(t, _, _)| *t == 0x03) {
+                reader.seek(std::io::SeekFrom::Start(wire2label_section.2))?;
+                Self::parse_wire2label(&mut reader, header.n_wires as usize)?
+            } else {
+                // Generate default wire2label if not present
+                (0..header.n_wires as u64).collect()
+            };
 
         Ok(R1csFile {
             field_size: header.field_size,
@@ -225,11 +286,11 @@ mod tests {
         println!("  Private inputs: {}", r1cs.n_prv_in);
         println!("  Labels: {}", r1cs.n_labels);
         println!("  Constraints: {}", r1cs.n_constraints);
-        
+
         assert!(r1cs.n_wires > 0, "Should have wires");
         assert!(r1cs.n_constraints > 0, "Should have constraints");
         assert_eq!(r1cs.constraints.len(), r1cs.n_constraints as usize);
-        
+
         // Check first constraint structure
         if !r1cs.constraints.is_empty() {
             let c0 = &r1cs.constraints[0];
@@ -238,5 +299,68 @@ mod tests {
             println!("  B factors: {}", c0.b.factors.len());
             println!("  C factors: {}", c0.c.factors.len());
         }
+    }
+
+    #[test]
+    fn test_r1cs_to_serializable() {
+        use std::path::PathBuf;
+
+        let mut r1cs_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        r1cs_path.push("tests/r1cs/signature.r1cs");
+
+        let r1cs = R1csFile::from_file(&r1cs_path).expect("Failed to parse R1CS");
+        let serializable = r1cs.to_serializable();
+
+        // Check metadata
+        assert_eq!(serializable.field_size, r1cs.field_size);
+        assert_eq!(serializable.n_wires, r1cs.n_wires);
+        assert_eq!(serializable.n_constraints, r1cs.n_constraints);
+        assert_eq!(serializable.constraints.len(), r1cs.constraints.len());
+
+        // Check first constraint conversion
+        if !serializable.constraints.is_empty() {
+            let orig = &r1cs.constraints[0];
+            let ser = &serializable.constraints[0];
+
+            assert_eq!(ser.a.factors.len(), orig.a.factors.len());
+            assert_eq!(ser.b.factors.len(), orig.b.factors.len());
+            assert_eq!(ser.c.factors.len(), orig.c.factors.len());
+
+            // Check first factor in A
+            if !orig.a.factors.is_empty() {
+                let (orig_wire, orig_coef) = &orig.a.factors[0];
+                let ser_factor = &ser.a.factors[0];
+                assert_eq!(ser_factor.wire_id, *orig_wire);
+                assert_eq!(&ser_factor.coefficient_bytes, orig_coef);
+            }
+        }
+
+        println!("✅ Conversion successful!");
+        println!("   {} constraints converted", serializable.constraints.len());
+    }
+
+    #[test]
+    fn test_export_to_json() {
+        use std::path::PathBuf;
+
+        let mut r1cs_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        r1cs_path.push("tests/r1cs/signature.r1cs");
+
+        let r1cs = R1csFile::from_file(&r1cs_path).expect("Failed to parse R1CS");
+        let serializable = r1cs.to_serializable();
+
+        // Test JSON export
+        let json = serializable.to_json().expect("Failed to serialize to JSON");
+        assert!(json.contains("field_size"));
+        assert!(json.contains("n_constraints"));
+
+        // Test round-trip
+        let loaded =
+            crate::serializable::SerializableCircuit::from_json(&json).expect("Failed to parse JSON");
+        assert_eq!(loaded.n_constraints, serializable.n_constraints);
+        assert_eq!(loaded.n_wires, serializable.n_wires);
+
+        println!("✅ JSON export/import successful!");
+        println!("   JSON size: {} bytes", json.len());
     }
 }
