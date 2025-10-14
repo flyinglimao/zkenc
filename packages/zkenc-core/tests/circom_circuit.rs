@@ -4,7 +4,7 @@
 
 #![cfg(feature = "test_fixtures")]
 
-use ark_bls12_381::Fr;
+use ark_bn254::Fr; // Circom uses BN254 (alt_bn128)
 use ark_ff::PrimeField;
 use ark_relations::gr1cs::{
     ConstraintSynthesizer, ConstraintSystemRef, LinearCombination, SynthesisError, Variable,
@@ -16,8 +16,8 @@ use zkenc_core::serializable::{SerializableCircuit, SerializableTestCase};
 /// Circom circuit wrapper for testing
 /// Implements ConstraintSynthesizer from SerializableCircuit
 pub struct TestCircuit {
-    circuit: SerializableCircuit,
-    witness: HashMap<u32, Fr>,
+    pub circuit: SerializableCircuit,
+    pub witness: HashMap<u32, Fr>,
 }
 
 impl TestCircuit {
@@ -70,9 +70,11 @@ impl TestCircuit {
 
 impl ConstraintSynthesizer<Fr> for TestCircuit {
     fn generate_constraints(self, cs: ConstraintSystemRef<Fr>) -> Result<(), SynthesisError> {
+        use ark_relations::gr1cs::R1CS_PREDICATE_LABEL;
+
         // Allocate variables
         let mut variables: HashMap<u32, Variable> = HashMap::new();
-        
+
         // Wire 0 is always ONE
         variables.insert(0, Variable::One);
 
@@ -138,14 +140,13 @@ impl ConstraintSynthesizer<Fr> for TestCircuit {
                 lc
             };
 
-            // Enforce constraint
-            let label = format!("r1cs_{}", idx);
+            // Enforce constraint using R1CS_PREDICATE_LABEL
             let boxed: Vec<Box<dyn FnOnce() -> LinearCombination<Fr>>> = vec![
                 Box::new(a_closure),
                 Box::new(b_closure),
                 Box::new(c_closure),
             ];
-            cs.enforce_constraint(&label, boxed)?;
+            cs.enforce_constraint(R1CS_PREDICATE_LABEL, boxed)?;
         }
 
         Ok(())
@@ -194,6 +195,48 @@ mod tests {
             }
             Err(e) => {
                 // Expected to fail without valid witness
+                println!("⚠️  Synthesis failed (expected): {:?}", e);
+            }
+        }
+    }
+
+    #[test]
+    fn test_load_sudoku_circuit() {
+        let circuit =
+            TestCircuit::from_fixture("sudoku_circuit").expect("Failed to load sudoku circuit");
+
+        println!("✅ Loaded sudoku circuit:");
+        println!("   - Public inputs: {}", circuit.n_public_inputs());
+        println!("   - Constraints: {}", circuit.circuit.n_constraints);
+        println!("   - Wires: {}", circuit.circuit.n_wires);
+
+        assert_eq!(circuit.n_public_inputs(), 81); // 9x9 sudoku grid
+        assert_eq!(circuit.circuit.n_constraints, 162);
+        assert_eq!(circuit.circuit.n_wires, 202);
+    }
+
+    #[test]
+    fn test_synthesize_sudoku_circuit() {
+        use ark_relations::gr1cs::ConstraintSystem;
+
+        let circuit =
+            TestCircuit::from_fixture("sudoku_circuit").expect("Failed to load sudoku circuit");
+
+        // Try to synthesize
+        let cs = ConstraintSystem::<Fr>::new_ref();
+        let result = circuit.generate_constraints(cs.clone());
+
+        match result {
+            Ok(_) => {
+                let cs_borrowed = cs.borrow().unwrap();
+                println!("✅ Sudoku synthesis successful!");
+                println!("   - Constraints: {}", cs_borrowed.num_constraints());
+                println!(
+                    "   - Variables: {}",
+                    cs_borrowed.num_instance_variables() + cs_borrowed.num_witness_variables()
+                );
+            }
+            Err(e) => {
                 println!("⚠️  Synthesis failed (expected): {:?}", e);
             }
         }

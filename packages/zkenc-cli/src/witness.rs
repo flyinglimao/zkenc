@@ -31,8 +31,8 @@ pub struct WitnessFile {
 impl WitnessFile {
     /// Load witness from .wtns file
     pub fn from_file(path: &str) -> Result<Self> {
-        let file = File::open(path)
-            .with_context(|| format!("Failed to open witness file: {}", path))?;
+        let file =
+            File::open(path).with_context(|| format!("Failed to open witness file: {}", path))?;
         let mut reader = BufReader::new(file);
 
         // Read magic
@@ -64,7 +64,7 @@ impl WitnessFile {
                 1 => {
                     // Header section
                     let field_size = read_u32_le(&mut reader)?;
-                    
+
                     // Read prime modulus
                     prime = vec![0u8; field_size as usize];
                     reader.read_exact(&mut prime)?;
@@ -123,14 +123,15 @@ impl WitnessFile {
     /// Convert to field elements for a specific prime field
     pub fn to_field_elements<F: PrimeField>(&self) -> Result<HashMap<u32, F>> {
         let mut result = HashMap::new();
-        
+
         for (&wire_id, bytes) in &self.assignments {
             // Deserialize from little-endian bytes
-            let value = F::deserialize_uncompressed(&bytes[..])
-                .with_context(|| format!("Failed to deserialize wire {} as field element", wire_id))?;
+            let value = F::deserialize_uncompressed(&bytes[..]).with_context(|| {
+                format!("Failed to deserialize wire {} as field element", wire_id)
+            })?;
             result.insert(wire_id, value);
         }
-        
+
         Ok(result)
     }
 
@@ -167,25 +168,31 @@ mod tests {
             "/tests/inputs/sudoku_sudoku_basic.wtns"
         );
 
-        let witness = WitnessFile::from_file(path)
-            .expect("Failed to load witness file");
+        let witness = WitnessFile::from_file(path).expect("Failed to load witness file");
 
         println!("Loaded witness:");
         println!("  - n_witness: {}", witness.n_witness);
         println!("  - prime size: {} bytes", witness.prime.len());
         println!("  - wire 0 (constant): {:?}", witness.assignments.get(&0));
-        println!("  - wire 1 (first input): {:?}", witness.assignments.get(&1));
+        println!(
+            "  - wire 1 (first input): {:?}",
+            witness.assignments.get(&1)
+        );
 
         // Convert to field elements
-        let field_elements: HashMap<u32, Fr> = witness.to_field_elements()
+        let field_elements: HashMap<u32, Fr> = witness
+            .to_field_elements()
             .expect("Failed to convert to field elements");
 
         assert_eq!(field_elements.len(), witness.n_witness as usize);
-        
+
         // Wire 0 should be 1 (constant)
         assert_eq!(field_elements[&0], Fr::from(1u64));
-        
-        println!("✅ Successfully converted {} wires to field elements", field_elements.len());
+
+        println!(
+            "✅ Successfully converted {} wires to field elements",
+            field_elements.len()
+        );
     }
 
     #[test]
@@ -196,18 +203,21 @@ mod tests {
             "/tests/inputs/signature_signature_basic.wtns"
         );
 
-        let witness = WitnessFile::from_file(path)
-            .expect("Failed to load witness file");
+        let witness = WitnessFile::from_file(path).expect("Failed to load witness file");
 
         println!("Loaded signature witness:");
         println!("  - n_witness: {}", witness.n_witness);
         println!("  - prime size: {} bytes", witness.prime.len());
 
-        let field_elements: HashMap<u32, Fr> = witness.to_field_elements()
+        let field_elements: HashMap<u32, Fr> = witness
+            .to_field_elements()
             .expect("Failed to convert to field elements");
 
         assert_eq!(field_elements[&0], Fr::from(1u64));
-        
-        println!("✅ Successfully loaded signature witness with {} wires", field_elements.len());
+
+        println!(
+            "✅ Successfully loaded signature witness with {} wires",
+            field_elements.len()
+        );
     }
 }

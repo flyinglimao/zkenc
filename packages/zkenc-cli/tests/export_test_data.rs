@@ -123,15 +123,15 @@ fn export_sudoku_circuit() {
     println!("\n📥 Loading witness from .wtns file...");
     let mut wtns_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     wtns_path.push("tests/inputs/sudoku_sudoku_basic.wtns");
-    
+
     let witness_file = zkenc_cli::witness::WitnessFile::from_file(wtns_path.to_str().unwrap())
         .expect("Failed to load witness file");
-    
+
     println!("✅ Loaded witness with {} wires", witness_file.n_wires());
-    
+
     // Use the witness assignments directly (already in the right format)
-    let witness = SerializableWitness { 
-        assignments: witness_file.assignments 
+    let witness = SerializableWitness {
+        assignments: witness_file.assignments,
     };
     let test_case = SerializableTestCase {
         circuit,
