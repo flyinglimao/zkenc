@@ -1,6 +1,8 @@
 // MiMC hash circuit for testing
 // Based on arkworks-rs/groth16/tests/mimc.rs
 
+#![cfg(feature = "with_curves")]
+
 use ark_ff::{PrimeField, Zero};
 use ark_relations::gr1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
 
