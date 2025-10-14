@@ -1,6 +1,6 @@
 use crate::r1cs::R1csFile;
 use anyhow::Result;
-use ark_bls12_381::{Bls12_381, Fr};
+use ark_bn254::Fr; // Circom uses BN254 (alt_bn128)
 use ark_ff::PrimeField;
 use ark_relations::gr1cs::{
     ConstraintSynthesizer, ConstraintSystemRef, LinearCombination, SynthesisError, Variable,
@@ -11,7 +11,8 @@ use std::path::Path;
 
 /// Circom circuit wrapper that implements ConstraintSynthesizer
 ///
-/// This bridges Circom R1CS format to zkenc-core's ConstraintSynthesizer trait
+/// This bridges Circom R1CS format to zkenc-core's ConstraintSynthesizer trait.
+/// Uses BN254 (alt_bn128) curve as this is Circom's default.
 pub struct CircomCircuit {
     r1cs: R1csFile,
     witness: HashMap<u32, Fr>, // wire_id -> value

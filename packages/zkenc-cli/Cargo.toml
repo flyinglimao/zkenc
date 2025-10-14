@@ -33,6 +33,7 @@ hex = "0.4"
 
 # Arkworks - matching zkenc-core versions
 ark-bls12-381 = { git = "https://github.com/arkworks-rs/algebra.git", features = ["curve"] }
+ark-bn254 = { git = "https://github.com/arkworks-rs/algebra.git", features = ["curve"] }
 ark-ff = { git = "https://github.com/arkworks-rs/algebra.git" }
 ark-relations = { git = "https://github.com/arkworks-rs/snark.git" }
 ark-serialize = { git = "https://github.com/arkworks-rs/algebra.git" }

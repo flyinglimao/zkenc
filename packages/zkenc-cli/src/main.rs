@@ -1,6 +1,14 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
+// Re-use modules from lib.rs
+use zkenc_cli::circuit;
+use zkenc_cli::crypto;
+use zkenc_cli::r1cs;
+use zkenc_cli::witness;
+
+mod commands;
+
 /// zkenc CLI - 零知識證明工具
 #[derive(Parser)]
 #[command(name = "zkenc")]
@@ -12,35 +20,59 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// 生成公開參數
-    Setup {
-        /// 輸出檔案路徑
+    /// Encapsulate: 產生密文和金鑰 (使用電路和公開輸入)
+    Encap {
+        /// R1CS 電路檔案路徑 (.r1cs)
         #[arg(short, long)]
-        output: String,
+        circuit: String,
+        /// 公開輸入 JSON 檔案 (e.g., sudoku puzzle)
+        #[arg(short, long)]
+        input: String,
+        /// 輸出密文檔案路徑
+        #[arg(short = 'c', long)]
+        ciphertext: String,
+        /// 輸出金鑰檔案路徑
+        #[arg(short = 'k', long)]
+        key: String,
     },
-    /// 生成證明
-    Prove {
-        /// 參數檔案路徑
+    /// Decapsulate: 恢復金鑰 (使用電路和完整 witness)
+    Decap {
+        /// R1CS 電路檔案路徑 (.r1cs)
         #[arg(short, long)]
-        params: String,
-        /// 見證資料檔案
+        circuit: String,
+        /// Witness 檔案路徑 (.wtns from snarkjs)
         #[arg(short, long)]
         witness: String,
-        /// 輸出證明檔案
+        /// 密文檔案路徑
+        #[arg(short = 'c', long)]
+        ciphertext: String,
+        /// 輸出金鑰檔案路徑
+        #[arg(short = 'k', long)]
+        key: String,
+    },
+    /// Encrypt: 使用金鑰加密訊息
+    Encrypt {
+        /// 金鑰檔案路徑
+        #[arg(short, long)]
+        key: String,
+        /// 輸入訊息檔案
+        #[arg(short, long)]
+        input: String,
+        /// 輸出加密檔案
         #[arg(short, long)]
         output: String,
     },
-    /// 驗證證明
-    Verify {
-        /// 參數檔案路徑
+    /// Decrypt: 使用金鑰解密訊息
+    Decrypt {
+        /// 金鑰檔案路徑
         #[arg(short, long)]
-        params: String,
-        /// 證明檔案路徑
-        #[arg(short = 'f', long)]
-        proof: String,
-        /// 公開輸入（hex 編碼）
+        key: String,
+        /// 輸入加密檔案
         #[arg(short, long)]
-        inputs: Vec<String>,
+        input: String,
+        /// 輸出解密檔案
+        #[arg(short, long)]
+        output: String,
     },
 }
 
@@ -48,35 +80,27 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Setup { output } => {
-            println!("正在生成公開參數...");
-            println!("輸出至: {}", output);
-            // TODO: 實作 setup 邏輯
-            println!("✓ 公開參數已生成");
+        Commands::Encap {
+            circuit,
+            input,
+            ciphertext,
+            key,
+        } => {
+            commands::encap_command(&circuit, &input, &ciphertext, &key)?;
         }
-        Commands::Prove {
-            params,
+        Commands::Decap {
+            circuit,
             witness,
-            output,
+            ciphertext,
+            key,
         } => {
-            println!("正在生成證明...");
-            println!("參數檔案: {}", params);
-            println!("見證資料: {}", witness);
-            println!("輸出至: {}", output);
-            // TODO: 實作 prove 邏輯
-            println!("✓ 證明已生成");
+            commands::decap_command(&circuit, &witness, &ciphertext, &key)?;
         }
-        Commands::Verify {
-            params,
-            proof,
-            inputs,
-        } => {
-            println!("正在驗證證明...");
-            println!("參數檔案: {}", params);
-            println!("證明檔案: {}", proof);
-            println!("公開輸入數量: {}", inputs.len());
-            // TODO: 實作 verify 邏輯
-            println!("✓ 證明驗證通過");
+        Commands::Encrypt { key, input, output } => {
+            commands::encrypt_command(&key, &input, &output)?;
+        }
+        Commands::Decrypt { key, input, output } => {
+            commands::decrypt_command(&key, &input, &output)?;
         }
     }
 
