@@ -91,8 +91,8 @@ export async function encrypt(
   key: Uint8Array,
   message: Uint8Array
 ): Promise<Uint8Array> {
-  // TODO: Implementation
-  throw new Error('Not implemented');
+  const { aesGcmEncrypt } = await import('./crypto.js');
+  return aesGcmEncrypt(key, message);
 }
 
 /**
@@ -112,6 +112,6 @@ export async function decrypt(
   key: Uint8Array,
   encrypted: Uint8Array
 ): Promise<Uint8Array> {
-  // TODO: Implementation
-  throw new Error('Not implemented');
+  const { aesGcmDecrypt } = await import('./crypto.js');
+  return aesGcmDecrypt(key, encrypted);
 }
