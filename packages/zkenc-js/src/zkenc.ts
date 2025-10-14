@@ -1,6 +1,6 @@
 /**
  * zkenc-js - TypeScript bindings for zkenc witness encryption
- * 
+ *
  * This module provides functions for witness encryption using Circom circuits.
  */
 
@@ -26,11 +26,11 @@ export interface CircuitFiles {
 
 /**
  * Generate ciphertext and encryption key from circuit and public inputs
- * 
+ *
  * @param circuitFiles - R1CS and WASM files
  * @param publicInputs - Public inputs as JSON object
  * @returns Ciphertext and encryption key
- * 
+ *
  * @example
  * ```typescript
  * const { ciphertext, key } = await encap({
@@ -44,17 +44,17 @@ export async function encap(
   publicInputs: Record<string, any>
 ): Promise<EncapResult> {
   // TODO: Implementation
-  throw new Error('Not implemented');
+  throw new Error("Not implemented");
 }
 
 /**
  * Recover encryption key from ciphertext using valid witness
- * 
+ *
  * @param circuitFiles - R1CS and WASM files
  * @param ciphertext - Ciphertext from encap
  * @param inputs - Full inputs (public + witness) as JSON object
  * @returns Recovered encryption key
- * 
+ *
  * @example
  * ```typescript
  * const key = await decap({
@@ -72,16 +72,16 @@ export async function decap(
   inputs: Record<string, any>
 ): Promise<Uint8Array> {
   // TODO: Implementation
-  throw new Error('Not implemented');
+  throw new Error("Not implemented");
 }
 
 /**
  * Encrypt message with symmetric key (AES-256-GCM)
- * 
+ *
  * @param key - Encryption key (32 bytes)
  * @param message - Message to encrypt
  * @returns Encrypted message with nonce
- * 
+ *
  * @example
  * ```typescript
  * const encrypted = await encrypt(key, new TextEncoder().encode('secret'));
@@ -91,17 +91,17 @@ export async function encrypt(
   key: Uint8Array,
   message: Uint8Array
 ): Promise<Uint8Array> {
-  const { aesGcmEncrypt } = await import('./crypto.js');
+  const { aesGcmEncrypt } = await import("./crypto.js");
   return aesGcmEncrypt(key, message);
 }
 
 /**
  * Decrypt message with symmetric key (AES-256-GCM)
- * 
+ *
  * @param key - Decryption key (32 bytes)
  * @param encrypted - Encrypted message with nonce
  * @returns Decrypted message
- * 
+ *
  * @example
  * ```typescript
  * const decrypted = await decrypt(key, encrypted);
@@ -112,6 +112,6 @@ export async function decrypt(
   key: Uint8Array,
   encrypted: Uint8Array
 ): Promise<Uint8Array> {
-  const { aesGcmDecrypt } = await import('./crypto.js');
+  const { aesGcmDecrypt } = await import("./crypto.js");
   return aesGcmDecrypt(key, encrypted);
 }

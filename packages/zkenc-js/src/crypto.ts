@@ -4,7 +4,7 @@
 
 /**
  * Encrypt data using AES-256-GCM
- * 
+ *
  * @param key - 32-byte encryption key
  * @param data - Data to encrypt
  * @returns Encrypted data with nonce prepended (12 bytes nonce + encrypted data + 16 bytes tag)
@@ -14,7 +14,7 @@ export async function aesGcmEncrypt(
   data: Uint8Array
 ): Promise<Uint8Array> {
   if (key.length !== 32) {
-    throw new Error('Key must be 32 bytes');
+    throw new Error("Key must be 32 bytes");
   }
 
   // Generate random 12-byte nonce
@@ -22,17 +22,17 @@ export async function aesGcmEncrypt(
 
   // Import key
   const cryptoKey = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     key as BufferSource,
-    { name: 'AES-GCM' },
+    { name: "AES-GCM" },
     false,
-    ['encrypt']
+    ["encrypt"]
   );
 
   // Encrypt
   const encrypted = await crypto.subtle.encrypt(
     {
-      name: 'AES-GCM',
+      name: "AES-GCM",
       iv: nonce,
       tagLength: 128, // 16 bytes
     },
@@ -50,7 +50,7 @@ export async function aesGcmEncrypt(
 
 /**
  * Decrypt data using AES-256-GCM
- * 
+ *
  * @param key - 32-byte decryption key
  * @param encrypted - Encrypted data with nonce prepended
  * @returns Decrypted data
@@ -60,11 +60,11 @@ export async function aesGcmDecrypt(
   encrypted: Uint8Array
 ): Promise<Uint8Array> {
   if (key.length !== 32) {
-    throw new Error('Key must be 32 bytes');
+    throw new Error("Key must be 32 bytes");
   }
 
   if (encrypted.length < 12 + 16) {
-    throw new Error('Invalid encrypted data: too short');
+    throw new Error("Invalid encrypted data: too short");
   }
 
   // Extract nonce and ciphertext
@@ -73,18 +73,18 @@ export async function aesGcmDecrypt(
 
   // Import key
   const cryptoKey = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     key as BufferSource,
-    { name: 'AES-GCM' },
+    { name: "AES-GCM" },
     false,
-    ['decrypt']
+    ["decrypt"]
   );
 
   // Decrypt
   try {
     const decrypted = await crypto.subtle.decrypt(
       {
-        name: 'AES-GCM',
+        name: "AES-GCM",
         iv: nonce,
         tagLength: 128,
       },
@@ -94,6 +94,6 @@ export async function aesGcmDecrypt(
 
     return new Uint8Array(decrypted);
   } catch (error) {
-    throw new Error('Decryption failed: invalid key or corrupted data');
+    throw new Error("Decryption failed: invalid key or corrupted data");
   }
 }
