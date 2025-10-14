@@ -75,7 +75,7 @@ fn test_parse_simple_input() {
 }
 
 // Phase 3 Note: Full Circom integration blocked by ark-circom dependency conflicts
-// 
+//
 // ark-circom (git) internally uses:
 // - dependencies: crates.io ark-bn254 0.5.0 (incompatible with git ark-ec)
 // - dev-dependencies: git versions

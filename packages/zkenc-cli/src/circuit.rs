@@ -55,12 +55,12 @@ impl CircomCircuit {
         // R1CS stores field elements in little-endian byte format
         // We need to convert them to ark-ff's representation
         Fr::from_le_bytes_mod_order(bytes);
-        
+
         // Use BigInt conversion for proper handling
         let mut bytes_array = vec![0u8; 32];
         let len = bytes.len().min(32);
         bytes_array[..len].copy_from_slice(&bytes[..len]);
-        
+
         Ok(Fr::from_le_bytes_mod_order(&bytes_array))
     }
 }
@@ -76,18 +76,14 @@ impl ConstraintSynthesizer<Fr> for CircomCircuit {
         let n_public = self.r1cs.n_public_inputs();
         for wire_id in 1..=n_public {
             let value = self.witness.get(&wire_id).copied();
-            let var = cs.new_input_variable(|| {
-                value.ok_or(SynthesisError::AssignmentMissing)
-            })?;
+            let var = cs.new_input_variable(|| value.ok_or(SynthesisError::AssignmentMissing))?;
             variables.insert(wire_id, var);
         }
 
         // Allocate private witnesses
         for wire_id in (n_public + 1)..self.r1cs.n_wires {
             let value = self.witness.get(&wire_id).copied();
-            let var = cs.new_witness_variable(|| {
-                value.ok_or(SynthesisError::AssignmentMissing)
-            })?;
+            let var = cs.new_witness_variable(|| value.ok_or(SynthesisError::AssignmentMissing))?;
             variables.insert(wire_id, var);
         }
 
@@ -192,7 +188,10 @@ mod tests {
                 let cs_borrowed = cs.borrow().unwrap();
                 println!("Synthesis successful!");
                 println!("  Constraints: {}", cs_borrowed.num_constraints());
-                println!("  Variables: {}", cs_borrowed.num_instance_variables() + cs_borrowed.num_witness_variables());
+                println!(
+                    "  Variables: {}",
+                    cs_borrowed.num_instance_variables() + cs_borrowed.num_witness_variables()
+                );
             }
             Err(e) => {
                 println!("Synthesis failed (expected without valid witness): {:?}", e);

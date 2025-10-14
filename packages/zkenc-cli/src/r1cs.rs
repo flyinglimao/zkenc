@@ -1,10 +1,10 @@
+use crate::serializable::{
+    SerializableCircuit, SerializableConstraint, SerializableFactor, SerializableLC,
+};
 use anyhow::{bail, Context, Result};
 use std::fs::File;
 use std::io::{BufReader, Read, Seek};
 use std::path::Path;
-use crate::serializable::{
-    SerializableCircuit, SerializableConstraint, SerializableFactor, SerializableLC,
-};
 
 /// R1CS file parser
 ///
@@ -336,7 +336,10 @@ mod tests {
         }
 
         println!("✅ Conversion successful!");
-        println!("   {} constraints converted", serializable.constraints.len());
+        println!(
+            "   {} constraints converted",
+            serializable.constraints.len()
+        );
     }
 
     #[test]
@@ -355,8 +358,8 @@ mod tests {
         assert!(json.contains("n_constraints"));
 
         // Test round-trip
-        let loaded =
-            crate::serializable::SerializableCircuit::from_json(&json).expect("Failed to parse JSON");
+        let loaded = crate::serializable::SerializableCircuit::from_json(&json)
+            .expect("Failed to parse JSON");
         assert_eq!(loaded.n_constraints, serializable.n_constraints);
         assert_eq!(loaded.n_wires, serializable.n_wires);
 
