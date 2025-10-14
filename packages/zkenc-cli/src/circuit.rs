@@ -4,6 +4,7 @@ use ark_bn254::Fr; // Circom uses BN254 (alt_bn128)
 use ark_ff::PrimeField;
 use ark_relations::gr1cs::{
     ConstraintSynthesizer, ConstraintSystemRef, LinearCombination, SynthesisError, Variable,
+    R1CS_PREDICATE_LABEL,
 };
 use ark_std::vec::Vec;
 use std::collections::HashMap;
@@ -89,7 +90,7 @@ impl ConstraintSynthesizer<Fr> for CircomCircuit {
         }
 
         // Add all constraints: A * B - C = 0  -->  A * B = C
-        for (idx, constraint) in self.r1cs.constraints.iter().enumerate() {
+        for constraint in self.r1cs.constraints.iter() {
             // Clone data needed for closures
             let a_factors = constraint.a.factors.clone();
             let b_factors = constraint.b.factors.clone();
@@ -136,14 +137,13 @@ impl ConstraintSynthesizer<Fr> for CircomCircuit {
             };
 
             // For R1CS: A * B = C means we need to enforce A * B - C = 0
-            // gr1cs uses predicate format, we use arity 3 with R1CS label
-            let label = format!("r1cs_{}", idx);
+            // gr1cs uses predicate format, we use arity 3 with standard R1CS_PREDICATE_LABEL
             let boxed: Vec<Box<dyn FnOnce() -> LinearCombination<Fr>>> = vec![
                 Box::new(a_closure),
                 Box::new(b_closure),
                 Box::new(c_closure),
             ];
-            cs.enforce_constraint(&label, boxed)?;
+            cs.enforce_constraint(R1CS_PREDICATE_LABEL, boxed)?;
         }
 
         Ok(())
