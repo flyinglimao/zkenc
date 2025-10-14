@@ -55,3 +55,7 @@ test.bin
 
 # allow testing assets
 !packages/zkenc-cli/tests/r1cs/*.wasm
+!packages/zkenc-core/tests/fixtures/*.bin
+
+# but ignore JSON fixtures (too large)
+packages/zkenc-core/tests/fixtures/*.json
