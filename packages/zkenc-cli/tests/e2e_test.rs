@@ -26,7 +26,7 @@ fn test_sudoku_e2e() -> Result<()> {
     let circuit_path = test_dir.join("r1cs/sudoku.r1cs");
     let input_path = test_dir.join("inputs/sudoku_basic.json");
     let witness_path = test_dir.join("inputs/sudoku_sudoku_basic.wtns");
-    
+
     let ciphertext_path = temp_dir.join("ciphertext.bin");
     let key1_path = temp_dir.join("key_encap.bin");
     let key2_path = temp_dir.join("key_decap.bin");
@@ -37,7 +37,10 @@ fn test_sudoku_e2e() -> Result<()> {
     // Create test message
     let original_message = b"Hello, Zero-Knowledge Encryption!";
     fs::write(&message_path, original_message)?;
-    println!("📝 Original message: {:?}", String::from_utf8_lossy(original_message));
+    println!(
+        "📝 Original message: {:?}",
+        String::from_utf8_lossy(original_message)
+    );
 
     // === Step 1: Encap ===
     println!("\n🔐 Step 1: Encap");
@@ -52,7 +55,7 @@ fn test_sudoku_e2e() -> Result<()> {
     // Verify files were created
     assert!(ciphertext_path.exists(), "Ciphertext file should exist");
     assert!(key1_path.exists(), "Key file should exist");
-    
+
     let ct_size = fs::metadata(&ciphertext_path)?.len();
     let key_size = fs::metadata(&key1_path)?.len();
     println!("\n✅ Encap complete:");
@@ -100,9 +103,15 @@ fn test_sudoku_e2e() -> Result<()> {
     println!("\n🔍 Step 5: Verify");
     println!("------------------");
     let decrypted_message = fs::read(&decrypted_path)?;
-    
-    println!("📝 Decrypted message: {:?}", String::from_utf8_lossy(&decrypted_message));
-    println!("📝 Original message:  {:?}", String::from_utf8_lossy(original_message));
+
+    println!(
+        "📝 Decrypted message: {:?}",
+        String::from_utf8_lossy(&decrypted_message)
+    );
+    println!(
+        "📝 Original message:  {:?}",
+        String::from_utf8_lossy(original_message)
+    );
 
     assert_eq!(
         original_message,
@@ -113,7 +122,10 @@ fn test_sudoku_e2e() -> Result<()> {
     // Verify keys match
     let key1_bytes = fs::read(&key1_path)?;
     let key2_bytes = fs::read(&key2_path)?;
-    assert_eq!(key1_bytes, key2_bytes, "Keys from encap and decap should match");
+    assert_eq!(
+        key1_bytes, key2_bytes,
+        "Keys from encap and decap should match"
+    );
 
     println!("\n✅ All checks passed!");
     println!("   - Message decrypted successfully");
@@ -139,7 +151,7 @@ fn test_sudoku_e2e_wrong_witness() -> Result<()> {
     let circuit_path = test_dir.join("r1cs/sudoku.r1cs");
     let input_path = test_dir.join("inputs/sudoku_basic.json");
     let wrong_witness_path = test_dir.join("inputs/sudoku_sudoku_general.wtns"); // Different witness
-    
+
     let ciphertext_path = temp_dir.join("ciphertext.bin");
     let key_path = temp_dir.join("key.bin");
 

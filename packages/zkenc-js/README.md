@@ -1,44 +1,62 @@
 # zkenc-js
 
-## 概述
-`zkenc-js` 是一個將核心演算法包裝成 WebAssembly (WASM) 的 JavaScript 專案。它提供了一個簡單的 JavaScript 介面，方便開發者在網頁或 Node.js 環境中使用這些演算法。
+**WebAssembly bindings for zkenc-core**
 
-## 安裝
-要安裝 `zkenc-js`，請使用以下命令：
+JavaScript/TypeScript bindings for zkenc-core, enabling witness encryption functionality in browser and Node.js environments.
+
+## Overview
+
+`zkenc-js` wraps the core Rust algorithms into WebAssembly (WASM), providing a simple JavaScript interface for developers to use witness encryption in web or Node.js applications.
+
+## Installation
+
+Install dependencies using npm or yarn:
 
 ```bash
 npm install
-```
-
-或使用 yarn：
-
-```bash
+# or
 yarn install
 ```
 
-## 使用說明
-在您的 TypeScript 或 JavaScript 檔案中，您可以這樣導入和使用 `zkenc-js`：
+## Usage
 
-```javascript
-import { yourFunction } from 'zkenc-js';
+Import and use `zkenc-js` in your TypeScript or JavaScript files:
 
-// 使用 yourFunction
-yourFunction();
+```typescript
+import init, { WasmEncryptor } from 'zkenc-js';
+
+// Initialize WASM module
+await init();
+
+// Use the encryptor
+const encryptor = new WasmEncryptor();
+const encrypted = encryptor.encrypt(data);
 ```
 
-請確保在使用之前已經編譯了 WASM 模組。
+**Note**: Make sure to compile the WASM module before using it.
 
-## 開發
-在開發過程中，您可以使用以下命令來啟動開發伺服器：
+## Building
+
+To build the WASM module:
+
+```bash
+# Build WASM package
+wasm-pack build --target web
+
+# Or for Node.js
+wasm-pack build --target nodejs
+```
+
+## Development
+
+During development, you can start a local development server:
 
 ```bash
 npm run dev
 ```
 
-這將會啟動一個本地伺服器，並監控檔案變更。
+This will start a local server and watch for file changes.
 
-## 貢獻
-歡迎任何形式的貢獻！請查看 [貢獻指南](CONTRIBUTING.md) 以獲取更多資訊。
+## License
 
-## 授權
-本專案採用 MIT 授權。詳情請參閱 [LICENSE](LICENSE) 檔案。
+MIT/Apache-2.0 dual license

@@ -10,7 +10,6 @@
 
 use anyhow::{bail, Context, Result};
 use ark_ff::PrimeField;
-use ark_serialize::CanonicalDeserialize;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufReader, Read};
