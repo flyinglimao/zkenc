@@ -4,7 +4,7 @@
  */
 
 // @ts-ignore - JavaScript module without types
-import witnessCalculatorBuilder from './witness_calculator.js';
+import witnessCalculatorBuilder from "./witness_calculator.js";
 
 /**
  * Calculate witness from Circom WASM circuit
