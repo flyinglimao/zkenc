@@ -1,31 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { encap, decap, encrypt, decrypt } from "./zkenc";
+import { encrypt, decrypt } from "./zkenc";
 
 describe("zkenc-js", () => {
-  describe("encap", () => {
-    it("should throw not implemented error", async () => {
-      const circuitFiles = {
-        r1csBuffer: new Uint8Array(),
-        wasmBuffer: new Uint8Array(),
-      };
-
-      await expect(encap(circuitFiles, {})).rejects.toThrow("Not implemented");
-    });
-  });
-
-  describe("decap", () => {
-    it("should throw not implemented error", async () => {
-      const circuitFiles = {
-        r1csBuffer: new Uint8Array(),
-        wasmBuffer: new Uint8Array(),
-      };
-      const ciphertext = new Uint8Array();
-
-      await expect(decap(circuitFiles, ciphertext, {})).rejects.toThrow(
-        "Not implemented"
-      );
-    });
-  });
+  // encap/decap tests are in zkenc-wasm.test.ts
 
   describe("encrypt/decrypt", () => {
     it("should encrypt and decrypt message successfully", async () => {

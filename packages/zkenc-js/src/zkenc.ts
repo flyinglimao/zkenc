@@ -4,8 +4,8 @@
  * This module provides functions for witness encryption using Circom circuits.
  */
 
-import { wasm_encap, wasm_decap, init as wasmInit } from '../pkg/zkenc_js.js';
-import { calculateWitness } from './witness.js';
+import { wasm_encap, wasm_decap, init as wasmInit } from "../pkg/zkenc_js.js";
+import { calculateWitness } from "./witness.js";
 
 // Initialize WASM module
 let wasmInitialized = false;
@@ -56,16 +56,16 @@ export async function encap(
   publicInputs: Record<string, any>
 ): Promise<EncapResult> {
   await ensureWasmInit();
-  
+
   // Convert public inputs to JSON string
   const publicInputsJson = JSON.stringify(publicInputs);
-  
+
   // Call WASM encap function
   const result = wasm_encap(circuitFiles.r1csBuffer, publicInputsJson);
-  
+
   return {
     ciphertext: result.ciphertext,
-    key: result.key
+    key: result.key,
   };
 }
 
@@ -94,13 +94,13 @@ export async function decap(
   inputs: Record<string, any>
 ): Promise<Uint8Array> {
   await ensureWasmInit();
-  
+
   // Calculate witness from inputs using Circom WASM
   const witnessBytes = await calculateWitness(circuitFiles.wasmBuffer, inputs);
-  
+
   // Call WASM decap function
   const key = wasm_decap(circuitFiles.r1csBuffer, witnessBytes, ciphertext);
-  
+
   return key;
 }
 

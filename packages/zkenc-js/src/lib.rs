@@ -134,7 +134,7 @@ fn parse_r1cs(data: &[u8]) -> Result<(R1csHeader, Vec<R1csConstraint>), String> 
             .iter()
             .find(|(t, _, _)| *t == 0x01)
             .ok_or("Header section (type 1) not found")?;
-        
+
         let mut header_pos = header_section.2;
         let field_size = read_u32(&mut header_pos)?;
         let prime_len = field_size as usize;
@@ -165,17 +165,20 @@ fn parse_r1cs(data: &[u8]) -> Result<(R1csHeader, Vec<R1csConstraint>), String> 
             .iter()
             .find(|(t, _, _)| *t == 0x02)
             .ok_or("Constraints section (type 2) not found")?;
-        
+
         let mut constraints_pos = constraints_section.2;
         let mut constraints = Vec::new();
-        
+
         for _ in 0..header.n_constraints {
             // Parse A linear combination
-            let a_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+            let a_factors =
+                parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
             // Parse B linear combination
-            let b_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+            let b_factors =
+                parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
             // Parse C linear combination
-            let c_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+            let c_factors =
+                parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
 
             constraints.push(R1csConstraint {
                 a_factors,
@@ -183,7 +186,7 @@ fn parse_r1cs(data: &[u8]) -> Result<(R1csHeader, Vec<R1csConstraint>), String> 
                 c_factors,
             });
         }
-        
+
         constraints
     };
 
@@ -304,19 +307,6 @@ struct CircomCircuit {
 }
 
 impl CircomCircuit {
-    fn new(header: R1csHeader, constraints: Vec<R1csConstraint>, witness_values: Vec<Fr>) -> Self {
-        let mut witness = HashMap::new();
-        for (idx, val) in witness_values.iter().enumerate() {
-            witness.insert(idx as u32, *val);
-        }
-
-        Self {
-            header,
-            constraints,
-            witness,
-        }
-    }
-
     fn bytes_to_fr(bytes: &[u8]) -> Fr {
         let mut bytes_array = [0u8; 32];
         let len = bytes.len().min(32);
@@ -415,15 +405,21 @@ pub fn wasm_encap(r1cs_bytes: &[u8], public_inputs_json: &str) -> Result<EncapRe
     }
     public_values.truncate(n_pub);
 
-    // Pad witness with zeros for private inputs (they won't be used in encap)
-    let mut full_witness = vec![Fr::from(1u64)]; // wire 0 = 1
-    full_witness.extend(public_values);
-    while full_witness.len() < header.n_wires as usize {
-        full_witness.push(Fr::from(0u64));
+    // Create witness map with only public inputs (for encap)
+    // Wire 0 = 1 (constant), Wire 1..n_pub = public inputs
+    // Private wires are intentionally left unassigned
+    let mut witness_map = HashMap::new();
+    witness_map.insert(0, Fr::from(1u64)); // wire 0 = 1
+    for (i, value) in public_values.iter().enumerate() {
+        witness_map.insert((i + 1) as u32, *value);
     }
 
-    // Create circuit
-    let circuit = CircomCircuit::new(header, constraints, full_witness);
+    // Create circuit with only public inputs assigned
+    let circuit = CircomCircuit {
+        header,
+        constraints,
+        witness: witness_map,
+    };
 
     // Generate random seed
     let mut seed = [0u8; 32];
@@ -478,8 +474,18 @@ pub fn wasm_decap(
         )));
     }
 
+    // Create witness map with all values (for decap)
+    let mut witness_map = HashMap::new();
+    for (idx, val) in witness_values.iter().enumerate() {
+        witness_map.insert(idx as u32, *val);
+    }
+
     // Create circuit with full witness
-    let circuit = CircomCircuit::new(header, constraints, witness_values);
+    let circuit = CircomCircuit {
+        header,
+        constraints,
+        witness: witness_map,
+    };
 
     // Deserialize ciphertext
     let ciphertext = Ciphertext::<Bn254>::deserialize_compressed(ciphertext_bytes)
