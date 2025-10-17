@@ -1,0 +1,90 @@
+/**
+ * Tests for zkenc WASM integration (encap/decap)
+ */
+
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { encap, decap } from './zkenc.js';
+
+describe('zkenc WASM integration', () => {
+  const testDir = join(process.cwd(), 'tests', 'fixtures');
+  
+  // Load test fixtures
+  const r1csBuffer = new Uint8Array(readFileSync(join(testDir, 'sudoku.r1cs')));
+  const wasmBuffer = new Uint8Array(readFileSync(join(testDir, 'sudoku.wasm')));
+  const sudokuInput = JSON.parse(readFileSync(join(testDir, 'sudoku_basic.json'), 'utf-8'));
+  
+  it('should perform encap with public inputs', async () => {
+    const result = await encap(
+      { r1csBuffer, wasmBuffer },
+      sudokuInput
+    );
+    
+    expect(result.ciphertext).toBeInstanceOf(Uint8Array);
+    expect(result.ciphertext.length).toBeGreaterThan(0);
+    expect(result.key).toBeInstanceOf(Uint8Array);
+    expect(result.key.length).toBe(32);
+  });
+  
+  it('should perform decap with valid witness', async () => {
+    // First encap
+    const { ciphertext, key: originalKey } = await encap(
+      { r1csBuffer, wasmBuffer },
+      sudokuInput
+    );
+    
+    // Then decap with same inputs
+    const recoveredKey = await decap(
+      { r1csBuffer, wasmBuffer },
+      ciphertext,
+      sudokuInput
+    );
+    
+    expect(recoveredKey).toBeInstanceOf(Uint8Array);
+    expect(recoveredKey.length).toBe(32);
+    
+    // Keys should match
+    expect(Array.from(recoveredKey)).toEqual(Array.from(originalKey));
+  });
+  
+  it('should produce different ciphertexts for same inputs', async () => {
+    // Encap twice with same inputs
+    const result1 = await encap({ r1csBuffer, wasmBuffer }, sudokuInput);
+    const result2 = await encap({ r1csBuffer, wasmBuffer }, sudokuInput);
+    
+    // Ciphertexts should be different (due to randomness)
+    expect(Array.from(result1.ciphertext)).not.toEqual(Array.from(result2.ciphertext));
+    
+    // But keys should also be different
+    expect(Array.from(result1.key)).not.toEqual(Array.from(result2.key));
+  });
+  
+  it('should work with full encrypt/decrypt flow', async () => {
+    const { encap, decap, encrypt, decrypt } = await import('./zkenc.js');
+    
+    const message = new TextEncoder().encode('Secret message for Sudoku solver!');
+    
+    // 1. Encap to get key
+    const { ciphertext: zkCiphertext, key } = await encap(
+      { r1csBuffer, wasmBuffer },
+      sudokuInput
+    );
+    
+    // 2. Encrypt message with key
+    const encryptedMessage = await encrypt(key, message);
+    
+    // 3. Decap to recover key
+    const recoveredKey = await decap(
+      { r1csBuffer, wasmBuffer },
+      zkCiphertext,
+      sudokuInput
+    );
+    
+    // 4. Decrypt message with recovered key
+    const decryptedMessage = await decrypt(recoveredKey, encryptedMessage);
+    
+    // 5. Verify
+    expect(new TextDecoder().decode(decryptedMessage)).toBe('Secret message for Sudoku solver!');
+  });
+});

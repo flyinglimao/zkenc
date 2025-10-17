@@ -118,64 +118,75 @@ fn parse_r1cs(data: &[u8]) -> Result<(R1csHeader, Vec<R1csConstraint>), String> 
     // Number of sections
     let n_sections = read_u32(&mut pos)?;
 
-    // Find header and constraints sections
-    let mut header_opt: Option<R1csHeader> = None;
-    let mut constraints: Vec<R1csConstraint> = Vec::new();
-
+    // First pass: collect all section positions
+    let mut sections = Vec::new();
     for _ in 0..n_sections {
         let section_type = read_u32(&mut pos)?;
         let section_len = read_u64(&mut pos)? as usize;
         let section_start = pos;
-
-        if section_type == 1 {
-            // Header section
-            let field_size = read_u32(&mut pos)?;
-            let prime_len = field_size as usize;
-            if pos + prime_len > data.len() {
-                return Err("Invalid prime length".to_string());
-            }
-            pos += prime_len; // Skip prime bytes
-
-            let n_wires = read_u32(&mut pos)?;
-            let n_pub_out = read_u32(&mut pos)?;
-            let n_pub_in = read_u32(&mut pos)?;
-            let _n_prv_in = read_u32(&mut pos)?;
-            let _n_labels = read_u64(&mut pos)?;
-            let n_constraints = read_u32(&mut pos)?;
-
-            header_opt = Some(R1csHeader {
-                field_size,
-                n_wires,
-                n_pub_out,
-                n_pub_in,
-                n_constraints,
-            });
-        } else if section_type == 2 {
-            // Constraints section
-            let header = header_opt
-                .as_ref()
-                .ok_or("Header must come before constraints")?;
-
-            for _ in 0..header.n_constraints {
-                // Parse A linear combination
-                let a_factors = parse_linear_combination(data, &mut pos, header.field_size)?;
-                // Parse B linear combination
-                let b_factors = parse_linear_combination(data, &mut pos, header.field_size)?;
-                // Parse C linear combination
-                let c_factors = parse_linear_combination(data, &mut pos, header.field_size)?;
-
-                constraints.push(R1csConstraint {
-                    a_factors,
-                    b_factors,
-                    c_factors,
-                });
-            }
-        }
-
+        sections.push((section_type, section_len, section_start));
         pos = section_start + section_len;
     }
 
-    let header = header_opt.ok_or("No header section found")?;
+    // Second pass: find and parse header section first
+    let header = {
+        let header_section = sections
+            .iter()
+            .find(|(t, _, _)| *t == 0x01)
+            .ok_or("Header section (type 1) not found")?;
+        
+        let mut header_pos = header_section.2;
+        let field_size = read_u32(&mut header_pos)?;
+        let prime_len = field_size as usize;
+        if header_pos + prime_len > data.len() {
+            return Err("Invalid prime length".to_string());
+        }
+        header_pos += prime_len; // Skip prime bytes
+
+        let n_wires = read_u32(&mut header_pos)?;
+        let n_pub_out = read_u32(&mut header_pos)?;
+        let n_pub_in = read_u32(&mut header_pos)?;
+        let _n_prv_in = read_u32(&mut header_pos)?;
+        let _n_labels = read_u64(&mut header_pos)?;
+        let n_constraints = read_u32(&mut header_pos)?;
+
+        R1csHeader {
+            field_size,
+            n_wires,
+            n_pub_out,
+            n_pub_in,
+            n_constraints,
+        }
+    };
+
+    // Third pass: parse constraints section
+    let constraints = {
+        let constraints_section = sections
+            .iter()
+            .find(|(t, _, _)| *t == 0x02)
+            .ok_or("Constraints section (type 2) not found")?;
+        
+        let mut constraints_pos = constraints_section.2;
+        let mut constraints = Vec::new();
+        
+        for _ in 0..header.n_constraints {
+            // Parse A linear combination
+            let a_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+            // Parse B linear combination
+            let b_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+            // Parse C linear combination
+            let c_factors = parse_linear_combination(data, &mut constraints_pos, header.field_size)?;
+
+            constraints.push(R1csConstraint {
+                a_factors,
+                b_factors,
+                c_factors,
+            });
+        }
+        
+        constraints
+    };
+
     Ok((header, constraints))
 }
 
@@ -264,21 +275,8 @@ fn parse_witness(data: &[u8]) -> Result<Vec<Fr>, String> {
             n8 = u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]])
                 as usize;
         } else if section_type == 2 {
-            // Witness values section
-            let _n8_check =
-                u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]])
-                    as usize;
-            pos += 4;
-
-            // Skip prime
-            pos += n8;
-
-            // Witness size
-            let _witness_size =
-                u32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
-            pos += 4;
-
-            // Read witness values
+            // Witness values section - contains raw witness data (field_size * n_witness bytes)
+            // Read all witness values directly
             while pos + n8 <= section_end {
                 let mut bytes = vec![0u8; 32];
                 let copy_len = n8.min(32);
