@@ -17,7 +17,7 @@ describe("Witness Calculator", () => {
     readFileSync(join(fixtures, "sudoku.wasm"))
   );
   const inputData = JSON.parse(
-    readFileSync(join(fixtures, "sudoku_basic.json"), "utf-8")
+    readFileSync(join(fixtures, "sudoku_general.json"), "utf-8")
   );
 
   describe("getCircuitInfo", () => {

@@ -14,7 +14,7 @@ describe("zkenc WASM integration", () => {
   const r1csBuffer = new Uint8Array(readFileSync(join(testDir, "sudoku.r1cs")));
   const wasmBuffer = new Uint8Array(readFileSync(join(testDir, "sudoku.wasm")));
   const sudokuInput = JSON.parse(
-    readFileSync(join(testDir, "sudoku_basic.json"), "utf-8")
+    readFileSync(join(testDir, "sudoku_general.json"), "utf-8")
   );
 
   it("should perform encap with public inputs", async () => {
