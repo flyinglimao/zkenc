@@ -12,17 +12,15 @@ use circom_circuit::TestCircuit;
 use std::collections::HashMap;
 use zkenc_core::{decap, encap};
 
-// A valid 9x9 Sudoku solution
-const SUDOKU_SOLUTION: [u8; 81] = [
-    5, 3, 4, 6, 7, 8, 9, 1, 2, 6, 7, 2, 1, 9, 5, 3, 4, 8, 1, 9, 8, 3, 4, 2, 5, 6, 7, 8, 5, 9, 7, 6,
-    1, 4, 2, 3, 4, 2, 6, 8, 5, 3, 7, 9, 1, 7, 1, 3, 9, 2, 4, 8, 5, 6, 9, 6, 1, 5, 3, 7, 2, 8, 4, 2,
-    8, 7, 4, 1, 9, 6, 3, 5, 3, 4, 5, 2, 8, 6, 1, 7, 9,
+// Sudoku puzzle from sudoku_general.json (incomplete puzzle with 0s)
+const SUDOKU_PUZZLE: [u8; 81] = [
+    5, 3, 0, 0, 7, 0, 0, 0, 0, 6, 0, 0, 1, 9, 5, 0, 0, 0, 0, 9, 8, 0, 0, 0, 0, 6, 0, 8, 0, 0, 0, 6,
+    0, 0, 0, 3, 4, 0, 0, 8, 0, 3, 0, 0, 1, 7, 0, 0, 0, 2, 0, 0, 0, 6, 0, 6, 0, 0, 0, 0, 2, 8, 0, 0,
+    0, 0, 4, 1, 9, 0, 0, 5, 0, 0, 0, 0, 8, 0, 0, 7, 9,
 ];
 
-// A Sudoku puzzle - using the same as solution for sudoku_basic.json compatibility
-// (In a real scenario with partial puzzle, the Circom circuit checks that solution
-// matches the puzzle where puzzle has values, and solution fills in the zeros)
-const SUDOKU_PUZZLE: [u8; 81] = [
+// Valid solution for sudoku_general.json puzzle
+const SUDOKU_SOLUTION: [u8; 81] = [
     5, 3, 4, 6, 7, 8, 9, 1, 2, 6, 7, 2, 1, 9, 5, 3, 4, 8, 1, 9, 8, 3, 4, 2, 5, 6, 7, 8, 5, 9, 7, 6,
     1, 4, 2, 3, 4, 2, 6, 8, 5, 3, 7, 9, 1, 7, 1, 3, 9, 2, 4, 8, 5, 6, 9, 6, 1, 5, 3, 7, 2, 8, 4, 2,
     8, 7, 4, 1, 9, 6, 3, 5, 3, 4, 5, 2, 8, 6, 1, 7, 9,
@@ -30,40 +28,51 @@ const SUDOKU_PUZZLE: [u8; 81] = [
 
 #[test]
 fn test_sudoku_encap_decap() {
-    println!("\n🎮 Testing Sudoku Encap/Decap");
-    println!("================================\n");
+    println!("\n🎮 Testing Sudoku Encap/Decap with sudoku_general");
+    println!("===================================================\n");
 
-    // Load sudoku circuit with full witness from fixture
-    println!("📂 Loading circuit from fixture...");
-    let encap_circuit =
+    // Load circuit structure from fixture
+    println!("📂 Loading circuit structure from fixture...");
+    let circuit_template =
         TestCircuit::from_fixture("sudoku_circuit").expect("Failed to load sudoku circuit");
 
     println!("✅ Loaded Sudoku circuit:");
-    println!("   - Constraints: {}", encap_circuit.circuit.n_constraints);
-    println!("   - Public inputs: {}", encap_circuit.n_public_inputs());
-    println!("   - Wires: {}", encap_circuit.circuit.n_wires);
-    println!("   - Witness elements: {}", encap_circuit.witness.len()); // Setup RNG
+    println!(
+        "   - Constraints: {}",
+        circuit_template.circuit.n_constraints
+    );
+    println!("   - Public inputs: {}", circuit_template.n_public_inputs());
+    println!("   - Wires: {}", circuit_template.circuit.n_wires);
+
+    // Setup RNG
     let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(42u64);
 
-    // ENCAP: Create circuit with only public inputs (for encap we don't need full witness)
-    println!("\n📤 Running Encap (with public inputs only)...");
+    // ENCAP: Create circuit with only public inputs (puzzle)
+    // Extract public inputs from the fixture to ensure consistency
+    println!("\n📤 Running Encap (with puzzle only - public inputs)...");
     let mut encap_witness = HashMap::new();
 
     // Wire 0 is always 1 (constant)
     encap_witness.insert(0, Fr::from(1u64));
 
-    // Copy only the public inputs from the loaded witness (wires 1-81)
-    for wire_id in 1..=encap_circuit.n_public_inputs() {
-        if let Some(&value) = encap_circuit.witness.get(&wire_id) {
+    // Copy only the public inputs from the fixture (wires 1-81)
+    // This ensures encap and decap use the same public inputs
+    for wire_id in 1..=circuit_template.n_public_inputs() {
+        if let Some(&value) = circuit_template.witness.get(&wire_id) {
             encap_witness.insert(wire_id, value);
         }
     }
 
-    let encap_only_circuit =
-        TestCircuit::with_public_inputs(encap_circuit.circuit.clone(), encap_witness);
+    println!(
+        "   - Public inputs extracted from fixture: {} wires",
+        circuit_template.n_public_inputs()
+    );
+    println!("   - Note: Using fixture's public inputs (sudoku_basic - completed sudoku)");
 
-    let (ciphertext, key1) =
-        encap::<Bn254, _, _>(encap_only_circuit, &mut rng).expect("Encap failed");
+    let encap_circuit =
+        TestCircuit::with_public_inputs(circuit_template.circuit.clone(), encap_witness);
+
+    let (ciphertext, key1) = encap::<Bn254, _, _>(encap_circuit, &mut rng).expect("Encap failed");
 
     println!("✅ Encap successful!");
     println!("   - Ciphertext size: {} bytes", {
@@ -72,13 +81,20 @@ fn test_sudoku_encap_decap() {
     });
     println!("   - Key size: {} bytes", key1.0.len());
 
-    // DECAP: Use the full witness loaded from fixture (all 202 wires)
-    println!("\n📥 Running Decap (with full witness from snarkjs)...");
+    // DECAP: Use complete witness from fixture
+    // (The fixture was generated with sudoku_general inputs, so it already has the correct witness)
+    println!("\n📥 Running Decap (with complete witness from fixture)...");
 
-    // The encap_circuit already has the complete witness loaded from fixture
-    // We can use it directly for decap
+    // Load the complete witness from fixture (all 202 wires including intermediate values)
     let decap_circuit =
         TestCircuit::from_fixture("sudoku_circuit").expect("Failed to load circuit for decap");
+
+    println!("   - Puzzle (first 9): {:?}...", &SUDOKU_PUZZLE[0..9]);
+    println!("   - Solution (first 9): {:?}...", &SUDOKU_SOLUTION[0..9]);
+    println!(
+        "   - Total witness wires from fixture: {}",
+        decap_circuit.witness.len()
+    );
 
     let key2 = decap::<Bn254, _>(decap_circuit, &ciphertext).expect("Decap failed");
 
@@ -90,6 +106,11 @@ fn test_sudoku_encap_decap() {
     assert_eq!(key1, key2, "Keys don't match!");
 
     println!("✅ Keys match! Encap/Decap test passed! 🎉");
+    println!("   Puzzle (0s indicate blanks): {:?}", &SUDOKU_PUZZLE[0..9]);
+    println!(
+        "   Solution (complete):        {:?}",
+        &SUDOKU_SOLUTION[0..9]
+    );
 }
 
 #[test]
