@@ -4,12 +4,16 @@
   "workspaces": [
     "packages/zkenc-core",
     "packages/zkenc-cli",
-    "packages/zkenc-js"
+    "packages/zkenc-js",
+    "docs"
   ],
   "scripts": {
     "build": "pnpm --filter zkenc-core build && pnpm --filter zkenc-cli build && pnpm --filter zkenc-js build",
     "test": "pnpm --filter zkenc-core test && pnpm --filter zkenc-cli test && pnpm --filter zkenc-js test",
-    "lint": "pnpm --filter zkenc-core lint && pnpm --filter zkenc-cli lint && pnpm --filter zkenc-js lint"
+    "lint": "pnpm --filter zkenc-core lint && pnpm --filter zkenc-cli lint && pnpm --filter zkenc-js lint",
+    "docs:dev": "pnpm --filter zkenc-docs start",
+    "docs:build": "pnpm --filter zkenc-docs build",
+    "docs:serve": "pnpm --filter zkenc-docs serve"
   },
   "devDependencies": {
     "typescript": "^4.0.0"
