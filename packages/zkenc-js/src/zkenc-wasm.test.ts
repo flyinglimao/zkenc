@@ -30,15 +30,14 @@ describe("zkenc WASM integration", () => {
     // First encap
     const { ciphertext, key: originalKey } = await encap(
       { r1csBuffer, wasmBuffer },
-      sudokuInput
+      { puzzle: sudokuInput.puzzle }
     );
 
     // Then decap with same inputs
-    const recoveredKey = await decap(
-      { r1csBuffer, wasmBuffer },
-      ciphertext,
-      sudokuInput
-    );
+    const recoveredKey = await decap({ r1csBuffer, wasmBuffer }, ciphertext, {
+      puzzle: sudokuInput.puzzle,
+      solution: sudokuInput.solution,
+    });
 
     expect(recoveredKey).toBeInstanceOf(Uint8Array);
     expect(recoveredKey.length).toBe(32);
@@ -49,8 +48,14 @@ describe("zkenc WASM integration", () => {
 
   it("should produce different ciphertexts for same inputs", async () => {
     // Encap twice with same inputs
-    const result1 = await encap({ r1csBuffer, wasmBuffer }, sudokuInput);
-    const result2 = await encap({ r1csBuffer, wasmBuffer }, sudokuInput);
+    const result1 = await encap(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle }
+    );
+    const result2 = await encap(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle }
+    );
 
     // Ciphertexts should be different (due to randomness)
     expect(Array.from(result1.ciphertext)).not.toEqual(
@@ -71,7 +76,7 @@ describe("zkenc WASM integration", () => {
     // 1. Encap to get key
     const { ciphertext: zkCiphertext, key } = await encap(
       { r1csBuffer, wasmBuffer },
-      sudokuInput
+      { puzzle: sudokuInput.puzzle }
     );
 
     // 2. Encrypt message with key
