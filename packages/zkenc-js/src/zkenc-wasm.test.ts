@@ -66,8 +66,8 @@ describe("zkenc WASM integration", () => {
     expect(Array.from(result1.key)).not.toEqual(Array.from(result2.key));
   });
 
-  it("should work with full encrypt/decrypt flow", async () => {
-    const { encap, decap, encrypt, decrypt } = await import("./zkenc.js");
+  it("should work with low-level encap/decap flow", async () => {
+    const { aesGcmEncrypt, aesGcmDecrypt } = await import("./crypto.js");
 
     const message = new TextEncoder().encode(
       "Secret message for Sudoku solver!"
@@ -79,8 +79,8 @@ describe("zkenc WASM integration", () => {
       { puzzle: sudokuInput.puzzle }
     );
 
-    // 2. Encrypt message with key
-    const encryptedMessage = await encrypt(key, message);
+    // 2. Encrypt message with key using AES
+    const encryptedMessage = await aesGcmEncrypt(key, message);
 
     // 3. Decap to recover key
     const recoveredKey = await decap(
@@ -90,11 +90,99 @@ describe("zkenc WASM integration", () => {
     );
 
     // 4. Decrypt message with recovered key
-    const decryptedMessage = await decrypt(recoveredKey, encryptedMessage);
+    const decryptedMessage = await aesGcmDecrypt(
+      recoveredKey,
+      encryptedMessage
+    );
 
     // 5. Verify
     expect(new TextDecoder().decode(decryptedMessage)).toBe(
       "Secret message for Sudoku solver!"
     );
+  });
+
+  it("should work with high-level encrypt/decrypt flow", async () => {
+    const { encrypt, decrypt } = await import("./zkenc.js");
+
+    const message = new TextEncoder().encode(
+      "Secret message for Sudoku solver!"
+    );
+
+    // 1. Encrypt: combines encap + AES encryption
+    const { ciphertext, key } = await encrypt(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle },
+      message
+    );
+
+    // Verify the key is returned for advanced users
+    expect(key).toBeInstanceOf(Uint8Array);
+    expect(key.length).toBe(32);
+
+    // Verify ciphertext contains both witness CT and encrypted message
+    expect(ciphertext.length).toBeGreaterThan(1576 + 28); // witness CT + AES overhead
+
+    // 2. Decrypt: combines decap + AES decryption
+    const decryptedMessage = await decrypt(
+      { r1csBuffer, wasmBuffer },
+      ciphertext,
+      sudokuInput
+    );
+
+    // 3. Verify
+    expect(new TextDecoder().decode(decryptedMessage)).toBe(
+      "Secret message for Sudoku solver!"
+    );
+  });
+
+  it("should produce different ciphertexts with encrypt", async () => {
+    const { encrypt } = await import("./zkenc.js");
+
+    const message = new TextEncoder().encode("Same message");
+
+    // Encrypt twice with same inputs
+    const result1 = await encrypt(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle },
+      message
+    );
+    const result2 = await encrypt(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle },
+      message
+    );
+
+    // Ciphertexts should be different (due to randomness in encap and AES nonce)
+    expect(Array.from(result1.ciphertext)).not.toEqual(
+      Array.from(result2.ciphertext)
+    );
+
+    // Keys should also be different
+    expect(Array.from(result1.key)).not.toEqual(Array.from(result2.key));
+  });
+
+  it("should fail to decrypt with invalid witness", async () => {
+    const { encrypt, decrypt } = await import("./zkenc.js");
+
+    const message = new TextEncoder().encode("Secret");
+
+    // Encrypt with correct puzzle
+    const { ciphertext } = await encrypt(
+      { r1csBuffer, wasmBuffer },
+      { puzzle: sudokuInput.puzzle },
+      message
+    );
+
+    // Try to decrypt with invalid solution
+    const invalidSolution = sudokuInput.solution.map((n: number) =>
+      n === 0 ? 0 : (n % 9) + 1
+    );
+
+    await expect(
+      decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
+        puzzle: sudokuInput.puzzle,
+        solution: invalidSolution,
+      })
+    ).rejects.toThrow();
   });
 });

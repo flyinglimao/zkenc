@@ -2,8 +2,6 @@
 
 Command-line interface for zkenc witness encryption with Circom circuit support.
 
-zkenc 的命令列工具,提供基於 Circom 電路的見證加密功能。
-
 ## 🚀 Installation
 
 ### From Source

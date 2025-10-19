@@ -26,45 +26,80 @@ yarn add zkenc-js
 
 ## Quick Start
 
+### High-Level API (Recommended)
+
+The simplest way to use zkenc-js - directly encrypt and decrypt messages:
+
 ```typescript
-import { encap, decap, encrypt, decrypt } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import { readFileSync } from "fs";
 
 // Load your Circom circuit files
 const r1csBuffer = readFileSync("circuit.r1cs");
 const wasmBuffer = readFileSync("circuit.wasm");
 
-// Define your public inputs (the statement)
+// Public inputs (the statement)
 const publicInputs = {
   puzzle: [
-    /* your puzzle data */
-  ],
-  solution: [
-    /* your solution data */
+    /* puzzle data */
   ],
 };
 
-// 1. Encapsulation: Generate ciphertext and encryption key
+// Complete inputs (public + witness)
+const completeInputs = {
+  puzzle: [
+    /* puzzle data */
+  ],
+  solution: [
+    /* solution data */
+  ],
+};
+
+// 1. Encrypt: Automatically handles encap + AES encryption
+const message = new TextEncoder().encode("Secret message");
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, wasmBuffer },
+  publicInputs,
+  message
+);
+// key is available for advanced users
+
+// 2. Decrypt: Automatically handles decap + AES decryption
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  completeInputs // Must include valid witness
+);
+
+const plaintext = new TextDecoder().decode(decrypted);
+console.log(plaintext); // "Secret message"
+```
+
+### Low-Level API (Advanced)
+
+For research or custom encryption schemes, use the paper-aligned API:
+
+```typescript
+import { encap, decap } from "zkenc-js";
+
+// 1. Encap: Generate witness-encrypted key
 const { ciphertext, key } = await encap(
   { r1csBuffer, wasmBuffer },
   publicInputs
 );
 
-// 2. Encrypt your message
-const message = new TextEncoder().encode("Secret message");
-const encrypted = await encrypt(key, message);
+// 2. Use key for custom encryption
+// ... your custom encryption logic ...
 
-// 3. Decapsulation: Recover key with valid witness
+// 3. Decap: Recover key with valid witness
 const recoveredKey = await decap(
   { r1csBuffer, wasmBuffer },
   ciphertext,
-  publicInputs // Must include valid witness
+  completeInputs
 );
 
-// 4. Decrypt the message
-const decrypted = await decrypt(recoveredKey, encrypted);
-const plaintext = new TextDecoder().decode(decrypted);
-console.log(plaintext); // "Secret message"
+// 4. Use recovered key for decryption
+// ... your custom decryption logic ...
 ```
 
 ## Complete Example: Sudoku Witness Encryption
@@ -72,14 +107,15 @@ console.log(plaintext); // "Secret message"
 This example demonstrates encrypting a message that can only be decrypted by someone who knows a valid Sudoku solution.
 
 ```typescript
-import { encap, decap, encrypt, decrypt } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import { readFileSync } from "fs";
 
 // Load Sudoku circuit (defines the computational statement)
 const r1csBuffer = readFileSync("sudoku.r1cs");
 const wasmBuffer = readFileSync("sudoku.wasm");
+const circuitFiles = { r1csBuffer, wasmBuffer };
 
-// The puzzle (public) and solution (witness)
+// The puzzle (public input)
 const puzzle = [
   5, 3, 0, 0, 7, 0, 0, 0, 0, 6, 0, 0, 1, 9, 5, 0, 0, 0,
   // ... 81 cells total
@@ -90,23 +126,23 @@ const solution = [
   // ... complete valid solution
 ];
 
-// Step 1: Encap - anyone can do this with just the puzzle
-const inputs = { puzzle, solution };
-const { ciphertext, key } = await encap({ r1csBuffer, wasmBuffer }, inputs);
-
-// Step 2: Encrypt message
+// Step 1: Encrypt - anyone can do this with just the puzzle
 const secret = new TextEncoder().encode("Prize: $1000");
-const encrypted = await encrypt(key, secret);
+const { ciphertext, key } = await encrypt(
+  circuitFiles,
+  { puzzle }, // Only public inputs needed
+  secret
+);
+// ciphertext now contains both witness encryption and AES encryption
 
-// Step 3: Decap - only works with valid solution
+// Step 2: Decrypt - only works with valid solution
 try {
-  const recoveredKey = await decap({ r1csBuffer, wasmBuffer }, ciphertext, {
-    puzzle,
-    solution,
-  });
+  const decrypted = await decrypt(
+    circuitFiles,
+    ciphertext,
+    { puzzle, solution } // Need both public and private inputs
+  );
 
-  // Step 4: Decrypt
-  const decrypted = await decrypt(recoveredKey, encrypted);
   console.log(new TextDecoder().decode(decrypted)); // "Prize: $1000"
 } catch (error) {
   console.error("Invalid witness!", error);
@@ -115,9 +151,11 @@ try {
 
 ## API Reference
 
-### `encap(circuitFiles, publicInputs)`
+### High-Level API
 
-Generate ciphertext and encryption key from circuit and public inputs.
+#### `encrypt(circuitFiles, publicInputs, message)`
+
+Encrypt message using witness encryption (combines encap + AES encryption).
 
 **Parameters:**
 
@@ -125,10 +163,66 @@ Generate ciphertext and encryption key from circuit and public inputs.
   - `r1csBuffer: Uint8Array` - R1CS circuit file
   - `wasmBuffer: Uint8Array` - Circom WASM file
 - `publicInputs: Record<string, any>` - Public inputs as JSON object
+- `message: Uint8Array` - Message to encrypt
+
+**Returns:** `Promise<EncryptResult>`
+
+- `ciphertext: Uint8Array` - Combined ciphertext (witness CT + AES CT)
+- `key: Uint8Array` - Encryption key (32 bytes, for advanced users)
+
+**Example:**
+
+```typescript
+const message = new TextEncoder().encode("Secret");
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, wasmBuffer },
+  { puzzle: puzzleData },
+  message
+);
+```
+
+---
+
+#### `decrypt(circuitFiles, ciphertext, inputs)`
+
+Decrypt message using witness decryption (combines decap + AES decryption).
+
+**Parameters:**
+
+- `circuitFiles: CircuitFiles` - Circuit files
+- `ciphertext: Uint8Array` - Combined ciphertext from encrypt
+- `inputs: Record<string, any>` - Complete inputs (public + witness)
+
+**Returns:** `Promise<Uint8Array>` - Decrypted message
+
+**Throws:** Error if witness is invalid or doesn't satisfy constraints
+
+**Example:**
+
+```typescript
+const decrypted = await decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
+  puzzle: puzzleData,
+  solution: solutionData,
+});
+const message = new TextDecoder().decode(decrypted);
+```
+
+---
+
+### Low-Level API
+
+#### `encap(circuitFiles, publicInputs)`
+
+Generate witness-encrypted key (low-level, paper-aligned API).
+
+**Parameters:**
+
+- `circuitFiles: CircuitFiles` - Circuit files
+- `publicInputs: Record<string, any>` - Public inputs as JSON object
 
 **Returns:** `Promise<EncapResult>`
 
-- `ciphertext: Uint8Array` - Ciphertext for witness verification
+- `ciphertext: Uint8Array` - Witness ciphertext (1576 bytes)
 - `key: Uint8Array` - Symmetric encryption key (32 bytes)
 
 **Example:**
@@ -136,25 +230,26 @@ Generate ciphertext and encryption key from circuit and public inputs.
 ```typescript
 const { ciphertext, key } = await encap(
   { r1csBuffer, wasmBuffer },
-  { puzzle: puzzleData, solution: solutionData }
+  { puzzle: puzzleData }
 );
+// Use key for custom encryption...
 ```
 
 ---
 
-### `decap(circuitFiles, ciphertext, fullInputs)`
+#### `decap(circuitFiles, ciphertext, inputs)`
 
-Recover encryption key using valid witness.
+Recover encryption key using valid witness (low-level, paper-aligned API).
 
 **Parameters:**
 
 - `circuitFiles: CircuitFiles` - Circuit files
-- `ciphertext: Uint8Array` - Ciphertext from encap
-- `fullInputs: Record<string, any>` - Complete inputs including witness
+- `ciphertext: Uint8Array` - Witness ciphertext from encap
+- `inputs: Record<string, any>` - Complete inputs (public + witness)
 
 **Returns:** `Promise<Uint8Array>` - Recovered encryption key (32 bytes)
 
-**Throws:** Error if witness is invalid or doesn't satisfy constraints
+**Throws:** Error if witness is invalid
 
 **Example:**
 
@@ -163,48 +258,7 @@ const key = await decap({ r1csBuffer, wasmBuffer }, ciphertext, {
   puzzle: puzzleData,
   solution: solutionData,
 });
-```
-
----
-
-### `encrypt(key, message)`
-
-Encrypt message with symmetric key using AES-256-GCM.
-
-**Parameters:**
-
-- `key: Uint8Array` - Encryption key (32 bytes)
-- `message: Uint8Array` - Message to encrypt
-
-**Returns:** `Promise<Uint8Array>` - Encrypted message with nonce
-
-**Example:**
-
-```typescript
-const message = new TextEncoder().encode("Hello");
-const encrypted = await encrypt(key, message);
-```
-
----
-
-### `decrypt(key, encrypted)`
-
-Decrypt message with symmetric key using AES-256-GCM.
-
-**Parameters:**
-
-- `key: Uint8Array` - Decryption key (32 bytes)
-- `encrypted: Uint8Array` - Encrypted message with nonce
-
-**Returns:** `Promise<Uint8Array>` - Decrypted message
-
-**Throws:** Error if decryption fails (wrong key or corrupted data)
-
-**Example:**
-
-```typescript
-const decrypted = await decrypt(key, encrypted);
-const message = new TextDecoder().decode(decrypted);
+// Use key for custom decryption...
 ```
 
 ## Browser Usage

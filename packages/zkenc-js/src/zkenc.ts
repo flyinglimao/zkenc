@@ -108,42 +108,122 @@ export async function decap(
 }
 
 /**
- * Encrypt message with symmetric key (AES-256-GCM)
- *
- * @param key - Encryption key (32 bytes)
- * @param message - Message to encrypt
- * @returns Encrypted message with nonce
- *
- * @example
- * ```typescript
- * const encrypted = await encrypt(key, new TextEncoder().encode('secret'));
- * ```
+ * Encryption result containing witness-encrypted ciphertext
  */
-export async function encrypt(
-  key: Uint8Array,
-  message: Uint8Array
-): Promise<Uint8Array> {
-  const { aesGcmEncrypt } = await import("./crypto.js");
-  return aesGcmEncrypt(key, message);
+export interface EncryptResult {
+  /** Combined ciphertext containing both witness encryption and AES-encrypted message */
+  ciphertext: Uint8Array;
+  /** The encryption key (for advanced users who want direct key access) */
+  key: Uint8Array;
 }
 
 /**
- * Decrypt message with symmetric key (AES-256-GCM)
+ * Encrypt message using witness encryption
  *
- * @param key - Decryption key (32 bytes)
- * @param encrypted - Encrypted message with nonce
+ * This is a high-level API that combines encap and AES encryption.
+ * It generates a witness-encrypted key and uses it to encrypt the message.
+ *
+ * @param circuitFiles - R1CS and WASM files
+ * @param publicInputs - Public inputs as JSON object
+ * @param message - Message to encrypt
+ * @returns Combined ciphertext and the encryption key
+ *
+ * @example
+ * ```typescript
+ * const { ciphertext, key } = await encrypt({
+ *   r1csBuffer: r1csData,
+ *   wasmBuffer: wasmData
+ * }, { puzzle: [5,3,0,...] }, new TextEncoder().encode('secret'));
+ * ```
+ */
+export async function encrypt(
+  circuitFiles: CircuitFiles,
+  publicInputs: Record<string, any>,
+  message: Uint8Array
+): Promise<EncryptResult> {
+  // Step 1: Generate witness-encrypted key
+  const { ciphertext: witnessCiphertext, key } = await encap(
+    circuitFiles,
+    publicInputs
+  );
+
+  // Step 2: Encrypt message with the key using AES-256-GCM
+  const { aesGcmEncrypt } = await import("./crypto.js");
+  const encryptedMessage = await aesGcmEncrypt(key, message);
+
+  // Step 3: Combine both ciphertexts
+  // Format: [4 bytes length][witness ciphertext][encrypted message]
+  const lengthBuffer = new Uint8Array(4);
+  new DataView(lengthBuffer.buffer).setUint32(
+    0,
+    witnessCiphertext.length,
+    false
+  );
+
+  const combinedCiphertext = new Uint8Array(
+    4 + witnessCiphertext.length + encryptedMessage.length
+  );
+  combinedCiphertext.set(lengthBuffer, 0);
+  combinedCiphertext.set(witnessCiphertext, 4);
+  combinedCiphertext.set(encryptedMessage, 4 + witnessCiphertext.length);
+
+  return {
+    ciphertext: combinedCiphertext,
+    key,
+  };
+}
+
+/**
+ * Decrypt message using witness decryption
+ *
+ * This is a high-level API that combines decap and AES decryption.
+ * It recovers the key from witness and uses it to decrypt the message.
+ *
+ * @param circuitFiles - R1CS and WASM files
+ * @param ciphertext - Combined ciphertext from encrypt
+ * @param inputs - Full inputs (public + witness) as JSON object
  * @returns Decrypted message
  *
  * @example
  * ```typescript
- * const decrypted = await decrypt(key, encrypted);
+ * const decrypted = await decrypt({
+ *   r1csBuffer: r1csData,
+ *   wasmBuffer: wasmData
+ * }, ciphertext, {
+ *   puzzle: [5,3,0,...],
+ *   solution: [5,3,4,...]
+ * });
  * const message = new TextDecoder().decode(decrypted);
  * ```
  */
 export async function decrypt(
-  key: Uint8Array,
-  encrypted: Uint8Array
+  circuitFiles: CircuitFiles,
+  ciphertext: Uint8Array,
+  inputs: Record<string, any>
 ): Promise<Uint8Array> {
+  // Step 1: Parse combined ciphertext
+  if (ciphertext.length < 4) {
+    throw new Error("Invalid ciphertext: too short");
+  }
+
+  const witnessCtLength = new DataView(
+    ciphertext.buffer,
+    ciphertext.byteOffset
+  ).getUint32(0, false);
+
+  if (ciphertext.length < 4 + witnessCtLength) {
+    throw new Error("Invalid ciphertext: length mismatch");
+  }
+
+  const witnessCiphertext = ciphertext.slice(4, 4 + witnessCtLength);
+  const encryptedMessage = ciphertext.slice(4 + witnessCtLength);
+
+  // Step 2: Recover key using witness decap
+  const key = await decap(circuitFiles, witnessCiphertext, inputs);
+
+  // Step 3: Decrypt message with recovered key
   const { aesGcmDecrypt } = await import("./crypto.js");
-  return aesGcmDecrypt(key, encrypted);
+  const message = await aesGcmDecrypt(key, encryptedMessage);
+
+  return message;
 }
