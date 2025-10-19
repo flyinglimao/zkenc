@@ -40,6 +40,7 @@ Cargo.lock
 *.tmp
 *.temp
 *.log
+tmp/
 
 # Package manager
 pnpm-lock.yaml
