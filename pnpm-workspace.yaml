@@ -2,3 +2,4 @@ packages:
   - packages/zkenc-core
   - packages/zkenc-cli
   - packages/zkenc-js
+  - docs
