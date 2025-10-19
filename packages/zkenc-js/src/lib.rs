@@ -16,6 +16,7 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::rngs::StdRng;
 use ark_std::rand::SeedableRng;
 use std::collections::HashMap;
+use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 use zkenc_core::{decap, encap, Ciphertext};
@@ -515,10 +516,11 @@ fn flatten_json(value: &serde_json::Value, result: &mut Vec<Fr>) -> Result<(), S
             Ok(())
         }
         serde_json::Value::String(s) => {
-            let num = s
-                .parse::<u64>()
-                .map_err(|_| format!("Failed to parse string as number: {}", s))?;
-            result.push(Fr::from(num));
+            // Try to parse as field element using PrimeField::from_str
+            // This supports large numbers that don't fit in u64
+            let field_elem = Fr::from_str(s)
+                .map_err(|_| format!("Failed to parse string as field element: {}", s))?;
+            result.push(field_elem);
             Ok(())
         }
         serde_json::Value::Array(arr) => {

@@ -1,9 +1,8 @@
 /**
- * TypeScript wrapper for witness_calculator.js
+ * TypeScript wrapper for witness calculator
  * Handles witness calculation from Circom WASM circuits
  */
 
-// @ts-ignore - JavaScript module without types
 import witnessCalculatorBuilder from "./witness_calculator.js";
 
 /**
@@ -22,10 +21,9 @@ import witnessCalculatorBuilder from "./witness_calculator.js";
  * ```
  */
 export async function calculateWitness(
-  wasmBuffer: Uint8Array,
+  wasmBuffer: BufferSource,
   inputs: Record<string, any>
 ): Promise<Uint8Array> {
-  // Build witness calculator from WASM
   const witnessCalculator = await witnessCalculatorBuilder(wasmBuffer);
 
   // Calculate witness in binary format (snarkjs wtns format)
@@ -43,7 +41,7 @@ export async function calculateWitness(
  * @returns Array of witness values as BigInt
  */
 export async function calculateWitnessArray(
-  wasmBuffer: Uint8Array,
+  wasmBuffer: BufferSource,
   inputs: Record<string, any>
 ): Promise<bigint[]> {
   const witnessCalculator = await witnessCalculatorBuilder(wasmBuffer);
@@ -56,7 +54,7 @@ export async function calculateWitnessArray(
  * @param wasmBuffer - Compiled Circom WASM file
  * @returns Circuit metadata
  */
-export async function getCircuitInfo(wasmBuffer: Uint8Array): Promise<{
+export async function getCircuitInfo(wasmBuffer: BufferSource): Promise<{
   version: number;
   n32: number;
   prime: bigint;

@@ -96,7 +96,10 @@ export async function decap(
   await ensureWasmInit();
 
   // Calculate witness from inputs using Circom WASM
-  const witnessBytes = await calculateWitness(circuitFiles.wasmBuffer, inputs);
+  const witnessBytes = await calculateWitness(
+    circuitFiles.wasmBuffer as BufferSource,
+    inputs
+  );
 
   // Call WASM decap function
   const key = wasm_decap(circuitFiles.r1csBuffer, witnessBytes, ciphertext);
