@@ -154,6 +154,7 @@ export class WitnessCalculator {
     const exports = this.instance.exports as any;
     const buff32 = new Uint32Array(this.witnessSize * this.n32 + this.n32 + 11);
     const buff = new Uint8Array(buff32.buffer);
+    const buffView = new DataView(buff32.buffer);
 
     await this._doCalculateWitness(input, sanityCheck);
 
@@ -174,9 +175,9 @@ export class WitnessCalculator {
 
     const n8 = this.n32 * 4;
     const idSection1length = 8 + n8;
-    const idSection1lengthHex = idSection1length.toString(16).padStart(16, "0");
-    buff32[4] = parseInt(idSection1lengthHex.slice(0, 8), 16);
-    buff32[5] = parseInt(idSection1lengthHex.slice(8, 16), 16);
+
+    // Write section 1 length as u64 little-endian
+    buffView.setBigUint64(16, BigInt(idSection1length), true);
 
     // field size
     buff32[6] = n8;
@@ -198,9 +199,9 @@ export class WitnessCalculator {
     pos++;
 
     const idSection2length = n8 * this.witnessSize;
-    const idSection2lengthHex = idSection2length.toString(16).padStart(16, "0");
-    buff32[pos] = parseInt(idSection2lengthHex.slice(0, 8), 16);
-    buff32[pos + 1] = parseInt(idSection2lengthHex.slice(8, 16), 16);
+
+    // Write section 2 length as u64 little-endian
+    buffView.setBigUint64(pos * 4, BigInt(idSection2length), true);
     pos += 2;
 
     // Write witness values
