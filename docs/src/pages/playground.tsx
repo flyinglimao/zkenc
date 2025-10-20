@@ -168,6 +168,8 @@ export default function Playground(): JSX.Element {
                   newValues[index] = newValue;
                   if (mode === "decrypt") {
                     setSolution(newValues);
+                  } else {
+                    setPuzzle(newValues);
                   }
                 }
               }}
@@ -217,7 +219,7 @@ export default function Playground(): JSX.Element {
                 🎲 Generate Random Puzzle
               </button>
               <div className={styles.puzzleContainer}>
-                {renderSudokuGrid(puzzle, false)}
+                {renderSudokuGrid(puzzle, true)}
               </div>
             </div>
 
