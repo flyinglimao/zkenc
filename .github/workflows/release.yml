@@ -1,0 +1,122 @@
+name: Release and Publish
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Install dependencies
+        run: |
+          cd packages/zkenc-js
+          pnpm install --frozen-lockfile
+
+      - name: Build zkenc-js
+        run: |
+          cd packages/zkenc-js
+          pnpm run build
+
+      - name: Publish to npm
+        run: |
+          cd packages/zkenc-js
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-docs:
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Wait for npm package to be available
+        run: |
+          PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}
+          echo "Waiting for zkenc-js@${PACKAGE_VERSION} to be available on npm..."
+          for i in {1..30}; do
+            if npm view zkenc-js@${PACKAGE_VERSION} version; then
+              echo "Package is available!"
+              break
+            fi
+            echo "Attempt $i/30: Package not yet available, waiting 10 seconds..."
+            sleep 10
+          done
+
+      - name: Update zkenc-js version in docs
+        run: |
+          PACKAGE_VERSION=${GITHUB_REF#refs/tags/v}
+          cd docs
+          pnpm add zkenc-js@${PACKAGE_VERSION}
+
+      - name: Install dependencies
+        run: |
+          cd docs
+          pnpm install --frozen-lockfile
+
+      - name: Build documentation
+        run: |
+          cd docs
+          pnpm run build
+        env:
+          NODE_ENV: production
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/build
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

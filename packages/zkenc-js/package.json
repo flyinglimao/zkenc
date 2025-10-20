@@ -1,11 +1,20 @@
 {
   "name": "zkenc-js",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "JavaScript/TypeScript bindings for zkenc witness encryption",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flyinglimao/zkenc-handmade.git",
+    "directory": "packages/zkenc-js"
+  },
+  "homepage": "https://zkenc.limaois.me",
+  "bugs": {
+    "url": "https://github.com/flyinglimao/zkenc-handmade/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -41,8 +50,13 @@
     "witness-encryption",
     "circom",
     "wasm",
-    "typescript"
+    "typescript",
+    "zero-knowledge",
+    "cryptography"
   ],
-  "author": "",
-  "license": "MIT OR Apache-2.0"
+  "author": "flyinglimao",
+  "license": "MIT OR Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
 }

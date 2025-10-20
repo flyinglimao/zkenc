@@ -1,0 +1,28 @@
+# Tests
+tests/
+*.test.ts
+*.test.js
+
+# Development files
+vitest.config.ts
+tsconfig.json
+
+# Build artifacts (we include compiled dist and pkg)
+target/
+*.rs
+Cargo.toml
+Cargo.lock
+
+# Documentation (keep README.md for npm)
+IMPLEMENTATION_PLAN.md
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Other
+.DS_Store
