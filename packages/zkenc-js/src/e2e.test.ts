@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { encap, decap, encrypt, decrypt } from "./zkenc";
+import { encap, decap } from "./zkenc";
+import { aesGcmEncrypt, aesGcmDecrypt } from "./crypto";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -39,7 +40,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
     });
 
     // Step 2: Encrypt message with encap key
-    const encrypted = await encrypt(encapKey, plaintextBytes);
+    const encrypted = await aesGcmEncrypt(encapKey, plaintextBytes);
     console.log("Encrypted data length:", encrypted.length);
 
     // Step 3: Decap - recover key using complete witness (puzzle + solution)
@@ -53,7 +54,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
     console.log("Decap completed, key length:", decapKey.length);
 
     // Step 4: Decrypt message with decap key
-    const decrypted = await decrypt(decapKey, encrypted);
+    const decrypted = await aesGcmDecrypt(decapKey, encrypted);
     const decryptedText = new TextDecoder().decode(decrypted);
     console.log("Decrypted:", decryptedText);
 
@@ -130,7 +131,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
       { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
       publicInputs
     );
-    const encrypted = await encrypt(encapKey, largePlaintext);
+    const encrypted = await aesGcmEncrypt(encapKey, largePlaintext);
 
     // Decap and decrypt
     const decapKey = await decap(
@@ -138,7 +139,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
       ciphertext,
       fullInputs
     );
-    const decrypted = await decrypt(decapKey, encrypted);
+    const decrypted = await aesGcmDecrypt(decapKey, encrypted);
 
     expect(decrypted).toEqual(largePlaintext);
     expect(decrypted.length).toBe(10 * 1024);
@@ -198,7 +199,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
       { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
       publicInputs
     );
-    const encrypted = await encrypt(encapKey, binaryData);
+    const encrypted = await aesGcmEncrypt(encapKey, binaryData);
 
     // Decap and decrypt
     const decapKey = await decap(
@@ -206,7 +207,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
       ciphertext,
       fullInputs
     );
-    const decrypted = await decrypt(decapKey, encrypted);
+    const decrypted = await aesGcmDecrypt(decapKey, encrypted);
 
     expect(decrypted).toEqual(binaryData);
   });

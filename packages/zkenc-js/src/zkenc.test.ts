@@ -59,7 +59,16 @@ describe("zkenc-js crypto utilities", () => {
     it("should handle large messages", async () => {
       const key = crypto.getRandomValues(new Uint8Array(32));
       const message = new Uint8Array(1024 * 1024); // 1MB
-      crypto.getRandomValues(message);
+
+      // Fill in chunks to avoid QuotaExceededError (crypto.getRandomValues has 65KB limit)
+      const chunkSize = 65536;
+      for (let i = 0; i < message.length; i += chunkSize) {
+        const chunk = message.subarray(
+          i,
+          Math.min(i + chunkSize, message.length)
+        );
+        crypto.getRandomValues(chunk);
+      }
 
       const encrypted = await aesGcmEncrypt(key, message);
       const decrypted = await aesGcmDecrypt(key, encrypted);

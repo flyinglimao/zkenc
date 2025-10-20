@@ -79,8 +79,8 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.21)(terser@5.44.0)
       wasm-pack:
-        specifier: ^0.12.0
-        version: 0.12.1
+        specifier: ^0.13.1
+        version: 0.13.1
 
 packages:
 
@@ -5490,8 +5490,8 @@ packages:
       jsdom:
         optional: true
 
-  wasm-pack@0.12.1:
-    resolution: {integrity: sha512-dIyKWUumPFsGohdndZjDXRFaokUT/kQS+SavbbiXVAvA/eN4riX5QNdB6AhXQx37zNxluxQkuixZUgJ8adKjOg==}
+  wasm-pack@0.13.1:
+    resolution: {integrity: sha512-P9exD4YkjpDbw68xUhF3MDm/CC/3eTmmthyG5bHJ56kalxOTewOunxTke4SyF8MTXV6jUtNjXggPgrGmMtczGg==}
     hasBin: true
 
   watchpack@2.4.4:
@@ -12386,7 +12386,7 @@ snapshots:
       - supports-color
       - terser
 
-  wasm-pack@0.12.1:
+  wasm-pack@0.13.1:
     dependencies:
       binary-install: 1.1.2
     transitivePeerDependencies:
