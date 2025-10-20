@@ -15,10 +15,10 @@ const config: Config = {
   },
 
   // Set the production url of your site here
-  url: "https://flyinglimao.github.io",
+  url: "https://zkenc.limaois.me",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/zkenc-handmade/",
+  baseUrl: "/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -52,6 +52,39 @@ const config: Config = {
         },
       } satisfies Preset.Options,
     ],
+  ],
+
+  plugins: [
+    function wasmPlugin() {
+      return {
+        name: "wasm-plugin",
+        configureWebpack(config, isServer) {
+          return {
+            experiments: {
+              asyncWebAssembly: true,
+            },
+            module: {
+              rules: [
+                {
+                  test: /\.wasm$/,
+                  type: "webassembly/async",
+                },
+              ],
+            },
+            resolve: {
+              alias: {
+                // Prevent server-side import of zkenc-js
+                ...(isServer
+                  ? {
+                      "zkenc-js": false,
+                    }
+                  : {}),
+              },
+            },
+          };
+        },
+      };
+    },
   ],
 
   themeConfig: {

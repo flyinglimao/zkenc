@@ -9,10 +9,17 @@ import { calculateWitness } from "./witness.js";
 
 // Initialize WASM module
 let wasmInitialized = false;
+let wasmInitPromise: Promise<void> | null = null;
+
 async function ensureWasmInit() {
   if (!wasmInitialized) {
-    wasmInit();
-    wasmInitialized = true;
+    if (!wasmInitPromise) {
+      wasmInitPromise = (async () => {
+        await wasmInit();
+        wasmInitialized = true;
+      })();
+    }
+    await wasmInitPromise;
   }
 }
 
