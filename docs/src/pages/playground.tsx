@@ -24,7 +24,7 @@ function generateSudoku(): { puzzle: number[]; solution: number[] } {
   return { puzzle, solution };
 }
 
-export default function Playground(): JSX.Element {
+export default function Playground(): React.ReactElement {
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
   const [message, setMessage] = useState("");
   const [puzzle, setPuzzle] = useState<number[]>([]);

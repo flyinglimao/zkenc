@@ -2,7 +2,28 @@
   // This file is not used in compilation. It is here just for a nice editor experience.
   "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "baseUrl": "."
+    "types": [
+      "node",
+      "@docusaurus/module-type-aliases",
+      "@docusaurus/theme-classic"
+    ],
+    "jsx": "react-jsx",
+    "lib": ["DOM", "DOM.Iterable", "ES2015", "ES2017"],
+    "target": "ES2017",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": false,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "paths": {
+      "@site/*": ["./*"]
+    }
   },
-  "exclude": [".docusaurus", "build"]
+  "include": ["src"],
+  "exclude": [".docusaurus", "build", "node_modules"]
 }
