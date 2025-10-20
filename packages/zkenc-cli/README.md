@@ -2,26 +2,17 @@
 
 Command-line interface for zkenc witness encryption with Circom circuit support.
 
-## 🚀 Installation
+## Installation
 
-### From Source
-
-```bash
-# Clone the repository
-git clone https://github.com/flyinglimao/zkenc-handmade
-cd zkenc-handmade/packages/zkenc-cli
-
-# Build the CLI tool
-cargo build --release
-
-# The binary will be at ../../target/release/zkenc
-```
+````bash
+git clone https://github.com/flyinglimao/zkenc
+cd zkenc/packages/zkenc-cli
 
 ### Install to PATH
 
 ```bash
 cargo install --path .
-```
+````
 
 ## 📖 Usage
 

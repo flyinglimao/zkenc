@@ -460,9 +460,7 @@ export default function PlaygroundClient(): React.ReactElement {
           </li>
         </ul>
         <p>
-          <a href="/zkenc-handmade/docs/getting-started/zkenc-js">
-            Learn more →
-          </a>
+          <a href="/zkenc/docs/getting-started/zkenc-js">Learn more →</a>
         </p>
       </div>
     </div>

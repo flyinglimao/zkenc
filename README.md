@@ -1,11 +1,11 @@
-# zkenc-handmade
+# zkenc
 
 A witness encryption implementation for QAP (Quadratic Arithmetic Programs) with Circom circuit support.
 
 ## 📦 Project Structure
 
 ```
-zkenc-handmade/
+zkenc/
 ├── packages/
 │   ├── zkenc-core/      # Core algorithm implementation (Rust)
 │   ├── zkenc-cli/       # Command-line interface tool

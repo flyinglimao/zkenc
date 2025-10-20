@@ -13,8 +13,8 @@ zkenc-cli is a command-line tool for witness encryption operations. It provides 
 Clone the repository and build from source:
 
 ```bash
-git clone https://github.com/flyinglimao/zkenc-handmade.git
-cd zkenc-handmade
+git clone https://github.com/flyinglimao/zkenc.git
+cd zkenc
 cargo build --release
 
 # The binary will be at target/release/zkenc
@@ -390,4 +390,4 @@ For issues or questions:
 
 1. Check the [API Reference](/docs/api/zkenc-cli)
 2. Review [cross-tool workflows](/docs/guides/cross-tool-workflow)
-3. Open an issue on [GitHub](https://github.com/flyinglimao/zkenc-handmade)
+3. Open an issue on [GitHub](https://github.com/flyinglimao/zkenc)

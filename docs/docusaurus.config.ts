@@ -23,7 +23,7 @@ const config: Config = {
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: "flyinglimao", // Usually your GitHub org/user name.
-  projectName: "zkenc-handmade", // Usually your repo name.
+  projectName: "zkenc", // Usually your repo name.
 
   onBrokenLinks: "throw",
 
@@ -43,8 +43,7 @@ const config: Config = {
           sidebarPath: "./sidebars.ts",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
-          editUrl:
-            "https://github.com/flyinglimao/zkenc-handmade/tree/main/docs/",
+          editUrl: "https://github.com/flyinglimao/zkenc/tree/main/docs/",
         },
         blog: false,
         theme: {
@@ -118,7 +117,7 @@ const config: Config = {
           position: "left",
         },
         {
-          href: "https://github.com/flyinglimao/zkenc-handmade",
+          href: "https://github.com/flyinglimao/zkenc",
           label: "GitHub",
           position: "right",
         },
@@ -145,7 +144,7 @@ const config: Config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/flyinglimao/zkenc-handmade",
+              href: "https://github.com/flyinglimao/zkenc",
             },
             {
               label: "npm - zkenc-js",

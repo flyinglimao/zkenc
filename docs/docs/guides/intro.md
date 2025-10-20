@@ -182,7 +182,7 @@ If you get stuck:
    - Each guide includes complete, runnable examples
 
 4. **Open an Issue:**
-   - [GitHub Issues](https://github.com/flyinglimao/zkenc-handmade/issues)
+   - [GitHub Issues](https://github.com/flyinglimao/zkenc/issues)
 
 ## Choose Your Guide
 

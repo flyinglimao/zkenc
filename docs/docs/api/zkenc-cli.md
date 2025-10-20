@@ -11,8 +11,8 @@ Complete command-line reference for zkenc-cli, the Rust-based witness encryption
 ### Build from Source
 
 ```bash
-git clone https://github.com/flyinglimao/zkenc-handmade.git
-cd zkenc-handmade
+git clone https://github.com/flyinglimao/zkenc.git
+cd zkenc
 cargo build --release --package zkenc-cli
 
 # Binary located at: target/release/zkenc

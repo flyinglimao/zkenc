@@ -8,12 +8,12 @@
   "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
-    "url": "https://github.com/flyinglimao/zkenc-handmade.git",
+    "url": "https://github.com/flyinglimao/zkenc.git",
     "directory": "packages/zkenc-js"
   },
   "homepage": "https://zkenc.limaois.me",
   "bugs": {
-    "url": "https://github.com/flyinglimao/zkenc-handmade/issues"
+    "url": "https://github.com/flyinglimao/zkenc/issues"
   },
   "exports": {
     ".": {

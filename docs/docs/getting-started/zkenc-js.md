@@ -249,4 +249,4 @@ If you encounter issues:
 
 1. Check the [API Reference](/docs/api/zkenc-js) for detailed documentation
 2. Review the [guides](/docs/guides/intro) for common patterns
-3. Open an issue on [GitHub](https://github.com/flyinglimao/zkenc-handmade)
+3. Open an issue on [GitHub](https://github.com/flyinglimao/zkenc)
