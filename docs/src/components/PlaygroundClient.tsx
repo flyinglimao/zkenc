@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../pages/playground.module.css";
 import { Sudoku, generator } from "@forfuns/sudoku";
-import { encrypt, decrypt, getPublicInput, encap, decap } from "zkenc-js";
+import { encrypt, decrypt, getPublicInput } from "zkenc-js";
 
 // Sudoku utilities
 function generateSudoku(): { puzzle: number[] } {
@@ -36,10 +36,6 @@ export default function PlaygroundClient(): React.ReactElement {
 
   // Mode state
   const [mode, setMode] = useState<"encrypt" | "decrypt">("encrypt");
-
-  // Advanced mode state
-  const [advancedMode, setAdvancedMode] = useState(false);
-  const [generatedKey, setGeneratedKey] = useState<Uint8Array | null>(null);
 
   // Sudoku-specific state
   const [message, setMessage] = useState("");
@@ -330,42 +326,21 @@ export default function PlaygroundClient(): React.ReactElement {
 
     setLoading(true);
     setError("");
-    setGeneratedKey(null);
 
     try {
       const publicInputs = JSON.parse(customPublicInput);
       const encoder = new TextEncoder();
       const messageBytes = encoder.encode(customMessage);
 
-      if (advancedMode) {
-        // Use low-level API
-        const { ciphertext: witnessCiphertext, key } = await encap(
-          customCircuitFiles,
-          publicInputs
-        );
+      // Use high-level API
+      const { ciphertext: encryptedData } = await encrypt(
+        customCircuitFiles,
+        publicInputs,
+        messageBytes,
+        { includePublicInput }
+      );
 
-        setGeneratedKey(key);
-
-        // Manually encrypt with the key (simplified version)
-        const { ciphertext: fullCiphertext } = await encrypt(
-          customCircuitFiles,
-          publicInputs,
-          messageBytes,
-          { includePublicInput }
-        );
-
-        setCustomCiphertext(fullCiphertext);
-      } else {
-        // Use high-level API
-        const { ciphertext: encryptedData } = await encrypt(
-          customCircuitFiles,
-          publicInputs,
-          messageBytes,
-          { includePublicInput }
-        );
-
-        setCustomCiphertext(encryptedData);
-      }
+      setCustomCiphertext(encryptedData);
 
       setError("");
     } catch (err) {
@@ -571,18 +546,6 @@ export default function PlaygroundClient(): React.ReactElement {
         >
           ⚙️ Custom Circuit
         </button>
-      </div>
-
-      {/* Advanced Mode Toggle */}
-      <div className={styles.advancedToggle}>
-        <label>
-          <input
-            type="checkbox"
-            checked={advancedMode}
-            onChange={(e) => setAdvancedMode(e.target.checked)}
-          />
-          <span>🔬 Advanced Mode (Show encryption key)</span>
-        </label>
       </div>
 
       {activeTab === "sudoku" ? (
@@ -872,20 +835,6 @@ export default function PlaygroundClient(): React.ReactElement {
                   <div className={styles.success}>
                     <p>✅ Encryption successful!</p>
                     <p>Ciphertext size: {customCiphertext.length} bytes</p>
-                    {advancedMode && generatedKey && (
-                      <div className={styles.keyDisplay}>
-                        <h4>🔑 Generated Key:</h4>
-                        <pre className={styles.keyHex}>
-                          {Array.from(generatedKey)
-                            .map((b: number) => b.toString(16).padStart(2, "0"))
-                            .join("")}
-                        </pre>
-                        <p className={styles.keyNote}>
-                          ⚠️ This key is for educational purposes. In
-                          production, keys are used internally.
-                        </p>
-                      </div>
-                    )}
                     <button
                       onClick={handleDownloadCustomCiphertext}
                       className={styles.button}
