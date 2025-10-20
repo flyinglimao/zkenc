@@ -1,3 +1,12 @@
+# When .npmignore exists, npm COMPLETELY IGNORES .gitignore
+# So we need to explicitly list what to exclude
+
+# Source files that shouldn't be published
+*.rs
+Cargo.toml
+Cargo.lock
+target/
+
 # Tests
 tests/
 *.test.ts
@@ -6,14 +15,9 @@ tests/
 # Development files
 vitest.config.ts
 tsconfig.json
+.npmignore.bak
 
-# Build artifacts (we include compiled dist and pkg)
-target/
-*.rs
-Cargo.toml
-Cargo.lock
-
-# Documentation (keep README.md for npm)
+# Documentation
 IMPLEMENTATION_PLAN.md
 
 # IDE
@@ -24,5 +28,11 @@ IMPLEMENTATION_PLAN.md
 *.log
 npm-debug.log*
 
-# Other
+# Temp files
 .DS_Store
+
+# We WANT to include:
+# - dist/ (compiled TypeScript)
+# - pkg/ (compiled WASM)
+# - src/ (source for sourcemaps)
+# - README.md
