@@ -125,6 +125,17 @@ export interface EncryptResult {
 }
 
 /**
+ * Options for encryption
+ */
+export interface EncryptOptions {
+  /**
+   * Whether to include public inputs in the ciphertext
+   * @default true
+   */
+  includePublicInput?: boolean;
+}
+
+/**
  * Encrypt message using witness encryption
  *
  * This is a high-level API that combines encap and AES encryption.
@@ -133,6 +144,7 @@ export interface EncryptResult {
  * @param circuitFiles - R1CS and WASM files
  * @param publicInputs - Public inputs as JSON object
  * @param message - Message to encrypt
+ * @param options - Encryption options
  * @returns Combined ciphertext and the encryption key
  *
  * @example
@@ -146,8 +158,11 @@ export interface EncryptResult {
 export async function encrypt(
   circuitFiles: CircuitFiles,
   publicInputs: Record<string, any>,
-  message: Uint8Array
+  message: Uint8Array,
+  options: EncryptOptions = {}
 ): Promise<EncryptResult> {
+  const { includePublicInput = true } = options;
+
   // Step 1: Generate witness-encrypted key
   const { ciphertext: witnessCiphertext, key } = await encap(
     circuitFiles,
@@ -158,21 +173,54 @@ export async function encrypt(
   const { aesGcmEncrypt } = await import("./crypto.js");
   const encryptedMessage = await aesGcmEncrypt(key, message);
 
-  // Step 3: Combine both ciphertexts
-  // Format: [4 bytes length][witness ciphertext][encrypted message]
-  const lengthBuffer = new Uint8Array(4);
-  new DataView(lengthBuffer.buffer).setUint32(
-    0,
-    witnessCiphertext.length,
-    false
-  );
+  // Step 3: Prepare public input data (if includePublicInput is true)
+  let publicInputBytes = new Uint8Array(0);
+  if (includePublicInput) {
+    const publicInputJson = JSON.stringify(publicInputs);
+    const encoder = new TextEncoder();
+    publicInputBytes = encoder.encode(publicInputJson);
+  }
 
-  const combinedCiphertext = new Uint8Array(
-    4 + witnessCiphertext.length + encryptedMessage.length
-  );
-  combinedCiphertext.set(lengthBuffer, 0);
-  combinedCiphertext.set(witnessCiphertext, 4);
-  combinedCiphertext.set(encryptedMessage, 4 + witnessCiphertext.length);
+  // Step 4: Combine all parts
+  // Format: [1 byte flag][4 bytes witness ct length][witness ciphertext]
+  //         [4 bytes public input length (if flag=1)][public input (if flag=1)]
+  //         [encrypted message]
+  const flag = includePublicInput ? 1 : 0;
+  const headerSize = includePublicInput ? 9 : 5; // flag(1) + witnessLen(4) + publicLen(4 if included)
+
+  const totalSize =
+    headerSize +
+    witnessCiphertext.length +
+    publicInputBytes.length +
+    encryptedMessage.length;
+
+  const combinedCiphertext = new Uint8Array(totalSize);
+  const view = new DataView(combinedCiphertext.buffer);
+
+  let offset = 0;
+
+  // Write flag
+  view.setUint8(offset, flag);
+  offset += 1;
+
+  // Write witness ciphertext length
+  view.setUint32(offset, witnessCiphertext.length, false);
+  offset += 4;
+
+  // Write witness ciphertext
+  combinedCiphertext.set(witnessCiphertext, offset);
+  offset += witnessCiphertext.length;
+
+  // Write public input (if included)
+  if (includePublicInput) {
+    view.setUint32(offset, publicInputBytes.length, false);
+    offset += 4;
+    combinedCiphertext.set(publicInputBytes, offset);
+    offset += publicInputBytes.length;
+  }
+
+  // Write encrypted message
+  combinedCiphertext.set(encryptedMessage, offset);
 
   return {
     ciphertext: combinedCiphertext,
@@ -209,21 +257,42 @@ export async function decrypt(
   inputs: Record<string, any>
 ): Promise<Uint8Array> {
   // Step 1: Parse combined ciphertext
-  if (ciphertext.length < 4) {
+  if (ciphertext.length < 5) {
     throw new Error("Invalid ciphertext: too short");
   }
 
-  const witnessCtLength = new DataView(
-    ciphertext.buffer,
-    ciphertext.byteOffset
-  ).getUint32(0, false);
+  const view = new DataView(ciphertext.buffer, ciphertext.byteOffset);
+  let offset = 0;
 
-  if (ciphertext.length < 4 + witnessCtLength) {
+  // Read flag
+  const flag = view.getUint8(offset);
+  offset += 1;
+
+  // Read witness ciphertext length
+  const witnessCtLength = view.getUint32(offset, false);
+  offset += 4;
+
+  if (ciphertext.length < offset + witnessCtLength) {
     throw new Error("Invalid ciphertext: length mismatch");
   }
 
-  const witnessCiphertext = ciphertext.slice(4, 4 + witnessCtLength);
-  const encryptedMessage = ciphertext.slice(4 + witnessCtLength);
+  // Extract witness ciphertext
+  const witnessCiphertext = ciphertext.slice(offset, offset + witnessCtLength);
+  offset += witnessCtLength;
+
+  // Skip public input if present (flag === 1)
+  if (flag === 1) {
+    if (ciphertext.length < offset + 4) {
+      throw new Error("Invalid ciphertext: missing public input length");
+    }
+    const publicInputLength = view.getUint32(offset, false);
+    offset += 4;
+    // Skip the public input data
+    offset += publicInputLength;
+  }
+
+  // Extract encrypted message
+  const encryptedMessage = ciphertext.slice(offset);
 
   // Step 2: Recover key using witness decap
   const key = await decap(circuitFiles, witnessCiphertext, inputs);
@@ -233,4 +302,77 @@ export async function decrypt(
   const message = await aesGcmDecrypt(key, encryptedMessage);
 
   return message;
+}
+
+/**
+ * Extract public inputs from ciphertext
+ *
+ * Retrieves the public inputs that were embedded in the ciphertext during encryption.
+ * This only works if the ciphertext was created with `includePublicInput: true`.
+ *
+ * @param ciphertext - Combined ciphertext from encrypt
+ * @returns Public inputs as JSON object
+ * @throws Error if public inputs were not included in the ciphertext
+ *
+ * @example
+ * ```typescript
+ * const publicInputs = getPublicInput(ciphertext);
+ * console.log(publicInputs.puzzle); // [5,3,0,...]
+ * ```
+ */
+export function getPublicInput(ciphertext: Uint8Array): Record<string, any> {
+  // Step 1: Validate ciphertext
+  if (ciphertext.length < 5) {
+    throw new Error("Invalid ciphertext: too short");
+  }
+
+  const view = new DataView(ciphertext.buffer, ciphertext.byteOffset);
+  let offset = 0;
+
+  // Read flag
+  const flag = view.getUint8(offset);
+  offset += 1;
+
+  if (flag !== 1) {
+    throw new Error(
+      "Public inputs are not included in this ciphertext. " +
+        "Use encrypt() with includePublicInput: true to embed public inputs."
+    );
+  }
+
+  // Read witness ciphertext length
+  const witnessCtLength = view.getUint32(offset, false);
+  offset += 4;
+
+  if (ciphertext.length < offset + witnessCtLength) {
+    throw new Error("Invalid ciphertext: length mismatch");
+  }
+
+  // Skip witness ciphertext
+  offset += witnessCtLength;
+
+  // Read public input length
+  if (ciphertext.length < offset + 4) {
+    throw new Error("Invalid ciphertext: missing public input length");
+  }
+
+  const publicInputLength = view.getUint32(offset, false);
+  offset += 4;
+
+  if (ciphertext.length < offset + publicInputLength) {
+    throw new Error("Invalid ciphertext: public input length mismatch");
+  }
+
+  // Extract and decode public input
+  const publicInputBytes = ciphertext.slice(offset, offset + publicInputLength);
+  const decoder = new TextDecoder();
+  const publicInputJson = decoder.decode(publicInputBytes);
+
+  try {
+    return JSON.parse(publicInputJson);
+  } catch (error) {
+    throw new Error(
+      "Failed to parse public inputs: " + (error as Error).message
+    );
+  }
 }

@@ -4,5 +4,10 @@
  * @packageDocumentation
  */
 
-export { encap, decap, encrypt, decrypt } from "./zkenc.js";
-export type { EncapResult, EncryptResult, CircuitFiles } from "./zkenc.js";
+export { encap, decap, encrypt, decrypt, getPublicInput } from "./zkenc.js";
+export type {
+  EncapResult,
+  EncryptResult,
+  CircuitFiles,
+  EncryptOptions,
+} from "./zkenc.js";

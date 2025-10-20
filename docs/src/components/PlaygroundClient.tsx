@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "../pages/playground.module.css";
 import { Sudoku, generator } from "@forfuns/sudoku";
-import { encrypt, decrypt } from "zkenc-js";
+import { encrypt, decrypt, getPublicInput } from "zkenc-js";
 
 // Sudoku utilities
 function generateSudoku(): { puzzle: number[] } {
@@ -228,19 +228,39 @@ export default function PlaygroundClient(): React.ReactElement {
     const reader = new FileReader();
     reader.onload = () => {
       const arrayBuffer = reader.result as ArrayBuffer;
-      setUploadedCiphertext(new Uint8Array(arrayBuffer));
+      const ciphertextBytes = new Uint8Array(arrayBuffer);
+      setUploadedCiphertext(ciphertextBytes);
+
+      // Try to extract public input (puzzle) from ciphertext
+      try {
+        const publicInputs = getPublicInput(ciphertextBytes);
+        if (publicInputs.puzzle && Array.isArray(publicInputs.puzzle)) {
+          setPuzzle(publicInputs.puzzle);
+          setSolution(publicInputs.puzzle); // Initialize solution with puzzle
+          setError("");
+        }
+      } catch (err) {
+        // Public input not included, user will need to load puzzle separately
+        console.log("Public input not included in ciphertext:", err);
+      }
+
       setMode("decrypt");
     };
     reader.readAsArrayBuffer(file);
   };
 
-  const renderSudokuGrid = (values: number[], editable: boolean) => {
+  const renderSudokuGrid = (
+    values: number[],
+    editable: boolean,
+    type: "puzzle" | "solution" = "puzzle"
+  ) => {
     return (
       <div className={styles.sudokuGrid}>
         {values.map((value, index) => {
           const row = Math.floor(index / 9);
           const col = index % 9;
-          const isGiven = mode === "decrypt" && puzzle[index] !== 0;
+          // Only lock cells when editing solution (not when editing puzzle)
+          const isGiven = type === "solution" && puzzle[index] !== 0;
 
           return (
             <input
@@ -254,7 +274,7 @@ export default function PlaygroundClient(): React.ReactElement {
                 if (newValue >= 0 && newValue <= 9) {
                   const newValues = [...values];
                   newValues[index] = newValue;
-                  if (mode === "decrypt") {
+                  if (type === "solution") {
                     setSolution(newValues);
                   } else {
                     setPuzzle(newValues);
@@ -262,7 +282,7 @@ export default function PlaygroundClient(): React.ReactElement {
                 }
               }}
               maxLength={1}
-              disabled={!editable || (mode === "decrypt" && isGiven)}
+              disabled={!editable || isGiven}
             />
           );
         })}
@@ -303,7 +323,7 @@ export default function PlaygroundClient(): React.ReactElement {
               🎲 Generate Random Puzzle
             </button>
             <div className={styles.puzzleContainer}>
-              {renderSudokuGrid(puzzle, true)}
+              {renderSudokuGrid(puzzle, true, "puzzle")}
             </div>
           </div>
 
@@ -365,9 +385,14 @@ export default function PlaygroundClient(): React.ReactElement {
           </div>
 
           <div className={styles.section}>
-            <h2>2. View Puzzle</h2>
+            <h2>2. Enter Puzzle</h2>
+            <p className={styles.hint}>
+              {puzzle.length === 81 && puzzle.some((n) => n !== 0)
+                ? "Puzzle loaded from ciphertext. You can edit if needed."
+                : "Enter the puzzle numbers. Empty cells should be 0."}
+            </p>
             <div className={styles.puzzleContainer}>
-              {renderSudokuGrid(puzzle, false)}
+              {renderSudokuGrid(puzzle, true, "puzzle")}
             </div>
           </div>
 
@@ -387,7 +412,11 @@ export default function PlaygroundClient(): React.ReactElement {
               </button>
             </div>
             <div className={styles.puzzleContainer}>
-              {renderSudokuGrid(solution.length ? solution : puzzle, true)}
+              {renderSudokuGrid(
+                solution.length ? solution : puzzle,
+                true,
+                "solution"
+              )}
             </div>
           </div>
 
