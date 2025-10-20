@@ -1,10 +1,10 @@
 [package]
 name = "zkenc-core"
 version = "0.1.0"
-authors = [ "flyinglimao <hi@limaois.me>" ]
+authors = [ "flyinglimao" ]
 description = "An implementation of a witness encryption for QAP"
 repository = "https://github.com/flyinglimao/zkenc"
-documentation = "https://zkenc.limaois.me/"
+documentation = "https://flyinglimao.github.io/zkenc/"
 categories = ["cryptography"]
 license = "MIT/Apache-2.0"
 edition = "2021"

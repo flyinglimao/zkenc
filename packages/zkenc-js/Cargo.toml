@@ -1,7 +1,7 @@
 [package]
 name = "zkenc-js"
 version = "0.1.0"
-authors = [ "flyinglimao <hi@limaois.me>" ]
+authors = [ "flyinglimao" ]
 description = "WASM bindings for zkenc-core"
 repository = "https://github.com/flyinglimao/zkenc"
 categories = ["cryptography", "wasm"]
