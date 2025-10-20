@@ -7,33 +7,31 @@ import { Sudoku, generator } from "@forfuns/sudoku";
 function generateSudoku(): { puzzle: number[] } {
   // Generate a random Sudoku puzzle using @forfuns/sudoku
   // Level 0: easy, 1: medium, 2: hard, 3: expert, 4: hell
-  const puzzleString = generator(1); // Generate medium difficulty puzzle
-  
-  // Convert string format to number array
-  // generator returns a string of 81 characters where '.' represents empty cells
-  const puzzleArray = puzzleString.split("").map((char) => {
-    return char === "." ? 0 : parseInt(char, 10);
-  });
+  const puzzleArray = generator(1); // Generate medium difficulty puzzle
 
-  return { puzzle: puzzleArray };
+  // generator returns an array of 81 numbers where -1 represents empty cells
+  // Convert -1 to 0 for our display format
+  const formattedPuzzle = puzzleArray.map((n) => (n === -1 ? 0 : n));
+
+  return { puzzle: formattedPuzzle };
 }
 
-function solveSudoku(puzzle: number[]): { solution: number[] | null; solvable: boolean } {
+function solveSudoku(puzzle: number[]): {
+  solution: number[] | null;
+  solvable: boolean;
+} {
   try {
-    // Convert number array back to string format for the solver
-    const puzzleString = puzzle.map((n) => (n === 0 ? "." : n.toString())).join("");
-    
+    // Convert our format (0 for empty) back to Sudoku library format (-1 for empty)
+    const puzzleForSolver = puzzle.map((n) => (n === 0 ? -1 : n));
+
     // Create Sudoku solver instance and get solution
-    const sudoku = new Sudoku(puzzleString);
-    const solutionString = sudoku.getSolution();
-    
-    if (!solutionString || solutionString.includes(".")) {
+    const sudoku = new Sudoku(puzzleForSolver);
+    const solutionArray = sudoku.getSolution();
+
+    if (!solutionArray || solutionArray.some((n) => n === -1)) {
       return { solution: null, solvable: false };
     }
-    
-    // Convert solution string to number array
-    const solutionArray = solutionString.split("").map((char) => parseInt(char, 10));
-    
+
     return { solution: solutionArray, solvable: true };
   } catch (error) {
     return { solution: null, solvable: false };
@@ -70,9 +68,11 @@ export default function Playground(): React.ReactElement {
 
     try {
       const { solution: solvedPuzzle, solvable } = solveSudoku(puzzle);
-      
+
       if (!solvable || !solvedPuzzle) {
-        setError("❌ Unable to solve this puzzle. It may not have a valid solution.");
+        setError(
+          "❌ Unable to solve this puzzle. It may not have a valid solution."
+        );
         setSolution([]);
       } else {
         setSolution(solvedPuzzle);
@@ -332,8 +332,8 @@ export default function Playground(): React.ReactElement {
                 locked.
               </p>
               <div style={{ marginBottom: "1rem" }}>
-                <button 
-                  onClick={handleAutoSolve} 
+                <button
+                  onClick={handleAutoSolve}
                   className={styles.button}
                   disabled={loading || !puzzle.length}
                 >
