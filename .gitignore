@@ -42,11 +42,6 @@ Cargo.lock
 *.log
 tmp/
 
-# Package manager
-pnpm-lock.yaml
-package-lock.json
-yarn.lock
-
 # Output files (examples from CLI)
 *.bin
 params.bin

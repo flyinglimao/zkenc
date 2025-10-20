@@ -1,27 +1,43 @@
 import React, { useState, useEffect } from "react";
 import Layout from "@theme/Layout";
 import styles from "./playground.module.css";
+import { Sudoku, generator } from "@forfuns/sudoku";
 
 // Sudoku utilities
-function generateSudoku(): { puzzle: number[]; solution: number[] } {
-  // Simple Sudoku generator (for demo purposes)
-  // In production, use a proper Sudoku generator library
-  const solution = [
-    5, 3, 4, 6, 7, 8, 9, 1, 2, 6, 7, 2, 1, 9, 5, 3, 4, 8, 1, 9, 8, 3, 4, 2, 5,
-    6, 7, 8, 5, 9, 7, 6, 1, 4, 2, 3, 4, 2, 6, 8, 5, 3, 7, 9, 1, 7, 1, 3, 9, 2,
-    4, 8, 5, 6, 9, 6, 1, 5, 3, 7, 2, 8, 4, 2, 8, 7, 4, 1, 9, 6, 3, 5, 3, 4, 5,
-    2, 8, 6, 1, 7, 9,
-  ];
+function generateSudoku(): { puzzle: number[] } {
+  // Generate a random Sudoku puzzle using @forfuns/sudoku
+  // Level 0: easy, 1: medium, 2: hard, 3: expert, 4: hell
+  const puzzleString = generator(1); // Generate medium difficulty puzzle
+  
+  // Convert string format to number array
+  // generator returns a string of 81 characters where '.' represents empty cells
+  const puzzleArray = puzzleString.split("").map((char) => {
+    return char === "." ? 0 : parseInt(char, 10);
+  });
 
-  // Create puzzle by removing some numbers
-  const puzzle = [...solution];
-  const indicesToRemove = [
-    2, 3, 5, 6, 8, 10, 11, 13, 14, 15, 17, 19, 20, 22, 24, 25, 27, 29, 31, 32,
-    34, 36, 37, 39, 40, 42, 44, 45, 47, 49,
-  ];
-  indicesToRemove.forEach((i) => (puzzle[i] = 0));
+  return { puzzle: puzzleArray };
+}
 
-  return { puzzle, solution };
+function solveSudoku(puzzle: number[]): { solution: number[] | null; solvable: boolean } {
+  try {
+    // Convert number array back to string format for the solver
+    const puzzleString = puzzle.map((n) => (n === 0 ? "." : n.toString())).join("");
+    
+    // Create Sudoku solver instance and get solution
+    const sudoku = new Sudoku(puzzleString);
+    const solutionString = sudoku.getSolution();
+    
+    if (!solutionString || solutionString.includes(".")) {
+      return { solution: null, solvable: false };
+    }
+    
+    // Convert solution string to number array
+    const solutionArray = solutionString.split("").map((char) => parseInt(char, 10));
+    
+    return { solution: solutionArray, solvable: true };
+  } catch (error) {
+    return { solution: null, solvable: false };
+  }
 }
 
 export default function Playground(): React.ReactElement {
@@ -42,10 +58,32 @@ export default function Playground(): React.ReactElement {
   }, []);
 
   const handleGenerateRandom = () => {
-    const { puzzle: newPuzzle, solution: newSolution } = generateSudoku();
+    const { puzzle: newPuzzle } = generateSudoku();
     setPuzzle(newPuzzle);
-    setSolution(newSolution);
+    setSolution([]); // Clear solution when generating new puzzle
     setError("");
+  };
+
+  const handleAutoSolve = () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const { solution: solvedPuzzle, solvable } = solveSudoku(puzzle);
+      
+      if (!solvable || !solvedPuzzle) {
+        setError("❌ Unable to solve this puzzle. It may not have a valid solution.");
+        setSolution([]);
+      } else {
+        setSolution(solvedPuzzle);
+        setError("");
+      }
+    } catch (err) {
+      setError("❌ Error solving puzzle: " + (err as Error).message);
+      setSolution([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEncrypt = async () => {
@@ -293,6 +331,15 @@ export default function Playground(): React.ReactElement {
                 Fill in the empty cells to solve the puzzle. Given numbers are
                 locked.
               </p>
+              <div style={{ marginBottom: "1rem" }}>
+                <button 
+                  onClick={handleAutoSolve} 
+                  className={styles.button}
+                  disabled={loading || !puzzle.length}
+                >
+                  {loading ? "🔄 Solving..." : "🧩 Auto Solve Puzzle"}
+                </button>
+              </div>
               <div className={styles.puzzleContainer}>
                 {renderSudokuGrid(solution.length ? solution : puzzle, true)}
               </div>
