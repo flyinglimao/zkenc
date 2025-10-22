@@ -84,6 +84,13 @@ const config: Config = {
         },
       };
     },
+    [
+      "@docusaurus/plugin-google-gtag",
+      {
+        trackingID: "G-ZSJCSHM3XT",
+        anonymizeIP: true,
+      },
+    ],
   ],
 
   themeConfig: {
