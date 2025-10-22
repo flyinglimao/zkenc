@@ -41,19 +41,19 @@ zkenc encap \
 
 **Arguments:**
 
-- `-c, --circuit <FILE>` - Path to R1CS circuit file (`.r1cs` from Circom)
-- `-i, --input <FILE>` - Path to JSON file with public inputs
-- `-c, --ciphertext <FILE>` - Output path for ciphertext
-- `-k, --key <FILE>` - Output path for encryption key
+- `--circuit <FILE>` - Path to R1CS circuit file (`.r1cs` from Circom)
+- `--input <FILE>` - Path to JSON file with public inputs
+- `--ciphertext <FILE>` - Output path for ciphertext
+- `--key <FILE>` - Output path for encryption key
 
 **Example:**
 
 ```bash
 zkenc encap \
-  -c tests/r1cs/sudoku.r1cs \
-  -i tests/inputs/sudoku_basic.json \
-  -c ciphertext.bin \
-  -k key.bin
+  --circuit tests/r1cs/sudoku.r1cs \
+  --input tests/inputs/sudoku_basic.json \
+  --ciphertext ciphertext.bin \
+  --key key.bin
 ```
 
 #### `zkenc decap`
@@ -70,19 +70,19 @@ zkenc decap \
 
 **Arguments:**
 
-- `-c, --circuit <FILE>` - Path to R1CS circuit file
-- `-w, --witness <FILE>` - Path to witness file (`.wtns` from snarkjs)
-- `-c, --ciphertext <FILE>` - Path to ciphertext file
-- `-k, --key <FILE>` - Output path for recovered key
+- `--circuit <FILE>` - Path to R1CS circuit file
+- `--witness <FILE>` - Path to witness file (`.wtns` from snarkjs)
+- `--ciphertext <FILE>` - Path to ciphertext file
+- `--key <FILE>` - Output path for recovered key
 
 **Example:**
 
 ```bash
 zkenc decap \
-  -c tests/r1cs/sudoku.r1cs \
-  -w tests/inputs/sudoku_sudoku_basic.wtns \
-  -c ciphertext.bin \
-  -k recovered_key.bin
+  --circuit tests/r1cs/sudoku.r1cs \
+  --witness tests/inputs/sudoku_sudoku_basic.wtns \
+  --ciphertext ciphertext.bin \
+  --key recovered_key.bin
 ```
 
 #### `zkenc encrypt`
@@ -98,17 +98,17 @@ zkenc encrypt \
 
 **Arguments:**
 
-- `-k, --key <FILE>` - Path to encryption key file
-- `-i, --input <FILE>` - Path to plaintext message file
-- `-o, --output <FILE>` - Output path for encrypted file
+- `--key <FILE>` - Path to encryption key file
+- `--input <FILE>` - Path to plaintext message file
+- `--output <FILE>` - Output path for encrypted file
 
 **Example:**
 
 ```bash
 zkenc encrypt \
-  -k key.bin \
-  -i message.txt \
-  -o encrypted.bin
+  --key key.bin \
+  --input message.txt \
+  --output encrypted.bin
 ```
 
 #### `zkenc decrypt`
@@ -124,17 +124,17 @@ zkenc decrypt \
 
 **Arguments:**
 
-- `-k, --key <FILE>` - Path to decryption key file
-- `-i, --input <FILE>` - Path to encrypted file
-- `-o, --output <FILE>` - Output path for decrypted message
+- `--key <FILE>` - Path to decryption key file
+- `--input <FILE>` - Path to encrypted file
+- `--output <FILE>` - Output path for decrypted message
 
 **Example:**
 
 ```bash
 zkenc decrypt \
-  -k recovered_key.bin \
-  -i encrypted.bin \
-  -o decrypted.txt
+  --key recovered_key.bin \
+  --input encrypted.bin \
+  --output decrypted.txt
 ```
 
 ## 🎯 Complete Workflow Example
@@ -144,24 +144,24 @@ Here's a complete example using a Sudoku circuit:
 ```bash
 # Step 1: Generate ciphertext and key
 zkenc encap \
-  -c sudoku.r1cs \
-  -i puzzle.json \
-  -c ct.bin \
-  -k key1.bin
+  --circuit tests/r1cs/sudoku.r1cs \
+  --input tests/inputs/sudoku_general.json \
+  --ciphertext c.bin \
+  --key k.bin
 
 # Step 2: Encrypt your secret message
-echo "Hello, Sudoku solver!" > secret.txt
-zkenc encrypt -k key1.bin -i secret.txt -o encrypted.bin
+echo "Hello, Sudoku solver" > secret.txt
+zkenc encrypt --key k.bin --input secret.txt --output encrypted.bin
 
 # Step 3: (Someone with valid witness) Recover the key
 zkenc decap \
-  -c sudoku.r1cs \
-  -w solution.wtns \
-  -c ct.bin \
-  -k key2.bin
+  --circuit tests/r1cs/sudoku.r1cs \
+  --witness tests/inputs/sudoku_solution.wtns \
+  --ciphertext c.bin \
+  --key recovered_key.bin
 
 # Step 4: Decrypt the message
-zkenc decrypt -k key2.bin -i encrypted.bin -o decrypted.txt
+zkenc decrypt --key recovered_key.bin --input encrypted.bin --output decrypted.txt
 
 # Verify
 cat decrypted.txt

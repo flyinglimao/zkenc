@@ -44,10 +44,10 @@ enum Commands {
         #[arg(short, long)]
         witness: String,
         /// 密文檔案路徑
-        #[arg(short = 'c', long)]
+        #[arg(short, long)]
         ciphertext: String,
         /// 輸出金鑰檔案路徑
-        #[arg(short = 'k', long)]
+        #[arg(short, long)]
         key: String,
     },
     /// Encrypt: 使用金鑰加密訊息
