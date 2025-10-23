@@ -12,7 +12,7 @@ zkenc-js provides a high-level API for witness encryption, allowing you to encry
 - 🌐 Works in both Node.js and browsers
 - 🚀 Powered by WASM for high performance
 - 📦 TypeScript support with full type definitions
-- 🧪 Comprehensive test suite (24 tests passing)
+- 🧪 Comprehensive test suite (29 tests passing)
 
 ## Installation
 
@@ -31,7 +31,7 @@ yarn add zkenc-js
 The simplest way to use zkenc-js - directly encrypt and decrypt messages:
 
 ```typescript
-import { encrypt, decrypt } from "zkenc-js";
+import { encrypt, decrypt, getPublicInput } from "zkenc-js";
 import { readFileSync } from "fs";
 
 // Load your Circom circuit files
@@ -61,10 +61,15 @@ const { ciphertext, key } = await encrypt(
   { r1csBuffer, wasmBuffer },
   publicInputs,
   message
+  // Optional: { includePublicInput: false } to exclude public inputs
 );
 // key is available for advanced users
 
-// 2. Decrypt: Automatically handles decap + AES decryption
+// 2. Extract public inputs from ciphertext (if included)
+const extractedInputs = getPublicInput(ciphertext);
+console.log(extractedInputs); // { puzzle: [...] }
+
+// 3. Decrypt: Automatically handles decap + AES decryption
 const decrypted = await decrypt(
   { r1csBuffer, wasmBuffer },
   ciphertext,
@@ -164,6 +169,8 @@ Encrypt message using witness encryption (combines encap + AES encryption).
   - `wasmBuffer: Uint8Array` - Circom WASM file
 - `publicInputs: Record<string, any>` - Public inputs as JSON object
 - `message: Uint8Array` - Message to encrypt
+- `options?: EncryptOptions` - Optional encryption options
+  - `includePublicInput?: boolean` - Include public inputs in ciphertext (default: true)
 
 **Returns:** `Promise<EncryptResult>`
 
@@ -177,7 +184,8 @@ const message = new TextEncoder().encode("Secret");
 const { ciphertext, key } = await encrypt(
   { r1csBuffer, wasmBuffer },
   { puzzle: puzzleData },
-  message
+  message,
+  { includePublicInput: true } // Optional, true by default
 );
 ```
 
@@ -206,6 +214,30 @@ const decrypted = await decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
 });
 const message = new TextDecoder().decode(decrypted);
 ```
+
+---
+
+#### `getPublicInput(ciphertext)`
+
+Extract public inputs from ciphertext (if they were included during encryption).
+
+**Parameters:**
+
+- `ciphertext: Uint8Array` - Combined ciphertext from encrypt
+
+**Returns:** `Record<string, any>` - Public inputs as JSON object
+
+**Throws:** Error if public inputs were not included in the ciphertext
+
+**Example:**
+
+```typescript
+// After encrypting with default options (includePublicInput: true)
+const publicInputs = getPublicInput(ciphertext);
+console.log(publicInputs.puzzle); // [5, 3, 0, ...]
+```
+
+**Note:** This only works if the ciphertext was created with `includePublicInput: true` (default).
 
 ---
 
@@ -358,10 +390,10 @@ pnpm test --watch
 Test coverage:
 
 - ✅ 9 witness calculator tests
-- ✅ 3 AES-256-GCM encryption tests
-- ✅ 4 WASM integration tests
+- ✅ 7 WASM integration tests
 - ✅ 8 end-to-end workflow tests
-- **Total: 24/24 passing**
+- ✅ 5 zkenc API tests
+- **Total: 29/29 passing**
 
 ## Development
 
