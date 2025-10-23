@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const config: Config = {
-  title: "zkenc",
+  title: "zkEnc",
   tagline: "Witness Encryption for Circom Circuits",
   favicon: "img/favicon.ico",
 
@@ -100,9 +100,9 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: "zkenc",
+      title: "zkEnc",
       logo: {
-        alt: "zkenc Logo",
+        alt: "zkEnc Logo",
         src: "img/zkenc-logo.webp",
       },
       items: [

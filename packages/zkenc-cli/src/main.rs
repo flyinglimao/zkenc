@@ -29,10 +29,10 @@ enum Commands {
         #[arg(short, long)]
         input: String,
         /// 輸出密文檔案路徑
-        #[arg(short = 'c', long)]
+        #[arg(short, long)]
         ciphertext: String,
         /// 輸出金鑰檔案路徑
-        #[arg(short = 'k', long)]
+        #[arg(short, long)]
         key: String,
     },
     /// Decapsulate: 恢復金鑰 (使用電路和完整 witness)
