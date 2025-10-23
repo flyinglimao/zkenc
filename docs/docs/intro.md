@@ -16,7 +16,7 @@ Witness Encryption allows you to encrypt a message under a circuit constraint. T
 
 ## Project Status
 
-The zkenc implementation is currently under peer review. The library provides a practical implementation of witness encryption for Circom circuits.
+The zkenc implementation has undergone initial security verification. While the library provides a practical implementation of witness encryption for Circom circuits with security validated in most scenarios, we are currently addressing edge cases where additional security considerations apply. Our paper is still being refined as we continue to strengthen the implementation.
 
 ## Available Packages
 
