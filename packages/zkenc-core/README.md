@@ -19,7 +19,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-zkenc-core = { path = "../zkenc-core", features = ["std"] }
+zkenc-core = { path = "../zkenc-core" }
 
 # For testing with concrete curves
 [dev-dependencies]
@@ -30,8 +30,9 @@ zkenc-core = { path = "../zkenc-core", features = ["with_curves"] }
 
 - `std`: Standard library support (enabled by default)
 - `r1cs`: R1CS constraint system support (required for circuit operations)
-- `with_curves`: Enables BLS12-381 curve for testing and examples
+- `with_curves`: Enables BN254 and BLS12-381 curves for testing and examples
 - `parallel`: Parallel computation support (native only)
+- `wasm`: WebAssembly support
 
 ## Usage
 
@@ -39,21 +40,21 @@ zkenc-core = { path = "../zkenc-core", features = ["with_curves"] }
 
 ```rust
 use zkenc_core::{encap, decap, Ciphertext, Key};
-use ark_bls12_381::Bls12_381;
+use ark_bn254::Bn254; // BN254 (alt_bn128) - used by Circom
 use ark_relations::gr1cs::ConstraintSynthesizer;
-use ark_std::test_rng;
+use ark_std::rand::SeedableRng;
 
 // Define your circuit implementing ConstraintSynthesizer<F>
 struct MyCircuit { /* ... */ }
 
 // Encapsulation: Generate ciphertext and key with public inputs only
 let circuit_encap = MyCircuit::new(/* public inputs only */);
-let mut rng = test_rng();
-let (ciphertext, key1) = encap::<Bls12_381, _, _>(circuit_encap, &mut rng)?;
+let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(0);
+let (ciphertext, key1) = encap::<Bn254, _, _>(circuit_encap, &mut rng)?;
 
 // Decapsulation: Recover key with full witness
 let circuit_decap = MyCircuit::new(/* public inputs + witness */);
-let key2 = decap::<Bls12_381, _>(circuit_decap, &ciphertext)?;
+let key2 = decap::<Bn254, _>(circuit_decap, &ciphertext)?;
 
 assert_eq!(key1, key2);
 ```
@@ -66,7 +67,7 @@ Generate a ciphertext and derive a key from a circuit with public inputs.
 
 **Type Parameters:**
 
-- `E: Pairing` - Pairing-friendly elliptic curve (e.g., `Bls12_381`)
+- `E: Pairing` - Pairing-friendly elliptic curve (e.g., `Bn254`, `Bls12_381`)
 - `C: ConstraintSynthesizer<E::ScalarField>` - Circuit implementing constraint synthesis
 - `R: RngCore` - Random number generator
 
@@ -92,7 +93,7 @@ use ark_std::rand::SeedableRng;
 
 let mut rng = ark_std::rand::rngs::StdRng::seed_from_u64(42);
 let circuit = MyCircuit::new(None, None, Some(public_output));
-let (ciphertext, key) = encap::<Bls12_381, _, _>(circuit, &mut rng)?;
+let (ciphertext, key) = encap::<Bn254, _, _>(circuit, &mut rng)?;
 ```
 
 ---
@@ -237,7 +238,7 @@ match encap(circuit, &mut rng) {
 3. Evaluate QAP polynomials uᵢ(x), vᵢ(x), wᵢ(x)
 4. Generate CRS query vectors with MSM
 5. Compute pairing s = e([α]₁, [β]₂) + e(Σ aᵢ·[φᵢ]₁, [1]₂)
-6. Derive key via serialization and hashing
+6. Derive key via Blake3 hash: key = Blake3(serialize(s))
 
 **Decapsulation:**
 
@@ -247,15 +248,16 @@ match encap(circuit, &mut rng) {
 4. Compute B = [β]₂ + Σ aᵢ·[r·vᵢ(x)]₂
 5. Compute C = Σ aᵢ·[φᵢ(x)/δ]₁
 6. Compute pairing s = e(A, B) - e(C, [δ]₂)
-7. Derive key using same KDF as encapsulation
+7. Derive key using Blake3: key = Blake3(serialize(s))
 
 ### Cryptographic Primitives
 
-- **Elliptic Curves**: Via `ark-ec` (BLS12-381 recommended)
+- **Elliptic Curves**: Via `ark-ec` (BN254/BLS12-381)
 - **Finite Fields**: Via `ark-ff`
 - **Constraint Systems**: Via `ark-relations` (R1CS/ConstraintSynthesizer)
 - **Pairing Operations**: Via `ark-ec::pairing::Pairing`
 - **Multi-Scalar Multiplication**: Via `ark-ec::VariableBaseMSM`
+- **Key Derivation**: Blake3 cryptographic hash function (32-byte output)
 
 ## Testing
 
@@ -288,16 +290,13 @@ The library includes comprehensive integration tests using a MiMC-322 hash circu
 
 1. **Placeholder QAP Conversion**: The R1CS to QAP polynomial evaluation currently returns zero vectors. Full FFT/IFFT-based polynomial interpolation is reserved for future implementation.
 
-2. **Key Derivation**: Uses simple serialization truncation. Production systems should use proper KDF (HKDF/Blake3).
-
-3. **Circuit Synthesis**: Encapsulation with missing witness shows 0 constraints. This is expected behavior but could be handled more gracefully.
+2. **Circuit Synthesis**: Encapsulation with missing witness shows 0 constraints. This is expected behavior but could be handled more gracefully.
 
 ### Planned Improvements
 
 - Complete FFT/IFFT-based R1CS to QAP conversion
-- Proper cryptographic KDF implementation
 - Performance optimization (parallel MSM, batch pairing)
-- Additional curve support (BN254, BW6-761)
+- Additional curve support (BW6-761)
 - Comprehensive security audit
 
 ## Documentation
@@ -317,9 +316,3 @@ Contributions are welcome! Please ensure:
 ## License
 
 This project is dual-licensed under MIT/Apache-2.0.
-
-## References
-
-- **WKEM Paper**: [Original witness encryption paper/scheme reference]
-- **Groth16**: "On the Size of Pairing-based Non-interactive Arguments" by Jens Groth
-- **arkworks**: https://github.com/arkworks-rs

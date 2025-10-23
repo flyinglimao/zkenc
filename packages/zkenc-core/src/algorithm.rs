@@ -196,18 +196,16 @@ where
     let pairing2 = E::pairing(phi_sum, g2_generator);
     let s = pairing1 + pairing2;
 
-    // Serialize pairing result and hash to get key
+    // Serialize pairing result and hash to derive key
     use ark_serialize::CanonicalSerialize;
     let mut s_bytes = Vec::new();
     s.serialize_compressed(&mut s_bytes)
         .map_err(|_| Error::SerializationError)?;
 
-    // Derive the key from pairing result
-    // In production, should use proper KDF like HKDF or Blake3
-    // For now, use first 32 bytes of serialized pairing result
-    let mut key_bytes = [0u8; 32];
-    let len = core::cmp::min(32, s_bytes.len());
-    key_bytes[..len].copy_from_slice(&s_bytes[..len]);
+    // Derive the key from pairing result using Blake3
+    // Blake3 is a fast, secure cryptographic hash function that outputs 32 bytes
+    let hash = blake3::hash(&s_bytes);
+    let key_bytes = *hash.as_bytes(); // Returns [u8; 32]
 
     let key = Key::new(key_bytes);
 
@@ -357,15 +355,15 @@ where
     let pairing_c_delta = E::pairing(c_point, ciphertext.encap_key.delta_g2);
     let s = pairing_ab - pairing_c_delta;
 
-    // Step 7: Derive key using same KDF as encap
+    // Step 7: Derive key using same KDF as encap (Blake3)
     use ark_serialize::CanonicalSerialize;
     let mut s_bytes = Vec::new();
     s.serialize_compressed(&mut s_bytes)
         .map_err(|_| Error::SerializationError)?;
 
-    let mut key_bytes = [0u8; 32];
-    let len = core::cmp::min(32, s_bytes.len());
-    key_bytes[..len].copy_from_slice(&s_bytes[..len]);
+    // Derive the key from pairing result using Blake3
+    let hash = blake3::hash(&s_bytes);
+    let key_bytes = *hash.as_bytes(); // Returns [u8; 32]
 
     let key = Key::new(key_bytes);
 

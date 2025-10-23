@@ -3,7 +3,7 @@
 //! This module defines the core data structures used in the WKEM scheme:
 //! - EncapKey: The Common Reference String (CRS) σ generated during Encap
 //! - Ciphertext: Contains EncapKey and public inputs
-//! - Key: The derived symmetric key (32 bytes from Keccak256)
+//! - Key: The derived symmetric key (32 bytes from Blake3)
 
 use ark_ec::pairing::Pairing;
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
@@ -48,7 +48,7 @@ pub struct Ciphertext<E: Pairing> {
     pub public_inputs: Vec<E::ScalarField>,
 }
 
-/// Derived symmetric key (output of Keccak256)
+/// Derived symmetric key (output of Blake3 hash)
 #[derive(Clone, Debug, PartialEq, Eq, CanonicalSerialize, CanonicalDeserialize)]
 pub struct Key(pub [u8; 32]);
 
