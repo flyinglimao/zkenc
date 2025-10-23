@@ -88,7 +88,7 @@ cargo test -p zkenc-core
 
 ## 💡 Usage Examples
 
-### Complete Sudoku Encryption Example
+### Complete Sudoku Encryption Example (High-Level API)
 
 Suppose you have a Sudoku circuit and want to encrypt a message that only someone who knows the correct solution can decrypt:
 
@@ -98,37 +98,32 @@ Suppose you have a Sudoku circuit and want to encrypt a message that only someon
 # - puzzle.json: Sudoku puzzle (public inputs)
 # - solution.wtns: snarkjs-generated correct solution witness
 
-# Step 1: Generate ciphertext and encryption key
-zkenc encap \
-  --circuit sudoku.r1cs \
-  --input puzzle.json \
-  --ciphertext ciphertext.bin \
-  --key encryption_key.bin
-
-# Step 2: Encrypt your message
+# Step 1: Encrypt your message (one-step encryption with embedded public inputs)
 echo "Secret message for Sudoku solver" > message.txt
 zkenc encrypt \
-  --key encryption_key.bin \
-  --input message.txt \
-  --output encrypted_message.bin
+  --circuit sudoku.r1cs \
+  --input puzzle.json \
+  --message message.txt \
+  --output encrypted_package.bin
 
-# Step 3: (Performed by someone with the solution) Recover key from ciphertext
-zkenc decap \
+# Step 2: (Performed by someone with the solution) Decrypt the message in one step
+zkenc decrypt \
   --circuit sudoku.r1cs \
   --witness solution.wtns \
-  --ciphertext ciphertext.bin \
-  --key decryption_key.bin
-
-# Step 4: Decrypt the message
-zkenc decrypt \
-  --key decryption_key.bin \
-  --input encrypted_message.bin \
+  --ciphertext encrypted_package.bin \
   --output decrypted_message.txt
 
 # Verify
 cat decrypted_message.txt
 # Output: Secret message for Sudoku solver
 ```
+
+**Key Benefits:**
+
+- ✅ Single command for encryption (no intermediate files needed)
+- ✅ Single command for decryption (fully automatic)
+- ✅ Public inputs embedded in ciphertext (self-contained)
+- ✅ Compatible with zkenc-js (no format conversion needed)
 
 ### Generating Inputs with Circom and snarkjs
 
@@ -139,11 +134,9 @@ circom sudoku.circom --r1cs --wasm --sym
 # 2. Prepare input JSON
 cat > input.json << EOF
 {
-  "puzzle": [5,3,0,0,7,0,0,0,0, ...],
-  "solution": [5,3,4,6,7,8,9,1,2, ...]
+  "puzzle": ["5","3","0","0","7","0","0","0","0"],
+  "solution": ["5","3","4","6","7","8","9","1","2"]
 }
-EOF
-
 EOF
 
 # 3. Calculate witness
@@ -155,6 +148,31 @@ snarkjs wtns check sudoku.r1cs witness.wtns
 # 5. Now you can use zkenc!
 ```
 
+### Cross-Tool Compatibility
+
+zkenc-cli and zkenc-js are fully compatible and use the same ciphertext format:
+
+```bash
+# Encrypt with CLI
+zkenc encrypt \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --message secret.txt \
+  --output encrypted.bin
+```
+
+```typescript
+// Decrypt with zkenc-js (Node.js or browser)
+import { zkenc } from "zkenc-js";
+import fs from "fs/promises";
+
+const ciphertext = await fs.readFile("encrypted.bin");
+const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+console.log(new TextDecoder().decode(decrypted));
+```
+
+**No format conversion needed!** Learn more about [cross-tool workflows →](./docs/docs/guides/cross-tool-workflow.md)
+
 ## 📚 Package Documentation
 
 ### zkenc-core
@@ -163,10 +181,11 @@ Core witness encryption algorithm implementation using the arkworks ecosystem.
 
 **Core Features**:
 
-- ✅ **Encap**: Generate ciphertext and key from circuit and public inputs
-- ✅ **Decap**: Recover key from ciphertext using witness
+- ✅ **Encap**: Generate witness-encrypted ciphertext and key from circuit and public inputs
+- ✅ **Decap**: Recover key from ciphertext using valid witness
 - ✅ R1CS to QAP conversion
 - ✅ BN254 (alt_bn128) curve support - Circom's default curve
+- ✅ Blake3 KDF for key derivation
 - ✅ Serializable circuit format
 - ✅ `no_std` environment support
 
@@ -182,11 +201,41 @@ Core witness encryption algorithm implementation using the arkworks ecosystem.
 
 Command-line interface tool providing witness encryption for Circom circuits.
 
+**Key Commands:**
+
+- `zkenc encrypt` - One-step encryption (encap + AES-256-GCM)
+- `zkenc decrypt` - One-step decryption (decap + AES-256-GCM)
+- `zkenc encap` - Low-level: generate witness-encrypted ciphertext
+- `zkenc decap` - Low-level: recover key from witness
+
+**Features:**
+
+- ✅ Combined ciphertext format (compatible with zkenc-js)
+- ✅ Public inputs can be embedded in ciphertext
+- ✅ Batch file processing support
+- ✅ Comprehensive error handling
+
 See the [CLI README](./packages/zkenc-cli/README.md) for detailed command documentation.
 
 ### zkenc-js
 
 JavaScript/WASM bindings for browser and Node.js environments.
+
+**Key Functions:**
+
+- `encrypt()` - One-step encryption (encap + AES-256-GCM)
+- `decrypt()` - One-step decryption (decap + AES-256-GCM)
+- `encap()` - Low-level: generate witness-encrypted ciphertext
+- `decap()` - Low-level: recover key from witness
+- `getPublicInput()` - Extract public inputs from ciphertext
+
+**Features:**
+
+- ✅ Works in browser and Node.js
+- ✅ Full TypeScript support
+- ✅ Combined ciphertext format
+- ✅ Optional public input embedding
+- ✅ 29+ test cases
 
 See the [zkenc-js README](./packages/zkenc-js/README.md) for detailed API documentation.
 
