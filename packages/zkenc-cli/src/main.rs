@@ -50,27 +50,36 @@ enum Commands {
         #[arg(short, long)]
         key: String,
     },
-    /// Encrypt: 使用金鑰加密訊息
+    /// Encrypt: 高階加密 (與 zkenc-js 相容格式)
     Encrypt {
-        /// 金鑰檔案路徑
+        /// R1CS 電路檔案路徑 (.r1cs)
         #[arg(short, long)]
-        key: String,
-        /// 輸入訊息檔案
+        circuit: String,
+        /// 公開輸入 JSON 檔案
         #[arg(short, long)]
         input: String,
-        /// 輸出加密檔案
+        /// 訊息檔案
+        #[arg(short, long)]
+        message: String,
+        /// 輸出組合密文檔案
         #[arg(short, long)]
         output: String,
+        /// 不在密文中包含公開輸入 (預設會包含)
+        #[arg(long, default_value = "false")]
+        no_public_input: bool,
     },
-    /// Decrypt: 使用金鑰解密訊息
+    /// Decrypt: 高階解密 (與 zkenc-js 相容格式)
     Decrypt {
-        /// 金鑰檔案路徑
+        /// R1CS 電路檔案路徑 (.r1cs)
         #[arg(short, long)]
-        key: String,
-        /// 輸入加密檔案
+        circuit: String,
+        /// Witness 檔案路徑 (.wtns from snarkjs)
         #[arg(short, long)]
-        input: String,
-        /// 輸出解密檔案
+        witness: String,
+        /// 組合密文檔案
+        #[arg(short = 'i', long)]
+        ciphertext: String,
+        /// 輸出解密訊息檔案
         #[arg(short, long)]
         output: String,
     },
@@ -96,11 +105,23 @@ fn main() -> Result<()> {
         } => {
             commands::decap_command(&circuit, &witness, &ciphertext, &key)?;
         }
-        Commands::Encrypt { key, input, output } => {
-            commands::encrypt_command(&key, &input, &output)?;
+
+        Commands::Encrypt {
+            circuit,
+            input,
+            message,
+            output,
+            no_public_input,
+        } => {
+            commands::encrypt_command(&circuit, &input, &message, &output, !no_public_input)?;
         }
-        Commands::Decrypt { key, input, output } => {
-            commands::decrypt_command(&key, &input, &output)?;
+        Commands::Decrypt {
+            circuit,
+            witness,
+            ciphertext,
+            output,
+        } => {
+            commands::decrypt_command(&circuit, &witness, &ciphertext, &output)?;
         }
     }
 
