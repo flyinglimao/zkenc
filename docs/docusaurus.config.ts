@@ -103,7 +103,7 @@ const config: Config = {
       title: "zkenc",
       logo: {
         alt: "zkenc Logo",
-        src: "img/logo.svg",
+        src: "img/zkenc-logo.webp",
       },
       items: [
         {
