@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # zkenc-core API Reference
 
-zkenc-core is the Rust library that provides the cryptographic primitives for witness encryption. It's the foundation for both zkenc-cli and zkenc-js.
+zkenc-core is the Rust library that provides the cryptographic primitives for witness encryption. It serves as the foundation layer - both zkenc-cli and zkenc-js are built on top of this core library.
 
 ## Overview
 

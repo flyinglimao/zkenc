@@ -229,6 +229,25 @@ match encap(circuit, &mut rng) {
 
 ## Architecture
 
+zkenc-core serves as the cryptographic foundation layer. Both zkenc-cli and zkenc-js are built on top of this core library:
+
+```
+┌─────────────────────────────────────────────────────┐
+│              Application Layer                      │
+│                                                     │
+│  ┌───────────────────┐    ┌───────────────────┐   │
+│  │   zkenc-cli       │    │    zkenc-js       │   │
+│  │   (Rust)          │    │    (WASM)         │   │
+│  └─────────┬─────────┘    └─────────┬─────────┘   │
+│            └────────────┬───────────┘             │
+└─────────────────────────┼─────────────────────────┘
+                          │
+            ┌─────────────▼──────────────┐
+            │      zkenc-core            │
+            │  (Cryptographic Foundation)│
+            └────────────────────────────┘
+```
+
 ### Algorithm Flow
 
 **Encapsulation:**

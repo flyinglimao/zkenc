@@ -2,6 +2,22 @@
 
 Command-line interface for zkenc witness encryption with Circom circuit support.
 
+## Architecture
+
+zkenc-cli is built on top of zkenc-core, providing a command-line interface for witness encryption operations:
+
+```
+┌─────────────────────────────────┐
+│         zkenc-cli               │
+│  (Command-line Application)     │
+└───────────────┬─────────────────┘
+                │
+  ┌─────────────▼──────────────┐
+  │      zkenc-core            │
+  │  (Cryptographic Foundation)│
+  └────────────────────────────┘
+```
+
 ## Installation
 
 ````bash

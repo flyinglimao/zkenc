@@ -327,34 +327,30 @@ export default defineConfig({
 
 ## Architecture
 
-zkenc-js consists of three layers:
-
-1. **zkenc-core** (Rust): Core witness encryption algorithms using arkworks
-2. **WASM bindings** (Rust): WebAssembly interface with R1CS/witness parsers
-3. **TypeScript API** (this package): High-level API with witness calculator
+zkenc-js is built on top of zkenc-core and compiled to WebAssembly:
 
 ```
 ┌─────────────────────────────────────┐
-│  TypeScript API (zkenc-js)          │
-│  - encap/decap wrappers             │
-│  - AES-256-GCM encrypt/decrypt      │
-│  - Witness calculator integration   │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  WASM Bindings (lib.rs)             │
-│  - R1CS parser (Circom format)      │
-│  - Witness parser (snarkjs format)  │
-│  - CircomCircuit implementation     │
-└──────────────┬──────────────────────┘
-               │
-┌──────────────▼──────────────────────┐
-│  zkenc-core (Rust)                  │
-│  - Encap: Generate key from QAP     │
-│  - Decap: Recover key with witness  │
-│  - Pairing-based cryptography       │
-└─────────────────────────────────────┘
+│         zkenc-js                    │
+│  (WASM + TypeScript Application)    │
+│                                     │
+│  - TypeScript API                   │
+│  - AES-256-GCM encryption           │
+│  - Witness calculator               │
+│  - R1CS/WTNS parsers                │
+└───────────────┬─────────────────────┘
+                │
+  ┌─────────────▼──────────────┐
+  │      zkenc-core            │
+  │  (Cryptographic Foundation)│
+  └────────────────────────────┘
 ```
+
+The package consists of three internal layers:
+
+1. **TypeScript API Layer**: High-level `encrypt()`/`decrypt()` functions with witness calculator integration
+2. **WASM Bindings Layer**: Circom R1CS parser, snarkjs witness parser, and `CircomCircuit` implementation
+3. **Core Layer**: zkenc-core providing `encap()`/`decap()` cryptographic primitives
 
 ## How It Works
 

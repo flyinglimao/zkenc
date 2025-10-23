@@ -67,23 +67,38 @@ Try zkenc in your browser with our interactive Sudoku puzzle playground:
 
 ## Architecture
 
+zkenc is built with a two-layer architecture:
+
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    zkenc-core                       │
-│              (Rust Core Library)                    │
-│  • Cryptographic primitives                         │
-│  • Circuit handling                                 │
-│  • Witness verification                             │
-└──────────────┬──────────────────────┬───────────────┘
-               │                      │
-               │                      │
-    ┌──────────▼──────────┐   ┌──────▼────────────┐
-    │    zkenc-cli        │   │    zkenc-js       │
-    │  (Command Line)     │   │  • Browser/Node   │
-    │  • File operations  │   │  • TypeScript API │
-    │  • Batch processing │   │                   │
-    └─────────────────────┘   └───────────────────┘
+│              Application Layer                      │
+│                                                     │
+│  ┌───────────────────┐    ┌───────────────────┐   │
+│  │   zkenc-cli       │    │    zkenc-js       │   │
+│  │   (Rust)          │    │    (WASM)         │   │
+│  │                   │    │                   │   │
+│  │ • Command-line    │    │ • Browser &       │   │
+│  │ • Batch           │    │   Node.js         │   │
+│  │   processing      │    │ • TypeScript API  │   │
+│  └─────────┬─────────┘    └─────────┬─────────┘   │
+│            │                        │             │
+│            └────────────┬───────────┘             │
+└─────────────────────────┼─────────────────────────┘
+                          │
+            ┌─────────────▼──────────────┐
+            │      zkenc-core            │
+            │      (Rust)                │
+            │                            │
+            │ • Cryptographic primitives │
+            │ • R1CS → QAP conversion    │
+            │ • BN254 curve support      │
+            │ • Blake3 KDF               │
+            └────────────────────────────┘
 ```
+
+**Core Layer:** zkenc-core provides the cryptographic foundation using arkworks, handling R1CS to QAP conversion, encryption/decryption primitives, and key derivation.
+
+**Application Layer:** Both zkenc-cli (command-line tool) and zkenc-js (WASM bindings) are built on top of zkenc-core, providing different interfaces for the same underlying functionality.
 
 ## Cross-Tool Compatibility
 
