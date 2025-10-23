@@ -79,46 +79,51 @@ Create `full_inputs.json` (needed for decryption):
 }
 ```
 
-### 4. Generate Witness-Encrypted Key
+### 4. Encrypt Your Secret Message
 
-Use `encap` to generate a ciphertext and encryption key from public inputs:
-
-```bash
-zkenc encap \
-  --circuit circuit_output/example.r1cs \
-  --input public_inputs.json \
-  --ciphertext witness_ct.bin \
-  --key encryption_key.bin
-```
-
-Output:
-
-```
-Encap successful!
-Ciphertext saved to: witness_ct.bin
-Key saved to: encryption_key.bin
-```
-
-### 5. Encrypt Your Secret Message
-
-Use the generated key to encrypt your message with AES-256-GCM:
+Use `encrypt` to perform witness encryption in one step:
 
 ```bash
 echo "Hello, zkenc!" > message.txt
 zkenc encrypt \
-  --key encryption_key.bin \
-  --input message.txt \
-  --output encrypted_message.bin
+  --circuit circuit_output/example.r1cs \
+  --input public_inputs.json \
+  --message message.txt \
+  --output encrypted.bin
 ```
+
+This command:
+
+- Generates a witness-encrypted key from public inputs (encap)
+- Encrypts your message with AES-256-GCM
+- Combines everything into a single ciphertext file
+- Embeds public inputs in the ciphertext (by default)
 
 Output:
 
 ```
-Encryption successful!
-Encrypted message saved to: encrypted_message.bin
+🔐 Step 1: Running Encap...
+📂 Loading R1CS circuit...
+   - Constraints: 2
+   - Public inputs: 1
+   - Wires: 4
+
+📋 Loading public inputs from JSON...
+   - Parsed 1 field elements
+
+   ✅ Witness ciphertext generated (123 bytes)
+
+🔒 Step 2: Encrypting message...
+   - Message size: 14 bytes
+   ✅ Message encrypted (42 bytes)
+
+📦 Step 3: Creating combined ciphertext...
+   ✅ Combined ciphertext saved (218 bytes)
+
+✨ Encryption complete! Public inputs are embedded in the ciphertext.
 ```
 
-### 6. Generate Witness File
+### 5. Generate Witness File
 
 Before decrypting, the recipient needs to generate a witness proving they have a valid solution:
 
@@ -129,41 +134,47 @@ snarkjs wtns calculate \
   witness.wtns
 ```
 
-### 7. Recover the Key
+### 6. Decrypt the Message
 
-Use `decap` with the witness to recover the encryption key:
-
-```bash
-zkenc decap \
-  --circuit circuit_output/example.r1cs \
-  --witness witness.wtns \
-  --ciphertext witness_ct.bin \
-  --key recovered_key.bin
-```
-
-Output:
-
-```
-Decap successful!
-Key recovered and saved to: recovered_key.bin
-```
-
-### 8. Decrypt the Message
-
-Use the recovered key to decrypt the message:
+Use `decrypt` to recover and decrypt the message in one step:
 
 ```bash
 zkenc decrypt \
-  --key recovered_key.bin \
-  --input encrypted_message.bin \
+  --circuit circuit_output/example.r1cs \
+  --witness witness.wtns \
+  --ciphertext encrypted.bin \
   --output decrypted.txt
 ```
+
+This command:
+
+- Parses the combined ciphertext
+- Recovers the key using the witness (decap)
+- Decrypts the message with AES-256-GCM
 
 Output:
 
 ```
-Decryption successful!
-Message saved to: decrypted.txt
+📦 Step 1: Parsing combined ciphertext...
+   - Flag: 1
+   - Witness ciphertext: 123 bytes
+   - Public input: {"publicValue":"42"}
+   - Encrypted message: 42 bytes
+
+🔓 Step 2: Running Decap...
+📂 Loading R1CS circuit...
+   - Constraints: 2
+   - Public inputs: 1
+
+📋 Loading witness from snarkjs...
+   - Witness elements: 4
+
+   ✅ Key recovered from witness
+
+🔓 Step 3: Decrypting message...
+   ✅ Decrypted message saved (14 bytes)
+
+✨ Decryption complete!
 ```
 
 Verify the result:
@@ -239,72 +250,135 @@ zkenc decap \
 
 ### `zkenc encrypt`
 
-Encrypt a message using an encryption key (AES-256-GCM).
+Encrypt a message using witness encryption (high-level, one-step operation).
 
 ```bash
 zkenc encrypt \
-  --key <KEY_FILE> \
-  --input <MESSAGE_FILE> \
-  --output <OUTPUT_FILE>
+  --circuit <R1CS_FILE> \
+  --input <JSON_FILE> \
+  --message <MESSAGE_FILE> \
+  --output <OUTPUT_FILE> \
+  [--no-public-input]
 ```
 
 **Arguments:**
 
-- `--key <FILE>` - Path to encryption key file (from encap)
-- `--input <FILE>` - Path to plaintext message file
-- `--output <FILE>` - Output path for encrypted file
+- `--circuit <FILE>` - Path to R1CS circuit file (`.r1cs` from Circom)
+- `--input <FILE>` - Path to JSON file with public inputs
+- `--message <FILE>` - Path to plaintext message file
+- `--output <FILE>` - Output path for combined ciphertext
+- `--no-public-input` - Don't embed public inputs in ciphertext (optional)
+
+**What it does:**
+
+This command combines encap and AES encryption into a single step:
+
+1. Generates witness-encrypted key from public inputs
+2. Encrypts message with AES-256-GCM
+3. Creates combined ciphertext with format: `[flag][witnessLen][witnessCT][publicLen][publicInput][encryptedMsg]`
 
 **Example:**
 
 ```bash
 zkenc encrypt \
-  --key key.bin \
-  --input message.txt \
+  --circuit sudoku.r1cs \
+  --input puzzle.json \
+  --message secret.txt \
   --output encrypted.bin
 ```
+
+**Compatibility:** The output is fully compatible with zkenc-js `decrypt()` function.
 
 ---
 
 ### `zkenc decrypt`
 
-Decrypt a message using a decryption key.
+Decrypt a message using witness decryption (high-level, one-step operation).
 
 ```bash
 zkenc decrypt \
-  --key <KEY_FILE> \
-  --input <ENCRYPTED_FILE> \
+  --circuit <R1CS_FILE> \
+  --witness <WTNS_FILE> \
+  --ciphertext <CT_FILE> \
   --output <OUTPUT_FILE>
 ```
 
 **Arguments:**
 
-- `--key <FILE>` - Path to decryption key file (from decap)
-- `--input <FILE>` - Path to encrypted file
+- `--circuit <FILE>` - Path to R1CS circuit file
+- `--witness <FILE>` - Path to witness file (`.wtns` from snarkjs)
+- `--ciphertext <FILE>` - Path to combined ciphertext file
 - `--output <FILE>` - Output path for decrypted message
+
+**What it does:**
+
+This command combines decap and AES decryption into a single step:
+
+1. Parses the combined ciphertext
+2. Recovers key using the witness
+3. Decrypts message with AES-256-GCM
 
 **Example:**
 
 ```bash
 zkenc decrypt \
-  --key recovered_key.bin \
-  --input encrypted.bin \
+  --circuit sudoku.r1cs \
+  --witness solution.wtns \
+  --ciphertext encrypted.bin \
   --output decrypted.txt
 ```
 
+**Compatibility:** Can decrypt files created by zkenc-js `encrypt()` function.
+
+---
+
+### Low-Level Commands
+
+For advanced use cases, you can use the low-level encap/decap commands separately:
+
+#### `zkenc encap`
+
 ## Understanding the Workflow
 
-zkenc-cli uses a four-step process for witness encryption:
+zkenc-cli provides two levels of API:
+
+### High-Level API (Recommended)
+
+A simple two-step process:
+
+1. **`encrypt`** - Combines encap + AES encryption in one command
+
+   - Input: circuit, public inputs, message
+   - Output: combined ciphertext (compatible with zkenc-js)
+
+2. **`decrypt`** - Combines decap + AES decryption in one command
+   - Input: circuit, witness, combined ciphertext
+   - Output: decrypted message
+
+**Benefits:**
+
+- Simpler workflow (2 steps vs 4)
+- Single ciphertext file to manage
+- Full compatibility with zkenc-js
+- Public inputs can be embedded in ciphertext
+
+### Low-Level API (Advanced)
+
+A four-step process for fine-grained control:
 
 1. **`encap`** - Generate witness-encrypted ciphertext and key from public inputs
-2. **`encrypt`** - Encrypt your message using the generated key (AES-256-GCM)
-3. **`decap`** - Recover the key using a valid witness (solution)
-4. **`decrypt`** - Decrypt the message using the recovered key
+2. Encrypt message separately (use any AES tool)
+3. **`decap`** - Recover the key using a valid witness
+4. Decrypt message separately (use any AES tool)
 
-This separation allows you to:
+**Use cases:**
 
-- Share the witness ciphertext and encrypted message publicly
-- Only those with a valid witness can recover the key
-- The actual message remains secure with symmetric encryption
+- Custom encryption schemes
+- Key reuse across multiple messages
+- Integration with existing encryption pipelines
+- Educational purposes to understand the protocol
+
+**Note:** For most use cases, the high-level API is recommended as it ensures compatibility and simplifies the workflow.
 
 ## Input File Formats
 
@@ -345,14 +419,58 @@ JSON object with signal names as keys:
 - All values must be strings (even numbers)
 - Array signals are supported
 - Signal names must match those defined in your circuit
-- For `encap`, only provide public inputs
-- For `decap`, provide witness file with all signals
+- For `encrypt`, only provide public inputs
+- For `decrypt`, provide witness file generated from full inputs (public + private)
+
+## Combined Ciphertext Format
+
+The `encrypt` command creates a combined ciphertext with the following structure:
+
+```
+[1 byte flag]
+[4 bytes witness CT length]
+[witness ciphertext]
+[4 bytes public input length]  (if flag = 1)
+[public input JSON]             (if flag = 1)
+[encrypted message]
+```
+
+**Flag byte:**
+
+- `1` = Public inputs included (default)
+- `0` = Public inputs not included (use `--no-public-input`)
+
+This format is compatible with zkenc-js and allows:
+
+- Self-contained ciphertext (includes all necessary data)
+- Cross-tool compatibility
+- Optional public input embedding
 
 ## Working with Binary Files
 
 ### Encrypting Binary Files
 
-You can encrypt any file type:
+You can encrypt any file type with the high-level API:
+
+```bash
+# Encrypt an image in one step
+zkenc encrypt \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --message photo.jpg \
+  --output encrypted_photo.bin
+
+# Someone with witness decrypts the image in one step
+zkenc decrypt \
+  --circuit circuit.r1cs \
+  --witness solution.wtns \
+  --ciphertext encrypted_photo.bin \
+  --output decrypted_photo.jpg
+```
+
+### Using Low-Level API for Binary Files
+
+For advanced use cases:
 
 ```bash
 # Step 1: Generate key from circuit
@@ -362,70 +480,100 @@ zkenc encap \
   --ciphertext witness_ct.bin \
   --key key.bin
 
-# Step 2: Encrypt an image
-zkenc encrypt \
-  --key key.bin \
-  --input photo.jpg \
-  --output encrypted_photo.bin
+# Step 2: Encrypt with external tool or custom method
+# (The key.bin is a 32-byte key suitable for AES-256)
 
-# Step 3: Someone with witness recovers the key
+# Step 3: Recipient recovers the key
 zkenc decap \
   --circuit circuit.r1cs \
   --witness solution.wtns \
   --ciphertext witness_ct.bin \
   --key recovered_key.bin
 
-# Step 4: Decrypt the image
-zkenc decrypt \
-  --key recovered_key.bin \
-  --input encrypted_photo.bin \
-  --output decrypted_photo.jpg
+# Step 4: Decrypt with the same method used in Step 2
 ```
 
 ## Advanced Usage
 
-### Batch Processing
+### Encrypting Without Embedding Public Inputs
 
-Encrypt multiple messages with the same witness ciphertext:
+By default, `encrypt` embeds public inputs in the ciphertext. To exclude them:
 
 ```bash
-# Generate key once
-zkenc encap \
+zkenc encrypt \
   --circuit circuit.r1cs \
   --input public.json \
-  --ciphertext shared_witness_ct.bin \
-  --key key.bin
+  --message message.txt \
+  --output encrypted.bin \
+  --no-public-input
+```
 
-# Encrypt multiple files
+**When to use `--no-public-input`:**
+
+- Public inputs are very large
+- You'll distribute public inputs separately
+- You want smaller ciphertext files
+
+**Note:** Recipients will need the public inputs to verify the witness.
+
+### Batch Processing
+
+Encrypt multiple messages for the same circuit and public inputs:
+
+```bash
+# Encrypt multiple files with embedded public inputs
 for file in documents/*.txt; do
   zkenc encrypt \
-    --key key.bin \
-    --input "$file" \
+    --circuit circuit.r1cs \
+    --input public.json \
+    --message "$file" \
     --output "encrypted/$(basename $file).enc"
 done
 ```
 
+Each encrypted file is self-contained and can be decrypted independently.
+
 ### Cross-Tool Compatibility
 
-Files created with zkenc-cli work with zkenc-js:
+zkenc-cli is **fully compatible** with zkenc-js! You can encrypt with one tool and decrypt with the other:
+
+**CLI → JS:**
 
 ```bash
 # Encrypt with CLI
-zkenc encap --circuit circuit.r1cs --input public.json --ciphertext ct.bin --key k.bin
-zkenc encrypt --key k.bin --input message.txt --output encrypted.bin
+zkenc encrypt \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --message message.txt \
+  --output encrypted.bin
 
-# The encrypted.bin can be used in zkenc-js
-# Load and decrypt in Node.js or browser
+# Decrypt with zkenc-js in Node.js or browser
+# The encrypted.bin can be read by zkenc-js decrypt()
 ```
+
+**JS → CLI:**
+
+```bash
+# After encrypting with zkenc-js encrypt()...
+# Decrypt with CLI
+zkenc decrypt \
+  --circuit circuit.r1cs \
+  --witness solution.wtns \
+  --ciphertext encrypted.bin \
+  --output decrypted.txt
+```
+
+Both tools use the same combined ciphertext format, ensuring seamless interoperability.
 
 [Learn more about cross-tool workflows →](/docs/guides/cross-tool-workflow)
 
 ## Performance Tips
 
-1. **Reuse witness ciphertext**: Generate once, use for multiple messages
-2. **Pre-compile circuits**: Compile circuits once, reuse many times
-3. **Consider circuit size**: Larger circuits = slower encap/decap operations
-4. **Use binary format**: Files are already in efficient binary format
+1. **Use high-level API**: `encrypt`/`decrypt` commands handle everything efficiently
+2. **Embed public inputs**: Keeps ciphertext self-contained (default behavior)
+3. **Pre-compile circuits**: Compile circuits once, reuse many times
+4. **Consider circuit size**: Larger circuits = slower encap/decap operations
+5. **Binary format**: All files use efficient binary serialization
 
 ## Common Patterns
 
@@ -433,16 +581,36 @@ zkenc encrypt --key k.bin --input message.txt --output encrypted.bin
 
 ```bash
 # Only users who solve the puzzle can decrypt
-zkenc encap --circuit puzzle.r1cs --input question.json --ciphertext puzzle_ct.bin --key key.bin
-zkenc encrypt --key key.bin --input "Secret answer: 42" --output secret.bin
+zkenc encrypt \
+  --circuit puzzle.r1cs \
+  --input question.json \
+  --message "Secret answer: 42" \
+  --output secret.bin
 ```
 
 ### Time-Lock Encryption
 
 ```bash
 # Requires computational work to generate witness
-zkenc encap --circuit timelock.r1cs --input params.json --ciphertext timelock_ct.bin --key key.bin
-zkenc encrypt --key key.bin --input future_message.txt --output locked.bin
+zkenc encrypt \
+  --circuit timelock.r1cs \
+  --input params.json \
+  --message future_message.txt \
+  --output locked.bin
+```
+
+### Distributing Encrypted Files
+
+```bash
+# Encrypt with embedded public inputs
+zkenc encrypt \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --message secret.txt \
+  --output package.bin
+
+# Share package.bin publicly
+# Only those who can generate valid witness can decrypt
 ```
 
 ## Next Steps
@@ -475,6 +643,14 @@ Check that your JSON file:
 cat inputs.json | jq .
 ```
 
+### "Invalid ciphertext: too short"
+
+This means the ciphertext file is corrupted or not a valid zkenc ciphertext. Ensure:
+
+- The file was created by zkenc-cli `encrypt` or zkenc-js `encrypt()`
+- The file wasn't modified or truncated
+- You're using the correct file
+
 ### "Decap failed"
 
 This usually means:
@@ -482,6 +658,7 @@ This usually means:
 - The witness doesn't satisfy the circuit constraints
 - The witness file is corrupted
 - Using wrong circuit files
+- The witness doesn't match the public inputs used for encryption
 
 Verify your witness first:
 
@@ -489,13 +666,14 @@ Verify your witness first:
 snarkjs wtns check circuit.r1cs witness.wtns
 ```
 
-### "Decryption failed"
+### "Decryption failed" or "Message decryption failed"
 
 Ensure:
 
-- You're using the correct key (from decap)
-- The encrypted file isn't corrupted
-- Key and ciphertext match
+- The witness satisfies the circuit constraints
+- The ciphertext file is not corrupted
+- Using the correct circuit file
+- The witness matches the public inputs from encryption
 
 ## Support
 

@@ -17,12 +17,21 @@ Combining zkenc-cli and zkenc-js enables powerful workflows:
 
 ## Compatibility
 
-zkenc-cli and zkenc-js are **fully compatible**:
+zkenc-cli and zkenc-js are **fully compatible** and use the same combined ciphertext format:
 
-✅ Ciphertexts from CLI can be decrypted with JS
-✅ Ciphertexts from JS can be decrypted with CLI  
+✅ Files encrypted with CLI can be decrypted with JS
+✅ Files encrypted with JS can be decrypted with CLI  
 ✅ Same circuit files work with both tools
 ✅ Same input format for both tools
+✅ No file format conversion needed
+
+**Both tools use the same combined format:**
+
+```
+[1 byte flag][4 bytes witness CT length][witness ciphertext]
+[4 bytes public input length (if flag=1)][public input JSON (if flag=1)]
+[encrypted message]
+```
 
 ## Workflow 1: CLI Encrypt → JS Decrypt
 
@@ -35,8 +44,8 @@ zkenc-cli and zkenc-js are **fully compatible**:
 circom circuit.circom --r1cs --wasm -o build
 
 # You'll need:
-# - build/circuit.r1cs (for CLI)
-# - build/circuit_js/circuit.wasm (for both)
+# - build/circuit.r1cs (for both CLI and JS)
+# - build/circuit_js/circuit.wasm (for both CLI and JS)
 ```
 
 ### Step 2: Create Public Inputs (CLI)
@@ -45,83 +54,39 @@ Create `public_inputs.json`:
 
 ```json
 {
-  "publicValue": 42
+  "publicValue": "42"
 }
 ```
 
 ### Step 3: Encrypt with CLI
 
 ```bash
-# Encapsulate: generate witness-encrypted key
-zkenc encap \
+# One-step encryption (recommended)
+zkenc encrypt \
   --circuit build/circuit.r1cs \
   --input public_inputs.json \
-  --ciphertext witness.ct \
-  --key encryption.key
-
-# Encrypt: encrypt message with key
-zkenc encrypt \
-  --key encryption.key \
-  --input secret.txt \
-  --output message.enc
+  --message secret.txt \
+  --output encrypted.bin
 ```
 
-You now have two files:
+The output `encrypted.bin` is a combined ciphertext that includes:
 
-- `witness.ct` (1576 bytes) - witness encryption ciphertext
-- `message.enc` (message size + 28 bytes) - AES-encrypted message
+- Witness encryption ciphertext
+- Public inputs (embedded by default)
+- AES-encrypted message
 
-### Step 4: Combine Files for JS
+**File sizes:**
 
-zkenc-js expects a combined format. Create it:
+- `encrypted.bin` (combined) ≈ witness CT (1576 bytes) + public inputs + message + overhead
 
-```bash
-# Calculate witness ciphertext length (always 1576 for BN254)
-WITNESS_LENGTH=1576
-
-# Create length prefix (4 bytes, big-endian)
-printf '\x00\x00\x06\x28' > combined.bin
-
-# Append witness ciphertext
-cat witness.ct >> combined.bin
-
-# Append encrypted message
-cat message.enc >> combined.bin
-
-echo "Combined ciphertext created: combined.bin"
-```
-
-Or use this helper script `combine.sh`:
-
-```bash
-#!/bin/bash
-WITNESS_CT=$1
-MESSAGE_ENC=$2
-OUTPUT=$3
-
-# Write 4-byte length (1576 = 0x00000628)
-printf '\x00\x00\x06\x28' > "$OUTPUT"
-cat "$WITNESS_CT" >> "$OUTPUT"
-cat "$MESSAGE_ENC" >> "$OUTPUT"
-
-echo "✅ Created $OUTPUT"
-```
-
-Usage:
-
-```bash
-chmod +x combine.sh
-./combine.sh witness.ct message.enc combined.bin
-```
-
-### Step 5: Decrypt with JS
+### Step 4: Decrypt with JS
 
 ```typescript
 import { zkenc } from "zkenc-js";
 import fs from "fs/promises";
 
 // Load combined ciphertext
-const ciphertext = await fs.readFile("combined.bin");
+const ciphertext = await fs.readFile("encrypted.bin");
 
 // Load circuit files
 const circuitFiles = {
@@ -135,11 +100,14 @@ const fullInputs = {
   privateValue: 123, // The witness
 };
 
-// Decrypt
+// Decrypt in one step
 const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
 
 console.log(new TextDecoder().decode(decrypted));
+// Output: (contents of secret.txt)
 ```
+
+**That's it!** No file conversion needed.
 
 ## Workflow 2: JS Encrypt → CLI Decrypt
 
@@ -159,9 +127,10 @@ const circuitFiles = {
     .then((b) => new Uint8Array(b)),
 };
 
-const publicInputs = { publicValue: 42 };
+const publicInputs = { publicValue: "42" };
 const message = new TextEncoder().encode("Secret from browser");
 
+// One-step encryption
 const { ciphertext } = await zkenc.encrypt(circuitFiles, publicInputs, message);
 
 // Download ciphertext
@@ -173,52 +142,16 @@ a.download = "encrypted.bin";
 a.click();
 ```
 
-### Step 2: Split Combined Ciphertext (CLI)
+The `ciphertext` is already in the combined format that CLI can read directly.
 
-zkenc-cli expects separate files. Split them:
-
-```bash
-# Extract witness ciphertext (skip 4 bytes, read 1576 bytes)
-dd if=encrypted.bin of=witness.ct bs=1 skip=4 count=1576
-
-# Extract encrypted message (skip 4+1576 bytes, read rest)
-dd if=encrypted.bin of=message.enc bs=1 skip=1580
-
-echo "✅ Split into witness.ct and message.enc"
-```
-
-Or use this helper script `split.sh`:
-
-```bash
-#!/bin/bash
-INPUT=$1
-WITNESS_CT="${INPUT%.bin}_witness.ct"
-MESSAGE_ENC="${INPUT%.bin}_message.enc"
-
-# Skip 4-byte header, extract 1576 bytes
-dd if="$INPUT" of="$WITNESS_CT" bs=1 skip=4 count=1576 2>/dev/null
-
-# Skip header + witness, extract rest
-dd if="$INPUT" of="$MESSAGE_ENC" bs=1 skip=1580 2>/dev/null
-
-echo "✅ Created $WITNESS_CT and $MESSAGE_ENC"
-```
-
-Usage:
-
-```bash
-chmod +x split.sh
-./split.sh encrypted.bin
-```
-
-### Step 3: Generate Witness (CLI)
+### Step 2: Generate Witness (CLI)
 
 Create full inputs `full_inputs.json`:
 
 ```json
 {
-  "publicValue": 42,
-  "privateValue": 123
+  "publicValue": "42",
+  "privateValue": "123"
 }
 ```
 
@@ -231,24 +164,21 @@ snarkjs wtns calculate \
   witness.wtns
 ```
 
-### Step 4: Decrypt with CLI
+### Step 3: Decrypt with CLI
 
 ```bash
-# Decapsulate: recover key
-zkenc decap \
+# One-step decryption
+zkenc decrypt \
   --circuit build/circuit.r1cs \
   --witness witness.wtns \
-  --ciphertext encrypted.bin_witness.ct \
-  --key recovered.key
-
-# Decrypt: decrypt message
-zkenc decrypt \
-  --key recovered.key \
-  --input encrypted.bin_message.enc \
+  --ciphertext encrypted.bin \
   --output decrypted.txt
 
 cat decrypted.txt
+# Output: Secret from browser
 ```
+
+**That's it!** The CLI can read the JS-encrypted file directly.
 
 ## Workflow 3: Hybrid Processing
 
@@ -267,16 +197,19 @@ for photo in uploads/*.jpg; do
 
   # Generate unique public input
   PUBLIC_VALUE=$(date +%s)
-  echo "{\"timestamp\": $PUBLIC_VALUE}" > inputs.json
+  echo "{\"timestamp\": \"$PUBLIC_VALUE\"}" > inputs.json
 
-  # Encrypt
-  zkenc encap -c circuit.r1cs -i inputs.json --ciphertext ct.bin -k key.bin
-  zkenc encrypt -k key.bin -i "$photo" -o "${photo}.enc"
+  # Encrypt in one step
+  zkenc encrypt \
+    --circuit circuit.r1cs \
+    --input inputs.json \
+    --message "$photo" \
+    --output "${photo}.enc"
 
   # Store metadata
   echo "$photo,$PUBLIC_VALUE" >> metadata.csv
 
-  rm key.bin ct.bin inputs.json
+  rm inputs.json
 done
 ```
 
@@ -285,7 +218,7 @@ done
 ```typescript
 // Decrypt selected photo
 async function decryptPhoto(photoId: string, privateValue: number) {
-  // Fetch encrypted photo
+  // Fetch encrypted photo (combined format)
   const response = await fetch(`/api/photos/${photoId}/encrypted`);
   const ciphertext = new Uint8Array(await response.arrayBuffer());
 
@@ -294,7 +227,7 @@ async function decryptPhoto(photoId: string, privateValue: number) {
     r.json()
   );
 
-  // Decrypt
+  // Decrypt in one step
   const fullInputs = {
     timestamp: metadata.timestamp,
     userSecret: privateValue,
@@ -307,6 +240,16 @@ async function decryptPhoto(photoId: string, privateValue: number) {
   const url = URL.createObjectURL(blob);
   imageElement.src = url;
 }
+```
+
+**Note:** Public inputs can be extracted from ciphertext using `getPublicInput()` if embedded:
+
+```typescript
+import { getPublicInput } from "zkenc-js";
+
+// Extract embedded public inputs
+const publicInputs = getPublicInput(ciphertext);
+console.log(publicInputs.timestamp); // No need to fetch metadata!
 ```
 
 ## Workflow 4: Multi-Platform Distribution
@@ -332,18 +275,16 @@ cp README.md package/
 # Create puzzle
 cat > puzzle.json <<EOF
 {
-  "puzzle": [5, 3, 0, 0, 7, 0, 0, 0, 0]
+  "puzzle": ["5", "3", "0", "0", "7", "0", "0", "0", "0"]
 }
 EOF
 
-# Encrypt message
-zkenc encap -c package/circuits/puzzle.r1cs -i puzzle.json \
-  --ciphertext package/puzzle.ct -k temp.key
-zkenc encrypt -k temp.key -i treasure.txt -o package/treasure.enc
-rm temp.key
-
-# Combine for JS users
-./combine.sh package/puzzle.ct package/treasure.enc package/treasure-combined.bin
+# Encrypt message (creates combined format)
+zkenc encrypt \
+  --circuit package/circuits/puzzle.r1cs \
+  --input puzzle.json \
+  --message treasure.txt \
+  --output package/treasure.enc
 ```
 
 ### Distribute
@@ -351,12 +292,10 @@ rm temp.key
 ```
 package/
 ├── circuits/
-│   ├── puzzle.r1cs     # For CLI users
-│   └── puzzle.wasm      # For all users
-├── puzzle.ct            # For CLI users
-├── treasure.enc         # For CLI users
-├── treasure-combined.bin # For JS users
-└── README.md            # Instructions for both
+│   ├── puzzle.r1cs     # Circuit file
+│   └── puzzle.wasm      # Witness generator
+├── treasure.enc         # Combined ciphertext (works with both tools!)
+└── README.md            # Instructions
 ```
 
 ### Users Can Decrypt With Either Tool
@@ -364,133 +303,115 @@ package/
 **CLI User:**
 
 ```bash
-# Generate solution
+# Generate solution witness
 cat > solution.json <<EOF
 {
-  "puzzle": [5, 3, 0, ...],
-  "solution": [5, 3, 4, 6, 7, 8, 9, 1, 2, ...]
+  "puzzle": ["5", "3", "0", ...],
+  "solution": ["5", "3", "4", "6", "7", "8", "9", "1", "2", ...]
 }
 EOF
 
 snarkjs wtns calculate puzzle.wasm solution.json solution.wtns
-zkenc decap -c puzzle.r1cs -w solution.wtns --ciphertext puzzle.ct -k key.bin
-zkenc decrypt -k key.bin -i treasure.enc -o treasure.txt
+
+# Decrypt directly
+zkenc decrypt \
+  --circuit puzzle.r1cs \
+  --witness solution.wtns \
+  --ciphertext treasure.enc \
+  --output treasure.txt
 ```
 
 **JS User:**
 
 ```typescript
-const ciphertext = await fetch('treasure-combined.bin')
+// Load the same encrypted file
+const ciphertext = await fetch('treasure.enc')
   .then(r => r.arrayBuffer())
   .then(b => new Uint8Array(b));
 
 const solution = {
-  puzzle: [5, 3, 0, ...],
-  solution: [5, 3, 4, 6, 7, 8, 9, 1, 2, ...],
+  puzzle: ["5", "3", "0", ...],
+  solution: ["5", "3", "4", "6", "7", "8", "9", "1", "2", ...],
 };
 
+// Decrypt directly
 const treasure = await zkenc.decrypt(circuitFiles, ciphertext, solution);
 ```
 
-## Helper Scripts
+**No conversion needed!** Both tools read the same file format.
 
-### Complete Combine Script
+## Advanced: Using Low-Level API
 
-`tools/combine-ciphertext.sh`:
+For advanced use cases, you can still use the low-level `encap`/`decap` commands separately:
 
-```bash
-#!/bin/bash
-set -e
-
-if [ "$#" -ne 3 ]; then
-  echo "Usage: $0 <witness.ct> <message.enc> <output.bin>"
-  exit 1
-fi
-
-WITNESS_CT=$1
-MESSAGE_ENC=$2
-OUTPUT=$3
-
-# Verify inputs exist
-[ -f "$WITNESS_CT" ] || { echo "Error: $WITNESS_CT not found"; exit 1; }
-[ -f "$MESSAGE_ENC" ] || { echo "Error: $MESSAGE_ENC not found"; exit 1; }
-
-# Check witness ciphertext size
-SIZE=$(stat -f%z "$WITNESS_CT" 2>/dev/null || stat -c%s "$WITNESS_CT" 2>/dev/null)
-if [ "$SIZE" -ne 1576 ]; then
-  echo "Warning: Witness ciphertext should be 1576 bytes, got $SIZE"
-fi
-
-# Create combined file
-printf '\x00\x00\x06\x28' > "$OUTPUT"
-cat "$WITNESS_CT" >> "$OUTPUT"
-cat "$MESSAGE_ENC" >> "$OUTPUT"
-
-echo "✅ Created combined ciphertext: $OUTPUT"
-echo "   Witness CT: 1576 bytes"
-echo "   Message CT: $(stat -f%z "$MESSAGE_ENC" 2>/dev/null || stat -c%s "$MESSAGE_ENC") bytes"
-echo "   Total: $(stat -f%z "$OUTPUT" 2>/dev/null || stat -c%s "$OUTPUT") bytes"
-```
-
-### Complete Split Script
-
-`tools/split-ciphertext.sh`:
+### CLI Low-Level Commands
 
 ```bash
-#!/bin/bash
-set -e
+# Step 1: Generate witness ciphertext and key
+zkenc encap \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --ciphertext witness.ct \
+  --key key.bin
 
-if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 <combined.bin> [output-prefix]"
-  exit 1
-fi
+# Step 2: Encrypt with any AES tool or custom implementation
+# (key.bin is a 32-byte key suitable for AES-256)
 
-INPUT=$1
-PREFIX=${2:-${INPUT%.bin}}
-WITNESS_CT="${PREFIX}_witness.ct"
-MESSAGE_ENC="${PREFIX}_message.enc"
+# Step 3: Decrypt - recover key
+zkenc decap \
+  --circuit circuit.r1cs \
+  --witness solution.wtns \
+  --ciphertext witness.ct \
+  --key recovered_key.bin
 
-# Verify input exists
-[ -f "$INPUT" ] || { echo "Error: $INPUT not found"; exit 1; }
-
-# Extract witness ciphertext
-dd if="$INPUT" of="$WITNESS_CT" bs=1 skip=4 count=1576 2>/dev/null
-
-# Extract encrypted message
-dd if="$INPUT" of="$MESSAGE_ENC" bs=1 skip=1580 2>/dev/null
-
-echo "✅ Split ciphertext:"
-echo "   Witness CT: $WITNESS_CT ($(stat -f%z "$WITNESS_CT" 2>/dev/null || stat -c%s "$WITNESS_CT") bytes)"
-echo "   Message CT: $MESSAGE_ENC ($(stat -f%z "$MESSAGE_ENC" 2>/dev/null || stat -c%s "$MESSAGE_ENC") bytes)"
+# Step 4: Decrypt with the same method used in Step 2
 ```
+
+### When to Use Low-Level API
+
+- Custom encryption schemes
+- Integration with existing encryption pipelines
+- Educational purposes
+- Debugging encryption/decryption separately
+
+**Note:** For most use cases, the high-level `encrypt`/`decrypt` commands are recommended.
 
 ## Best Practices
 
-1. **Keep Circuit Files Consistent**: Use the same compiled circuit files across tools
-2. **Document Public Inputs**: Clearly document which inputs are public vs private
-3. **Version Your Circuits**: Track circuit versions to ensure compatibility
-4. **Test Both Directions**: Always test CLI→JS and JS→CLI workflows
-5. **Automate Conversion**: Use scripts to convert between formats
+1. **Use High-Level API**: Use `encrypt`/`decrypt` commands for simplicity and compatibility
+2. **Keep Circuit Files Consistent**: Use the same compiled circuit files across tools
+3. **Document Public Inputs**: Clearly document which inputs are public vs private
+4. **Embed Public Inputs**: Use default behavior (embedded) for self-contained ciphertexts
+5. **Version Your Circuits**: Track circuit versions to ensure compatibility
+6. **Test Both Directions**: Always test CLI→JS and JS→CLI workflows
 
 ## Troubleshooting
 
 **"Invalid ciphertext" when decrypting:**
 
-- Ensure combined format is correct (4-byte length prefix)
-- Verify witness ciphertext is exactly 1576 bytes
-- Check files weren't corrupted during transfer
+- Ensure the file is a valid zkenc ciphertext (created by `encrypt` command)
+- Verify file wasn't corrupted during transfer
+- Check you're using the correct circuit file
 
 **"Witness doesn't satisfy constraints":**
 
 - Verify public inputs match between encryption and decryption
 - Check private inputs satisfy circuit constraints
 - Ensure using same circuit version
+- Use `snarkjs wtns check` to validate witness
 
 **File format issues:**
 
+- Files are already compatible - no conversion needed!
 - Use binary mode for all file operations
 - Avoid text editors that might corrupt binary files
-- Use `xxd` or `hexdump` to inspect files
+- Use `xxd` or `hexdump` to inspect files if needed
+
+**Public inputs mismatch:**
+
+- CLI and JS both embed public inputs by default
+- Use `getPublicInput()` in JS to extract from ciphertext
+- CLI displays public inputs when decrypting (if embedded)
 
 ## Next Steps
 
@@ -498,22 +419,3 @@ echo "   Message CT: $MESSAGE_ENC ($(stat -f%z "$MESSAGE_ENC" 2>/dev/null || sta
 - **[React Guide →](/docs/guides/react-integration)** - Build web UIs
 - **[API References →](/docs/api/zkenc-js)** - Detailed documentation
 - **[Playground →](/playground)** - Try it in browser
-
-## Examples Repository
-
-Complete working examples: `examples/cross-tool-workflow/`
-
-```
-examples/cross-tool-workflow/
-├── cli-to-js/
-│   ├── encrypt.sh
-│   ├── combine.sh
-│   └── decrypt.ts
-├── js-to-cli/
-│   ├── encrypt.ts
-│   ├── split.sh
-│   └── decrypt.sh
-└── hybrid/
-    ├── server/
-    └── client/
-```
