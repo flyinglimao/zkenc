@@ -683,6 +683,10 @@ export default function PlaygroundClient(): React.ReactElement {
                   {loading ? "🔄 Decrypting..." : "🔓 Decrypt Message"}
                 </button>
 
+                {error && mode === "decrypt" && activeTab === "sudoku" && (
+                  <div className={styles.error}>❌ {error}</div>
+                )}
+
                 {decrypted && (
                   <div className={styles.success}>
                     <h3>✅ Decrypted Message:</h3>
@@ -970,6 +974,10 @@ export default function PlaygroundClient(): React.ReactElement {
                   {loading ? "🔄 Decrypting..." : "🔓 Decrypt Message"}
                 </button>
 
+                {error && mode === "decrypt" && activeTab === "custom" && (
+                  <div className={styles.error}>❌ {error}</div>
+                )}
+
                 {customDecrypted && (
                   <div className={styles.success}>
                     <h3>✅ Decrypted Message:</h3>
@@ -1009,7 +1017,9 @@ export default function PlaygroundClient(): React.ReactElement {
         </>
       )}
 
-      {error && <div className={styles.error}>❌ {error}</div>}
+      {error && mode === "encrypt" && (
+        <div className={styles.error}>❌ {error}</div>
+      )}
     </div>
   );
 }
