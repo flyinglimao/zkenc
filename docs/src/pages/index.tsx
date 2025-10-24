@@ -34,11 +34,10 @@ function HomepageHeader() {
 }
 
 export default function Home(): ReactNode {
-  const { siteConfig } = useDocusaurusContext();
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />"
+      title="Witness Encryption for Circom Circuits"
+      description="Conditional encryption for Circom circuits. Encrypt to computational statements, decrypt with valid witnesses. Available as CLI tool and JavaScript library."
     >
       <HomepageHeader />
       <main>
