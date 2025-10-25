@@ -286,6 +286,7 @@ zkenc encrypt \
 ```
 
 **兼容性：**输出与 zkenc-js 的 `decrypt()` 函数完全兼容。
+
 ---
 
 ### `zkenc decrypt`
@@ -489,6 +490,7 @@ zkenc decap \
 
 # 步骤 4：使用步骤 2 相同的方法解密
 ```
+
 ## 进阶用法
 
 ### 不嵌入公开输入的加密

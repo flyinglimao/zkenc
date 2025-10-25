@@ -155,9 +155,7 @@ export function EncryptionForm() {
           value={publicValue}
           onChange={(e) => setPublicValue(Number(e.target.value))}
         />
-        <small>
-          注意：私密值必須是 {100 - publicValue} 才能解密
-        </small>
+        <small>注意：私密值必須是 {100 - publicValue} 才能解密</small>
       </div>
 
       <button onClick={handleEncrypt} disabled={loading || !message}>
