@@ -55,6 +55,10 @@
     "message": "ライト/ダークモードを切り替え（現在{mode}）",
     "description": "The ARIA label for the color mode toggle"
   },
+  "homepage.tagline": {
+    "message": "Circom回路のためのウィットネス暗号化",
+    "description": "The homepage tagline"
+  },
   "theme.tags.tagsPageLink": {
     "message": "すべてのタグを表示",
     "description": "The label of the link targeting the tag list page"

@@ -55,6 +55,10 @@
     "message": "切換淺色/深色模式（當前為{mode}）",
     "description": "The ARIA label for the color mode toggle"
   },
+  "homepage.tagline": {
+    "message": "Circom 電路的見證加密",
+    "description": "The homepage tagline"
+  },
   "theme.tags.tagsPageLink": {
     "message": "檢視所有標籤",
     "description": "The label of the link targeting the tag list page"
