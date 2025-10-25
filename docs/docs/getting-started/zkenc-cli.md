@@ -332,12 +332,6 @@ zkenc decrypt \
 
 ---
 
-### Low-Level Commands
-
-For advanced use cases, you can use the low-level encap/decap commands separately:
-
-#### `zkenc encap`
-
 ## Understanding the Workflow
 
 zkenc-cli provides two levels of API:

@@ -326,15 +326,9 @@ zkenc decrypt \
   --output decrypted.txt
 ```
 
-**相容性：**可以解密由 zkenc-js `encrypt()` 函式建立的檔案。
+**相容性：** 可以解密由 zkenc-js `encrypt()` 函式建立的檔案。
 
 ---
-
-### 低階命令
-
-對於進階使用情境，你可以分別使用低階的 encap/decap 命令：
-
-#### `zkenc encap`
 
 ## 了解工作流程
 

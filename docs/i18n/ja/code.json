@@ -1,14 +1,593 @@
 {
-  "homepage.tagline": {
-    "message": "Circom 回路のためのウィットネス暗号化",
-    "description": "The homepage tagline"
+  "theme.ErrorPageContent.title": {
+    "message": "このページはクラッシュしました。",
+    "description": "The title of the fallback page when the page crashed"
   },
-  "homepage.hero.title": {
-    "message": "zkEnc",
-    "description": "The homepage hero title"
+  "theme.BackToTopButton.buttonAriaLabel": {
+    "message": "トップに戻る",
+    "description": "The ARIA label for the back to top button"
   },
-  "homepage.hero.subtitle": {
-    "message": "ゼロ知識証明によるプログラマブルな条件付き暗号化",
-    "description": "The homepage hero subtitle"
+  "theme.blog.archive.title": {
+    "message": "アーカイブ",
+    "description": "The page & hero title of the blog archive page"
+  },
+  "theme.blog.archive.description": {
+    "message": "アーカイブ",
+    "description": "The page & hero description of the blog archive page"
+  },
+  "theme.blog.paginator.navAriaLabel": {
+    "message": "ブログ記事一覧のページネーション",
+    "description": "The ARIA label for the blog pagination"
+  },
+  "theme.blog.paginator.newerEntries": {
+    "message": "新しい記事",
+    "description": "The label used to navigate to the newer blog posts page (previous page)"
+  },
+  "theme.blog.paginator.olderEntries": {
+    "message": "古い記事",
+    "description": "The label used to navigate to the older blog posts page (next page)"
+  },
+  "theme.blog.post.paginator.navAriaLabel": {
+    "message": "ブログ記事のページネーション",
+    "description": "The ARIA label for the blog posts pagination"
+  },
+  "theme.blog.post.paginator.newerPost": {
+    "message": "新しい記事",
+    "description": "The blog post button label to navigate to the newer/previous post"
+  },
+  "theme.blog.post.paginator.olderPost": {
+    "message": "古い記事",
+    "description": "The blog post button label to navigate to the older/next post"
+  },
+  "theme.colorToggle.ariaLabel.mode.system": {
+    "message": "システムモード",
+    "description": "The name for the system color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.light": {
+    "message": "ライトモード",
+    "description": "The name for the light color mode"
+  },
+  "theme.colorToggle.ariaLabel.mode.dark": {
+    "message": "ダークモード",
+    "description": "The name for the dark color mode"
+  },
+  "theme.colorToggle.ariaLabel": {
+    "message": "ライト/ダークモードを切り替え（現在{mode}）",
+    "description": "The ARIA label for the color mode toggle"
+  },
+  "theme.tags.tagsPageLink": {
+    "message": "すべてのタグを表示",
+    "description": "The label of the link targeting the tag list page"
+  },
+  "theme.docs.breadcrumbs.navAriaLabel": {
+    "message": "パンくずリスト",
+    "description": "The ARIA label for the breadcrumbs"
+  },
+  "theme.docs.paginator.navAriaLabel": {
+    "message": "ドキュメントのページネーション",
+    "description": "The ARIA label for the docs pagination"
+  },
+  "theme.docs.paginator.previous": {
+    "message": "前へ",
+    "description": "The label used to navigate to the previous doc"
+  },
+  "theme.docs.paginator.next": {
+    "message": "次へ",
+    "description": "The label used to navigate to the next doc"
+  },
+  "theme.docs.DocCard.categoryDescription.plurals": {
+    "message": "{count}項目",
+    "description": "The default description for a category card in the generated index about how many items this category includes"
+  },
+  "theme.docs.versionBadge.label": {
+    "message": "バージョン: {versionLabel}"
+  },
+  "theme.docs.versions.unreleasedVersionLabel": {
+    "message": "これは{siteTitle} {versionLabel}の未リリースドキュメントです。",
+    "description": "The label used to tell the user that he's browsing an unreleased doc version"
+  },
+  "theme.docs.versions.unmaintainedVersionLabel": {
+    "message": "これは{siteTitle} {versionLabel}のドキュメントで、現在積極的にメンテナンスされていません。",
+    "description": "The label used to tell the user that he's browsing an unmaintained doc version"
+  },
+  "theme.docs.versions.latestVersionSuggestionLabel": {
+    "message": "最新のドキュメントは{latestVersionLink}（{versionLabel}）をご覧ください。",
+    "description": "The label used to tell the user to check the latest version"
+  },
+  "theme.docs.versions.latestVersionLinkLabel": {
+    "message": "最新バージョン",
+    "description": "The label used for the latest version suggestion link label"
+  },
+  "theme.docs.tagDocListPageTitle.nDocsTagged": {
+    "message": "{count}件のドキュメントにタグ付け",
+    "description": "Pluralized label for \"{count} docs tagged\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.docs.tagDocListPageTitle": {
+    "message": "{nDocsTagged}「{tagName}」",
+    "description": "The title of the page for a docs tag"
+  },
+  "theme.common.headingLinkTitle": {
+    "message": "{heading}への直接リンク",
+    "description": "Title for link to heading"
+  },
+  "theme.common.editThisPage": {
+    "message": "このページを編集",
+    "description": "The link label to edit the current page"
+  },
+  "theme.lastUpdated.atDate": {
+    "message": "{date}に",
+    "description": "The words used to describe on which date a page has been last updated"
+  },
+  "theme.lastUpdated.byUser": {
+    "message": "{user}によって",
+    "description": "The words used to describe by who the page has been last updated"
+  },
+  "theme.lastUpdated.lastUpdatedAtBy": {
+    "message": "最終更新: {byUser}{atDate}",
+    "description": "The sentence used to display when a page has been last updated, and by who"
+  },
+  "theme.NotFound.title": {
+    "message": "ページが見つかりません",
+    "description": "The title of the 404 page"
+  },
+  "theme.navbar.mobileVersionsDropdown.label": {
+    "message": "バージョンを選択",
+    "description": "The label for the navbar versions dropdown on mobile view"
+  },
+  "theme.tags.tagsListLabel": {
+    "message": "タグ:",
+    "description": "The label alongside a tag list"
+  },
+  "theme.AnnouncementBar.closeButtonAriaLabel": {
+    "message": "閉じる",
+    "description": "The ARIA label for close button of announcement bar"
+  },
+  "theme.admonition.caution": {
+    "message": "注意",
+    "description": "The default label used for the Caution admonition (:::caution)"
+  },
+  "theme.admonition.danger": {
+    "message": "危険",
+    "description": "The default label used for the Danger admonition (:::danger)"
+  },
+  "theme.admonition.info": {
+    "message": "情報",
+    "description": "The default label used for the Info admonition (:::info)"
+  },
+  "theme.admonition.note": {
+    "message": "備考",
+    "description": "The default label used for the Note admonition (:::note)"
+  },
+  "theme.admonition.tip": {
+    "message": "ヒント",
+    "description": "The default label used for the Tip admonition (:::tip)"
+  },
+  "theme.admonition.warning": {
+    "message": "警告",
+    "description": "The default label used for the Warning admonition (:::warning)"
+  },
+  "theme.DocSidebarItem.expandCategoryAriaLabel": {
+    "message": "サイドバーカテゴリ'{label}'を展開",
+    "description": "The ARIA label to expand the sidebar category"
+  },
+  "theme.DocSidebarItem.collapseCategoryAriaLabel": {
+    "message": "サイドバーカテゴリ'{label}'を折りたたむ",
+    "description": "The ARIA label to collapse the sidebar category"
+  },
+  "theme.blog.sidebar.navAriaLabel": {
+    "message": "最近のブログ記事ナビゲーション",
+    "description": "The ARIA label for recent posts in the blog sidebar"
+  },
+  "theme.IconExternalLink.ariaLabel": {
+    "message": "（新しいタブで開く）",
+    "description": "The ARIA label for the external link icon"
+  },
+  "theme.NotFound.p1": {
+    "message": "お探しのページが見つかりませんでした。",
+    "description": "The first paragraph of the 404 page"
+  },
+  "theme.NotFound.p2": {
+    "message": "元のリンク先サイトの所有者に連絡して、リンクが壊れていることをお知らせください。",
+    "description": "The 2nd paragraph of the 404 page"
+  },
+  "theme.NavBar.navAriaLabel": {
+    "message": "メインナビゲーション",
+    "description": "The ARIA label for the main navigation"
+  },
+  "theme.TOCCollapsible.toggleButtonLabel": {
+    "message": "このページの目次",
+    "description": "The label used by the button on the collapsible TOC component"
+  },
+  "theme.navbar.mobileLanguageDropdown.label": {
+    "message": "言語を選択",
+    "description": "The label for the mobile language switcher dropdown"
+  },
+  "theme.blog.post.readMore": {
+    "message": "もっと読む",
+    "description": "The label used in blog post item excerpts to link to full blog posts"
+  },
+  "theme.blog.post.readMoreLabel": {
+    "message": "{title}の全文を読む",
+    "description": "The ARIA label for the link to full blog posts from excerpts"
+  },
+  "theme.CodeBlock.wordWrapToggle": {
+    "message": "ワードラップを切り替え",
+    "description": "The title attribute for toggle word wrapping button of code block lines"
+  },
+  "theme.blog.post.readingTime.plurals": {
+    "message": "読了時間約{readingTime}分",
+    "description": "Pluralized label for \"{readingTime} min read\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.docs.breadcrumbs.home": {
+    "message": "ホームページ",
+    "description": "The ARIA label for the home page in the breadcrumbs"
+  },
+  "theme.CodeBlock.copy": {
+    "message": "コピー",
+    "description": "The copy button label on code blocks"
+  },
+  "theme.CodeBlock.copied": {
+    "message": "コピーしました",
+    "description": "The copied button label on code blocks"
+  },
+  "theme.CodeBlock.copyButtonAriaLabel": {
+    "message": "コードをクリップボードにコピー",
+    "description": "The ARIA label for copy code blocks button"
+  },
+  "theme.docs.sidebar.navAriaLabel": {
+    "message": "ドキュメントサイドバー",
+    "description": "The ARIA label for the sidebar navigation"
+  },
+  "theme.docs.sidebar.collapseButtonTitle": {
+    "message": "サイドバーを折りたたむ",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.collapseButtonAriaLabel": {
+    "message": "サイドバーを折りたたむ",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.expandAriaLabel": {
+    "message": "ドロップダウンを展開",
+    "description": "The ARIA label of the button to expand the mobile dropdown navbar item"
+  },
+  "theme.navbar.mobileDropdown.collapseButton.collapseAriaLabel": {
+    "message": "ドロップダウンを折りたたむ",
+    "description": "The ARIA label of the button to collapse the mobile dropdown navbar item"
+  },
+  "theme.navbar.mobileSidebarSecondaryMenu.backButtonLabel": {
+    "message": "← メインメニューに戻る",
+    "description": "The label of the back button to return to main menu, inside the mobile navbar sidebar secondary menu (notably used to display the docs sidebar)"
+  },
+  "theme.docs.sidebar.expandButtonTitle": {
+    "message": "サイドバーを展開",
+    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  },
+  "theme.docs.sidebar.expandButtonAriaLabel": {
+    "message": "サイドバーを展開",
+    "description": "The ARIA label and title attribute for expand button of doc sidebar"
+  },
+  "theme.docs.sidebar.closeSidebarButtonAriaLabel": {
+    "message": "ナビゲーションバーを閉じる",
+    "description": "The ARIA label for close button of mobile sidebar"
+  },
+  "theme.docs.sidebar.toggleSidebarButtonAriaLabel": {
+    "message": "ナビゲーションバーを切り替え",
+    "description": "The ARIA label for hamburger menu button of mobile navigation"
+  },
+  "theme.blog.post.plurals": {
+    "message": "{count}件の記事",
+    "description": "Pluralized label for \"{count} posts\". Use as much plural forms (separated by \"|\") as your language support (see https://www.unicode.org/cldr/cldr-aux/charts/34/supplemental/language_plural_rules.html)"
+  },
+  "theme.blog.tagTitle": {
+    "message": "{nPosts}「{tagName}」タグ付き",
+    "description": "The title of the page for a blog tag"
+  },
+  "theme.blog.author.pageTitle": {
+    "message": "{authorName} - {nPosts}",
+    "description": "The title of the page for a blog author"
+  },
+  "theme.blog.authorsList.pageTitle": {
+    "message": "著者一覧",
+    "description": "The title of the authors page"
+  },
+  "theme.blog.authorsList.viewAll": {
+    "message": "すべての著者を表示",
+    "description": "The label of the link targeting the blog authors page"
+  },
+  "theme.blog.author.noPosts": {
+    "message": "この著者はまだ記事を書いていません。",
+    "description": "The text for authors with 0 blog post"
+  },
+  "theme.contentVisibility.unlistedBanner.title": {
+    "message": "非公開ページ",
+    "description": "The unlisted content banner title"
+  },
+  "theme.contentVisibility.unlistedBanner.message": {
+    "message": "このページは非公開です。検索エンジンにインデックスされず、直接リンクを持つユーザーのみがアクセスできます。",
+    "description": "The unlisted content banner message"
+  },
+  "theme.contentVisibility.draftBanner.title": {
+    "message": "下書きページ",
+    "description": "The draft content banner title"
+  },
+  "theme.contentVisibility.draftBanner.message": {
+    "message": "このページは下書きです。開発環境でのみ表示され、本番ビルドには含まれません。",
+    "description": "The draft content banner message"
+  },
+  "theme.ErrorPageContent.tryAgain": {
+    "message": "再試行",
+    "description": "The label of the button to try again rendering when the React error boundary captures an error"
+  },
+  "theme.common.skipToMainContent": {
+    "message": "メインコンテンツにスキップ",
+    "description": "The skip to content label used for accessibility, allowing to rapidly navigate to main content with keyboard tab/enter navigation"
+  },
+  "theme.tags.tagsPageTitle": {
+    "message": "タグ",
+    "description": "The title of the tag list page"
+  },
+  "homepage.buttons.playground": {
+    "message": "🎮 Playgroundを試す"
+  },
+  "homepage.buttons.docs": {
+    "message": "📖 ドキュメントを読む"
+  },
+  "homepage.title": {
+    "message": "Circom回路のためのウィットネス暗号化"
+  },
+  "homepage.description": {
+    "message": "Circom回路の条件付き暗号化。計算ステートメントに暗号化し、有効なウィットネスで復号化。CLIツールとJavaScriptライブラリを提供。"
+  },
+  "homepage.features.encrypt.title": {
+    "message": "ステートメントに暗号化、鍵ではなく"
+  },
+  "homepage.features.encrypt.description": {
+    "message": "ウィットネス暗号化により、データを計算ステートメントに暗号化できます。有効な解を持つ誰でも復号化可能——鍵交換不要、信頼できる第三者不要。検証可能な計算のみ。"
+  },
+  "homepage.features.circom.title": {
+    "message": "Circomで構築"
+  },
+  "homepage.features.circom.description": {
+    "message": "Circom回路を使用して復号化条件を定義します。シンプルなパズルから複雑なアクセスポリシーまで——制約として書ければ暗号化できます。R1CS完全サポート。"
+  },
+  "homepage.features.everywhere.title": {
+    "message": "どこでも動作"
+  },
+  "homepage.features.everywhere.description": {
+    "message": "ターミナルでCLIを使用、Node.jsアプリケーションで使用、またはブラウザで直接使用。RustとWASMを活用し、すべてのプラットフォームで高性能。"
+  },
+  "playground.loading": {
+    "message": "Playground読み込み中..."
+  },
+  "playground.title": {
+    "message": "Playground"
+  },
+  "playground.description": {
+    "message": "インタラクティブな数独ウィットネス暗号化デモ"
+  },
+  "playground.header.title": {
+    "message": "🎮 ウィットネス暗号化 Playground"
+  },
+  "playground.header.description": {
+    "message": "事前構築された回路またはカスタム回路をアップロードしてウィットネス暗号化を実験"
+  },
+  "playground.tabs.sudoku": {
+    "message": "🧩 数独デモ"
+  },
+  "playground.tabs.custom": {
+    "message": "⚙️ カスタム回路"
+  },
+  "playground.mode.encrypt": {
+    "message": "🔐 暗号化"
+  },
+  "playground.mode.decrypt": {
+    "message": "🔓 復号化"
+  },
+  "playground.sudoku.encrypt.step1": {
+    "message": "1. パズルを生成または入力"
+  },
+  "playground.sudoku.encrypt.generateButton": {
+    "message": "🎲 ランダムパズルを生成"
+  },
+  "playground.sudoku.encrypt.step2": {
+    "message": "2. メッセージを入力"
+  },
+  "playground.sudoku.encrypt.encrypting": {
+    "message": "🔄 暗号化中..."
+  },
+  "playground.sudoku.encrypt.encryptButton": {
+    "message": "🔐 メッセージを暗号化"
+  },
+  "playground.sudoku.encrypt.success": {
+    "message": "✅ 暗号化成功!"
+  },
+  "playground.sudoku.encrypt.ciphertextSize": {
+    "message": "暗号文サイズ: {size}バイト"
+  },
+  "playground.sudoku.encrypt.downloadButton": {
+    "message": "📥 暗号文をダウンロード"
+  },
+  "playground.sudoku.decrypt.step1": {
+    "message": "1. 暗号文を読み込む"
+  },
+  "playground.sudoku.decrypt.uploadButton": {
+    "message": "📤 暗号文ファイルをアップロード"
+  },
+  "playground.sudoku.decrypt.ciphertextLoaded": {
+    "message": "✅ 暗号文を読み込みました（{size}バイト）"
+  },
+  "playground.sudoku.decrypt.step2": {
+    "message": "2. パズルを入力"
+  },
+  "playground.sudoku.decrypt.puzzleLoaded": {
+    "message": "暗号文からパズルを読み込みました。必要に応じて編集できます。"
+  },
+  "playground.sudoku.decrypt.puzzleHint": {
+    "message": "パズルの数字を入力してください。空のマスは0にしてください。"
+  },
+  "playground.sudoku.decrypt.step3": {
+    "message": "3. 解答を入力"
+  },
+  "playground.sudoku.decrypt.solutionHint": {
+    "message": "空のマスを埋めてパズルを解いてください。与えられた数字はロックされています。"
+  },
+  "playground.sudoku.decrypt.solving": {
+    "message": "🔄 解決中..."
+  },
+  "playground.sudoku.decrypt.autoSolveButton": {
+    "message": "🧩 自動解答"
+  },
+  "playground.sudoku.decrypt.decrypting": {
+    "message": "🔄 復号化中..."
+  },
+  "playground.sudoku.decrypt.decryptButton": {
+    "message": "🔓 メッセージを復号化"
+  },
+  "playground.sudoku.decrypt.successTitle": {
+    "message": "✅ 復号化されたメッセージ："
+  },
+  "playground.sudoku.info.title": {
+    "message": "ℹ️ 数独デモについて"
+  },
+  "playground.sudoku.info.description": {
+    "message": "このデモは数独回路を使用しています。メッセージは有効な解答を提供することでのみ復号化できます。"
+  },
+  "playground.sudoku.info.feature1": {
+    "message": "✅ 実際のzkenc-jsライブラリを使用"
+  },
+  "playground.sudoku.info.feature2": {
+    "message": "✅ 暗号学的に数独の解答を検証"
+  },
+  "playground.sudoku.info.feature3": {
+    "message": "✅ 有効なウィットネス（正しい解答）のみが復号化可能"
+  },
+  "playground.custom.encrypt.step1": {
+    "message": "1. 回路ファイルをアップロード"
+  },
+  "playground.custom.encrypt.r1csLabel": {
+    "message": "📄 R1CSファイル (.r1cs)"
+  },
+  "playground.custom.encrypt.r1csLoaded": {
+    "message": "✅ R1CSを読み込みました（{size}バイト）"
+  },
+  "playground.custom.encrypt.wasmLabel": {
+    "message": "⚙️ WASMファイル (.wasm)"
+  },
+  "playground.custom.encrypt.wasmLoaded": {
+    "message": "✅ WASMを読み込みました（{size}バイト）"
+  },
+  "playground.custom.encrypt.step2": {
+    "message": "2. 公開入力を入力 (JSON)"
+  },
+  "playground.custom.encrypt.publicInputHint": {
+    "message": "公開入力をJSON形式で入力してください。JSONを貼り付けるか、ファイルをアップロードすることもできます。"
+  },
+  "playground.custom.encrypt.uploadJson": {
+    "message": "📁 JSONファイルをアップロード"
+  },
+  "playground.custom.encrypt.step3": {
+    "message": "3. メッセージを入力"
+  },
+  "playground.custom.encrypt.messagePlaceholder": {
+    "message": "暗号化する秘密メッセージを入力..."
+  },
+  "playground.custom.encrypt.includePublicInput": {
+    "message": "暗号文に公開入力を含める（推奨）"
+  },
+  "playground.custom.encrypt.includePublicInputHint": {
+    "message": "有効にすると、公開入力が暗号文に埋め込まれ、復号化が便利になります。"
+  },
+  "playground.custom.encrypt.encrypting": {
+    "message": "🔄 暗号化中..."
+  },
+  "playground.custom.encrypt.encryptButton": {
+    "message": "🔐 メッセージを暗号化"
+  },
+  "playground.custom.encrypt.success": {
+    "message": "✅ 暗号化成功!"
+  },
+  "playground.custom.encrypt.ciphertextSize": {
+    "message": "暗号文サイズ: {size}バイト"
+  },
+  "playground.custom.encrypt.download": {
+    "message": "📥 暗号文をダウンロード"
+  },
+  "playground.custom.decrypt.step1": {
+    "message": "1. 回路ファイルをアップロード"
+  },
+  "playground.custom.decrypt.r1csLabel": {
+    "message": "📄 R1CSファイル (.r1cs)"
+  },
+  "playground.custom.decrypt.r1csLoaded": {
+    "message": "✅ R1CSを読み込みました（{size}バイト）"
+  },
+  "playground.custom.decrypt.wasmLabel": {
+    "message": "⚙️ WASMファイル (.wasm)"
+  },
+  "playground.custom.decrypt.wasmLoaded": {
+    "message": "✅ WASMを読み込みました（{size}バイト）"
+  },
+  "playground.custom.decrypt.step2": {
+    "message": "2. 暗号文を読み込む"
+  },
+  "playground.custom.decrypt.uploadCiphertext": {
+    "message": "📤 暗号文ファイルをアップロード"
+  },
+  "playground.custom.decrypt.ciphertextLoaded": {
+    "message": "✅ 暗号文を読み込みました（{size}バイト）"
+  },
+  "playground.custom.decrypt.step3": {
+    "message": "3. 公開入力を入力 (JSON)"
+  },
+  "playground.custom.decrypt.publicInputLoaded": {
+    "message": "暗号文から公開入力を読み込みました。必要に応じて編集できます。"
+  },
+  "playground.custom.decrypt.publicInputHint": {
+    "message": "暗号化時に使用した公開入力を入力してください。"
+  },
+  "playground.custom.decrypt.uploadJson": {
+    "message": "📁 JSONファイルをアップロード"
+  },
+  "playground.custom.decrypt.step4": {
+    "message": "4. 秘密入力を入力 (JSON)"
+  },
+  "playground.custom.decrypt.privateInputHint": {
+    "message": "完全なウィットネス（公開 + 秘密入力）を入力してください。秘密シグナルのみの場合は、上記の公開入力とマージされます。"
+  },
+  "playground.custom.decrypt.uploadPrivateJson": {
+    "message": "📁 JSONファイルをアップロード"
+  },
+  "playground.custom.decrypt.decrypting": {
+    "message": "🔄 復号化中..."
+  },
+  "playground.custom.decrypt.decryptButton": {
+    "message": "🔓 メッセージを復号化"
+  },
+  "playground.custom.decrypt.success": {
+    "message": "✅ 復号化されたメッセージ："
+  },
+  "playground.custom.info.title": {
+    "message": "ℹ️ カスタム回路について"
+  },
+  "playground.custom.info.description": {
+    "message": "独自のCircom回路をアップロードしてウィットネス暗号化を実験できます。"
+  },
+  "playground.custom.info.compile": {
+    "message": "📄 以下のコマンドで回路をコンパイル："
+  },
+  "playground.custom.info.upload": {
+    "message": "📦 .r1csと.wasmファイルの両方をアップロード"
+  },
+  "playground.custom.info.publicInputs": {
+    "message": "🔐 公開入力は暗号化に使用"
+  },
+  "playground.custom.info.witness": {
+    "message": "🔓 完全なウィットネス（公開 + 秘密）は復号化に使用"
+  },
+  "playground.custom.info.embed": {
+    "message": "💾 公開入力を暗号文に埋め込んで便利に使用可能"
+  },
+  "playground.custom.info.learnMore": {
+    "message": "詳細を見る →"
   }
 }
