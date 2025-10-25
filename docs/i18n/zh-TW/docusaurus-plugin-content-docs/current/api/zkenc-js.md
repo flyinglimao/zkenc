@@ -82,8 +82,7 @@ interface EncryptResult {
 async function encrypt(
   circuitFiles: CircuitFiles,
   publicInputs: Record<string, any>,
-  message: Uint8Array,
-  options?: { includePublicInput?: boolean }
+  message: Uint8Array
 ): Promise<EncryptResult>;
 ```
 
@@ -92,8 +91,6 @@ async function encrypt(
 - `circuitFiles` - 電路檔案（R1CS 和 WASM）
 - `publicInputs` - 公開輸入，作為 JSON 物件（僅公開訊號）
 - `message` - 要加密的訊息，作為 Uint8Array
-- `options` - 可選設定
-  - `includePublicInput` - 是否在密文中嵌入公開輸入（預設：true）
 
 **回傳：**
 
@@ -102,9 +99,11 @@ async function encrypt(
 **密文格式：**
 
 ```
-[1 位元組旗標][4 位元組見證 CT 長度][見證密文]
-[4 位元組公開輸入長度（若旗標=1）][公開輸入 JSON（若旗標=1）]
-[AES 加密訊息]
+[4 位元組：見證 CT 長度][見證密文][AES 加密訊息]
+│                        │           │
+│                        │           └─ AES-256-GCM 加密
+│                        └─ 見證加密（1576 位元組）
+└─ Big-endian 長度（總是 1576）
 ```
 
 **範例：**
@@ -122,6 +121,7 @@ const { ciphertext, key } = await zkenc.encrypt(
 );
 
 console.log("密文大小：", ciphertext.length);
+// 密文大小：1608 位元組（4 + 1576 + 28）
 ```
 
 **效能：**
@@ -201,18 +201,28 @@ async function encap(
 
 **回傳：**
 
-- `Promise<EncapResult>` - 見證密文和加密金鑰
+- `Promise<EncapResult>` - 見證密文（1576 位元組）和金鑰（32 位元組）
 
 **範例：**
 
 ```typescript
-const { ciphertext: witnessCT, key } = await zkenc.encap(circuitFiles, {
-  publicValue: 42,
-});
+const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    wasmBuffer: await fs.readFile("circuit.wasm"),
+  },
+  { publicValue: 42 }
+);
 
-// 使用金鑰進行自訂加密
-const encrypted = await customAESEncrypt(key, message);
+// 現在使用金鑰進行自訂加密
+const encryptedMessage = await customEncrypt(key, message);
 ```
+
+**使用情境：**
+
+- 自訂加密方案
+- 獨立金鑰管理
+- 研究和實驗
 
 ### `decap()`
 
@@ -229,23 +239,34 @@ async function decap(
 **參數：**
 
 - `circuitFiles` - 電路檔案（R1CS 和 WASM）
-- `ciphertext` - 來自 `encap()` 的見證密文
-- `inputs` - 完整輸入（公開 + 私密訊號）
+- `ciphertext` - 來自 `encap()` 的見證密文（1576 位元組）
+- `inputs` - 完整輸入，作為 JSON 物件（必須滿足電路約束）
 
 **回傳：**
 
 - `Promise<Uint8Array>` - 恢復的加密金鑰（32 位元組）
 
+**拋出例外：**
+
+- `Error` - 如果見證不滿足電路約束
+
 **範例：**
 
 ```typescript
-const recoveredKey = await zkenc.decap(circuitFiles, witnessCT, {
-  publicValue: 42,
-  privateValue: 58,
-});
+const recoveredKey = await zkenc.decap(
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    wasmBuffer: await fs.readFile("circuit.wasm"),
+  },
+  witnessCiphertext,
+  {
+    publicValue: 42,
+    privateValue: 123,
+  }
+);
 
-// 使用恢復的金鑰解密
-const decrypted = await customAESDecrypt(recoveredKey, encrypted);
+// 現在使用恢復的金鑰
+const decryptedMessage = await customDecrypt(recoveredKey, encryptedMessage);
 ```
 
 ## 使用模式
@@ -328,24 +349,20 @@ const { ciphertext: witnessCt, key } = await zkenc.encap(
   publicInputs
 );
 
-// 使用金鑰進行自訂加密
-const iv = crypto.getRandomValues(new Uint8Array(16));
-const aesKey = await crypto.subtle.importKey(
-  "raw",
-  key,
-  { name: "AES-GCM" },
-  false,
-  ["encrypt"]
-);
+// 使用你自己的加密方式
+import { customEncrypt, customDecrypt } from "./my-crypto";
+const encrypted = await customEncrypt(key, message);
 
-const encrypted = await crypto.subtle.encrypt(
-  { name: "AES-GCM", iv },
-  aesKey,
-  message
-);
+// 儲存兩個部分
+await fs.writeFile("witness.ct", witnessCt);
+await fs.writeFile("message.ct", encrypted);
 
-// 組合密文
-const combinedCt = new Uint8Array([...witnessCt, ...iv, ...new Uint8Array(encrypted)]);
+// 稍後：解密
+const witnessCt = await fs.readFile("witness.ct");
+const encrypted = await fs.readFile("message.ct");
+
+const recoveredKey = await zkenc.decap(circuitFiles, witnessCt, fullInputs);
+const decrypted = await customDecrypt(recoveredKey, encrypted);
 ```
 
 ## 輸入格式
