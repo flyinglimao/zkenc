@@ -100,25 +100,25 @@ zkenc encrypt \
 輸出：
 
 ```
-🔐 步驟 1：執行 Encap...
-📂 載入 R1CS 電路...
-   - 約束：2
-   - 公開輸入：1
-   - 線路：4
+🔐 Step 1: Running Encap...
+📂 Loading R1CS circuit...
+   - Constraints: 2
+   - Public inputs: 1
+   - Wires: 4
 
-📋 從 JSON 載入公開輸入...
-   - 已解析 1 個場元素
+📋 Loading public inputs from JSON...
+   - Parsed 1 field elements
 
-   ✅ 已產生見證密文（123 位元組）
+   ✅ Witness ciphertext generated (123 bytes)
 
-🔒 步驟 2：加密訊息...
-   - 訊息大小：14 位元組
-   ✅ 訊息已加密（42 位元組）
+🔒 Step 2: Encrypting message...
+   - Message size: 14 bytes
+   ✅ Message encrypted (42 bytes)
 
-📦 步驟 3：建立組合密文...
-   ✅ 已儲存組合密文（218 位元組）
+📦 Step 3: Creating combined ciphertext...
+   ✅ Combined ciphertext saved (218 bytes)
 
-✨ 加密完成！公開輸入已嵌入密文中。
+✨ Encryption complete! Public inputs are embedded in the ciphertext.
 ```
 
 ### 5. 產生見證檔案
@@ -153,26 +153,26 @@ zkenc decrypt \
 輸出：
 
 ```
-📦 步驟 1：解析組合密文...
-   - 旗標：1
-   - 見證密文：123 位元組
-   - 公開輸入：{"publicValue":"42"}
-   - 加密訊息：42 位元組
+📦 Step 1: Parsing combined ciphertext...
+   - Flag: 1
+   - Witness ciphertext: 123 bytes
+   - Public input: {"publicValue":"42"}
+   - Encrypted message: 42 bytes
 
-🔓 步驟 2：執行 Decap...
-📂 載入 R1CS 電路...
-   - 約束：2
-   - 公開輸入：1
+🔓 Step 2: Running Decap...
+📂 Loading R1CS circuit...
+   - Constraints: 2
+   - Public inputs: 1
 
-📋 從 snarkjs 載入見證...
-   - 見證元素：4
+📋 Loading witness from snarkjs...
+   - Witness elements: 4
 
-   ✅ 已從見證恢復金鑰
+   ✅ Key recovered from witness
 
-🔓 步驟 3：解密訊息...
-   ✅ 已儲存解密訊息（14 位元組）
+🔓 Step 3: Decrypting message...
+   ✅ Decrypted message saved (14 bytes)
 
-✨ 解密完成！
+✨ Decryption complete!
 ```
 
 驗證結果：
