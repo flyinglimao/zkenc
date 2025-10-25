@@ -5,7 +5,7 @@ import Translate, { translate } from "@docusaurus/Translate";
 import styles from "./styles.module.css";
 
 type FeatureItem = {
-  key: string;
+  name: string;
   title: string;
   Svg: React.ComponentType<React.ComponentProps<"svg">>;
   description: ReactNode;
@@ -13,7 +13,7 @@ type FeatureItem = {
 
 const FeatureList: FeatureItem[] = [
   {
-    key: "encrypt",
+    name: "encrypt",
     title: "Encrypt to Statements, Not Keys",
     Svg: require("@site/static/img/undraw_security.svg").default,
     description: (
@@ -25,7 +25,7 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    key: "circom",
+    name: "circom",
     title: "Built on Circom",
     Svg: require("@site/static/img/undraw_programming.svg").default,
     description: (
@@ -37,7 +37,7 @@ const FeatureList: FeatureItem[] = [
     ),
   },
   {
-    key: "everywhere",
+    name: "everywhere",
     title: "Works Everywhere",
     Svg: require("@site/static/img/undraw_web_devices.svg").default,
     description: (
@@ -50,10 +50,10 @@ const FeatureList: FeatureItem[] = [
   },
 ];
 
-function Feature({ key, title, Svg, description }: FeatureItem) {
+function Feature({ name, title, Svg, description }: FeatureItem) {
   // Render title based on key
   const titleElement = (() => {
-    switch (key) {
+    switch (name) {
       case "encrypt":
         return (
           <Translate id="homepage.features.encrypt.title">
