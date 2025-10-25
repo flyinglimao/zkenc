@@ -186,6 +186,8 @@ const decrypted = await zkenc.decrypt(
 
 ## 選擇你的指南
 
+<div className="guides-grid">
+
 ### 給 Node.js 開發者
 
 適合用於建立：
@@ -218,6 +220,8 @@ const decrypted = await zkenc.decrypt(
 - 跨平台工作流程
 
 [跨工具工作流程 →](/docs/guides/cross-tool-workflow)
+
+</div>
 
 ## 下一步
 
