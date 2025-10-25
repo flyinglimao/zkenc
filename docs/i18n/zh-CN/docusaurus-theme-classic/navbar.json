@@ -1,4 +1,16 @@
 {
+  "item.label.Documentation": {
+    "message": "文档",
+    "description": "Navbar item with label Documentation"
+  },
+  "item.label.Guides": {
+    "message": "指南",
+    "description": "Navbar item with label Guides"
+  },
+  "item.label.Playground": {
+    "message": "游乐场",
+    "description": "Navbar item with label Playground"
+  },
   "theme.NotFound.title": {
     "message": "找不到页面",
     "description": "The title of the 404 page"

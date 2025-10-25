@@ -1,0 +1,18 @@
+{
+  "version.label": {
+    "message": "下一步",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Getting Started": {
+    "message": "入門",
+    "description": "The label for category Getting Started in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.API Reference": {
+    "message": "API 參考",
+    "description": "The label for category API Reference in sidebar docsSidebar"
+  },
+  "sidebar.guidesSidebar.category.Step-by-Step Guides": {
+    "message": "逐步指南",
+    "description": "The label for category Step-by-Step Guides in sidebar guidesSidebar"
+  }
+}

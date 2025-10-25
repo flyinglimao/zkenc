@@ -1,4 +1,16 @@
 {
+  "item.label.Documentation": {
+    "message": "ドキュメント",
+    "description": "Navbar item with label Documentation"
+  },
+  "item.label.Guides": {
+    "message": "ガイド",
+    "description": "Navbar item with label Guides"
+  },
+  "item.label.Playground": {
+    "message": "プレイグラウンド",
+    "description": "Navbar item with label Playground"
+  },
   "theme.NotFound.title": {
     "message": "ページが見つかりません",
     "description": "The title of the 404 page"

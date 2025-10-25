@@ -1,0 +1,18 @@
+{
+  "version.label": {
+    "message": "次へ",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Getting Started": {
+    "message": "はじめに",
+    "description": "The label for category Getting Started in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.API Reference": {
+    "message": "API リファレンス",
+    "description": "The label for category API Reference in sidebar docsSidebar"
+  },
+  "sidebar.guidesSidebar.category.Step-by-Step Guides": {
+    "message": "ステップバイステップガイド",
+    "description": "The label for category Step-by-Step Guides in sidebar guidesSidebar"
+  }
+}
