@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../pages/playground.module.css";
 import { Sudoku, generator } from "@forfuns/sudoku";
 import { encrypt, decrypt, getPublicInput } from "zkenc-js";
-import Translate from "@docusaurus/Translate";
+import Translate, { translate } from "@docusaurus/Translate";
 import useBaseUrl from "@docusaurus/useBaseUrl";
 
 // Sudoku utilities
@@ -900,10 +900,16 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>2. Enter Public Input (JSON)</h2>
+                <h2>
+                  <Translate id="playground.custom.encrypt.step2">
+                    2. Enter Public Input (JSON)
+                  </Translate>
+                </h2>
                 <p className={styles.hint}>
-                  Enter the public inputs as JSON. You can also paste JSON or
-                  upload a file.
+                  <Translate id="playground.custom.encrypt.publicInputHint">
+                    Enter the public inputs as JSON. You can also paste JSON or
+                    upload a file.
+                  </Translate>
                 </p>
                 <div className={styles.inputWithUpload}>
                   <textarea
@@ -914,7 +920,9 @@ export default function PlaygroundClient(): React.ReactElement {
                     rows={6}
                   />
                   <label className={styles.uploadJsonButton}>
-                    📁 Upload JSON File
+                    <Translate id="playground.custom.encrypt.uploadJson">
+                      📁 Upload JSON File
+                    </Translate>
                     <input
                       type="file"
                       accept=".json"
@@ -926,12 +934,19 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>3. Enter Message</h2>
+                <h2>
+                  <Translate id="playground.custom.encrypt.step3">
+                    3. Enter Message
+                  </Translate>
+                </h2>
                 <textarea
                   className={styles.textarea}
                   value={customMessage}
                   onChange={(e) => setCustomMessage(e.target.value)}
-                  placeholder="Enter secret message to encrypt..."
+                  placeholder={translate({
+                    id: "playground.custom.encrypt.messagePlaceholder",
+                    message: "Enter secret message to encrypt...",
+                  })}
                   rows={4}
                 />
               </div>
@@ -945,12 +960,16 @@ export default function PlaygroundClient(): React.ReactElement {
                       onChange={(e) => setIncludePublicInput(e.target.checked)}
                     />
                     <span>
-                      Include public input in ciphertext (recommended)
+                      <Translate id="playground.custom.encrypt.includePublicInput">
+                        Include public input in ciphertext (recommended)
+                      </Translate>
                     </span>
                   </label>
                   <p className={styles.optionHint}>
-                    When enabled, the public input will be embedded in the
-                    ciphertext for easier decryption.
+                    <Translate id="playground.custom.encrypt.includePublicInputHint">
+                      When enabled, the public input will be embedded in the
+                      ciphertext for easier decryption.
+                    </Translate>
                   </p>
                 </div>
               </div>
@@ -961,18 +980,39 @@ export default function PlaygroundClient(): React.ReactElement {
                   disabled={loading || !customMessage || !customCircuitFiles}
                   className={styles.primaryButton}
                 >
-                  {loading ? "🔄 Encrypting..." : "🔐 Encrypt Message"}
+                  {loading ? (
+                    <Translate id="playground.custom.encrypt.encrypting">
+                      🔄 Encrypting...
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.custom.encrypt.encryptButton">
+                      🔐 Encrypt Message
+                    </Translate>
+                  )}
                 </button>
 
                 {customCiphertext && (
                   <div className={styles.success}>
-                    <p>✅ Encryption successful!</p>
-                    <p>Ciphertext size: {customCiphertext.length} bytes</p>
+                    <p>
+                      <Translate id="playground.custom.encrypt.success">
+                        ✅ Encryption successful!
+                      </Translate>
+                    </p>
+                    <p>
+                      <Translate
+                        id="playground.custom.encrypt.ciphertextSize"
+                        values={{ size: customCiphertext.length }}
+                      >
+                        {"Ciphertext size: {size} bytes"}
+                      </Translate>
+                    </p>
                     <button
                       onClick={handleDownloadCustomCiphertext}
                       className={styles.button}
                     >
-                      📥 Download Ciphertext
+                      <Translate id="playground.custom.encrypt.download">
+                        📥 Download Ciphertext
+                      </Translate>
                     </button>
                   </div>
                 )}
@@ -981,11 +1021,17 @@ export default function PlaygroundClient(): React.ReactElement {
           ) : (
             <div className={styles.content}>
               <div className={styles.section}>
-                <h2>1. Upload Circuit Files</h2>
+                <h2>
+                  <Translate id="playground.custom.decrypt.step1">
+                    1. Upload Circuit Files
+                  </Translate>
+                </h2>
                 <div className={styles.uploadGrid}>
                   <div>
                     <label className={styles.fileLabel}>
-                      📄 R1CS File (.r1cs)
+                      <Translate id="playground.custom.decrypt.r1csLabel">
+                        📄 R1CS File (.r1cs)
+                      </Translate>
                       <input
                         type="file"
                         accept=".r1cs"
@@ -995,14 +1041,22 @@ export default function PlaygroundClient(): React.ReactElement {
                     </label>
                     {customCircuitFiles?.r1csBuffer.length > 0 && (
                       <p className={styles.fileSuccess}>
-                        ✅ R1CS loaded ({customCircuitFiles.r1csBuffer.length}{" "}
-                        bytes)
+                        <Translate
+                          id="playground.custom.decrypt.r1csLoaded"
+                          values={{
+                            size: customCircuitFiles.r1csBuffer.length,
+                          }}
+                        >
+                          {"✅ R1CS loaded ({size} bytes)"}
+                        </Translate>
                       </p>
                     )}
                   </div>
                   <div>
                     <label className={styles.fileLabel}>
-                      ⚙️ WASM File (.wasm)
+                      <Translate id="playground.custom.decrypt.wasmLabel">
+                        ⚙️ WASM File (.wasm)
+                      </Translate>
                       <input
                         type="file"
                         accept=".wasm"
@@ -1012,8 +1066,14 @@ export default function PlaygroundClient(): React.ReactElement {
                     </label>
                     {customCircuitFiles?.wasmBuffer.length > 0 && (
                       <p className={styles.fileSuccess}>
-                        ✅ WASM loaded ({customCircuitFiles.wasmBuffer.length}{" "}
-                        bytes)
+                        <Translate
+                          id="playground.custom.decrypt.wasmLoaded"
+                          values={{
+                            size: customCircuitFiles.wasmBuffer.length,
+                          }}
+                        >
+                          {"✅ WASM loaded ({size} bytes)"}
+                        </Translate>
                       </p>
                     )}
                   </div>
@@ -1021,10 +1081,16 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>2. Load Ciphertext</h2>
+                <h2>
+                  <Translate id="playground.custom.decrypt.step2">
+                    2. Load Ciphertext
+                  </Translate>
+                </h2>
                 <div className={styles.uploadArea}>
                   <label className={styles.uploadButton}>
-                    📤 Upload Ciphertext File
+                    <Translate id="playground.custom.decrypt.uploadCiphertext">
+                      📤 Upload Ciphertext File
+                    </Translate>
                     <input
                       type="file"
                       accept=".bin"
@@ -1034,18 +1100,34 @@ export default function PlaygroundClient(): React.ReactElement {
                   </label>
                   {customCiphertext && (
                     <p className={styles.uploadSuccess}>
-                      ✅ Ciphertext loaded ({customCiphertext.length} bytes)
+                      <Translate
+                        id="playground.custom.decrypt.ciphertextLoaded"
+                        values={{ size: customCiphertext.length }}
+                      >
+                        {"✅ Ciphertext loaded ({size} bytes)"}
+                      </Translate>
                     </p>
                   )}
                 </div>
               </div>
 
               <div className={styles.section}>
-                <h2>3. Enter Public Input (JSON)</h2>
+                <h2>
+                  <Translate id="playground.custom.decrypt.step3">
+                    3. Enter Public Input (JSON)
+                  </Translate>
+                </h2>
                 <p className={styles.hint}>
-                  {customPublicInput && customPublicInput.trim() !== "{}"
-                    ? "Public input loaded from ciphertext. You can edit if needed."
-                    : "Enter the public inputs that were used during encryption."}
+                  {customPublicInput && customPublicInput.trim() !== "{}" ? (
+                    <Translate id="playground.custom.decrypt.publicInputLoaded">
+                      Public input loaded from ciphertext. You can edit if
+                      needed.
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.custom.decrypt.publicInputHint">
+                      Enter the public inputs that were used during encryption.
+                    </Translate>
+                  )}
                 </p>
                 <div className={styles.inputWithUpload}>
                   <textarea
@@ -1056,7 +1138,9 @@ export default function PlaygroundClient(): React.ReactElement {
                     rows={6}
                   />
                   <label className={styles.uploadJsonButton}>
-                    📁 Upload JSON File
+                    <Translate id="playground.custom.decrypt.uploadJson">
+                      📁 Upload JSON File
+                    </Translate>
                     <input
                       type="file"
                       accept=".json"
@@ -1068,11 +1152,17 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>4. Enter Private Input (JSON)</h2>
+                <h2>
+                  <Translate id="playground.custom.decrypt.step4">
+                    4. Enter Private Input (JSON)
+                  </Translate>
+                </h2>
                 <p className={styles.hint}>
-                  Enter the complete witness (public + private inputs). If you
-                  only have private signals, they will be merged with public
-                  inputs above.
+                  <Translate id="playground.custom.decrypt.privateInputHint">
+                    Enter the complete witness (public + private inputs). If you
+                    only have private signals, they will be merged with public
+                    inputs above.
+                  </Translate>
                 </p>
                 <div className={styles.inputWithUpload}>
                   <textarea
@@ -1083,7 +1173,9 @@ export default function PlaygroundClient(): React.ReactElement {
                     rows={6}
                   />
                   <label className={styles.uploadJsonButton}>
-                    📁 Upload JSON File
+                    <Translate id="playground.custom.decrypt.uploadPrivateJson">
+                      📁 Upload JSON File
+                    </Translate>
                     <input
                       type="file"
                       accept=".json"
@@ -1100,7 +1192,15 @@ export default function PlaygroundClient(): React.ReactElement {
                   disabled={loading || !customCiphertext || !customCircuitFiles}
                   className={styles.primaryButton}
                 >
-                  {loading ? "🔄 Decrypting..." : "🔓 Decrypt Message"}
+                  {loading ? (
+                    <Translate id="playground.custom.decrypt.decrypting">
+                      🔄 Decrypting...
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.custom.decrypt.decryptButton">
+                      🔓 Decrypt Message
+                    </Translate>
+                  )}
                 </button>
 
                 {error && mode === "decrypt" && activeTab === "custom" && (
@@ -1109,7 +1209,11 @@ export default function PlaygroundClient(): React.ReactElement {
 
                 {customDecrypted && (
                   <div className={styles.success}>
-                    <h3>✅ Decrypted Message:</h3>
+                    <h3>
+                      <Translate id="playground.custom.decrypt.success">
+                        ✅ Decrypted Message:
+                      </Translate>
+                    </h3>
                     <pre className={styles.decryptedMessage}>
                       {customDecrypted}
                     </pre>
@@ -1120,27 +1224,51 @@ export default function PlaygroundClient(): React.ReactElement {
           )}
 
           <div className={styles.info}>
-            <h3>ℹ️ About Custom Circuits</h3>
+            <h3>
+              <Translate id="playground.custom.info.title">
+                ℹ️ About Custom Circuits
+              </Translate>
+            </h3>
             <p>
-              Upload your own Circom circuits to experiment with witness
-              encryption.
+              <Translate id="playground.custom.info.description">
+                Upload your own Circom circuits to experiment with witness
+                encryption.
+              </Translate>
             </p>
             <ul>
               <li>
-                📄 Compile your circuit with:{" "}
+                <Translate id="playground.custom.info.compile">
+                  📄 Compile your circuit with:
+                </Translate>{" "}
                 <code>circom circuit.circom --r1cs --wasm</code>
               </li>
-              <li>📦 Upload both .r1cs and .wasm files</li>
-              <li>🔐 Public inputs are used for encryption</li>
               <li>
-                🔓 Full witness (public + private) is needed for decryption
+                <Translate id="playground.custom.info.upload">
+                  📦 Upload both .r1cs and .wasm files
+                </Translate>
               </li>
               <li>
-                💾 Public inputs can be embedded in ciphertext for convenience
+                <Translate id="playground.custom.info.publicInputs">
+                  🔐 Public inputs are used for encryption
+                </Translate>
+              </li>
+              <li>
+                <Translate id="playground.custom.info.witness">
+                  🔓 Full witness (public + private) is needed for decryption
+                </Translate>
+              </li>
+              <li>
+                <Translate id="playground.custom.info.embed">
+                  💾 Public inputs can be embedded in ciphertext for convenience
+                </Translate>
               </li>
             </ul>
             <p>
-              <a href="/docs/getting-started/zkenc-js">Learn more →</a>
+              <a href="/docs/getting-started/zkenc-js">
+                <Translate id="playground.custom.info.learnMore">
+                  Learn more →
+                </Translate>
+              </a>
             </p>
           </div>
         </>
