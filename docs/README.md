@@ -25,11 +25,10 @@ yarn start --locale ja
 
 ### Translation Status
 
-See [TRANSLATION_GUIDE.md](./TRANSLATION_GUIDE.md) for detailed translation status and how to contribute translations.
-
 **Currently translated:**
 - Core documentation pages (intro, zkenc-js getting started, guides overview)
 - All UI elements (navbar, footer, sidebars)
+- Available in 3 languages: Traditional Chinese (zh-TW), Simplified Chinese (zh-CN), and Japanese (ja)
 
 ## Installation
 
