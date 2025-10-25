@@ -83,7 +83,7 @@ export async function loadCircuitFiles(): Promise<CircuitFiles> {
 
 建立主要應用程式元件，處理加密和解密操作。
 
-## 步驟 5：添加UI元素
+## 步驟 5：添加 UI 元素
 
 - 訊息輸入框
 - 公開/私密值輸入
@@ -94,6 +94,7 @@ export async function loadCircuitFiles(): Promise<CircuitFiles> {
 ## 步驟 6：處理狀態管理
 
 使用 React hooks 管理：
+
 - 載入狀態
 - 錯誤訊息
 - 電路檔案快取
@@ -104,15 +105,15 @@ export async function loadCircuitFiles(): Promise<CircuitFiles> {
 更新 `vite.config.ts` 以處理 WASM：
 
 ```typescript
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    exclude: ['zkenc-js']
-  }
-})
+    exclude: ["zkenc-js"],
+  },
+});
 ```
 
 ## 最佳實踐
