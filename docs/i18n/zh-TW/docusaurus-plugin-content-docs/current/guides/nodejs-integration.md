@@ -410,12 +410,7 @@ export async function encryptFileWithProgress(
   outputFile: string,
   publicValue: number
 ): Promise<void> {
-  const steps = [
-    "載入電路",
-    "讀取訊息",
-    "加密",
-    "儲存密文",
-  ];
+  const steps = ["載入電路", "讀取訊息", "加密", "儲存密文"];
 
   for (let i = 0; i < steps.length; i++) {
     console.log(`[${i + 1}/${steps.length}] ${steps[i]}...`);
