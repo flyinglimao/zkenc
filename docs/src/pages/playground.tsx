@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Layout from "@theme/Layout";
+import Translate, { translate } from "@docusaurus/Translate";
 
 function PlaygroundWrapper(): React.ReactElement {
   const [PlaygroundClient, setPlaygroundClient] =
@@ -15,7 +16,7 @@ function PlaygroundWrapper(): React.ReactElement {
   if (!PlaygroundClient) {
     return (
       <div style={{ padding: "2rem", textAlign: "center" }}>
-        Loading playground...
+        <Translate id="playground.loading">Loading playground...</Translate>
       </div>
     );
   }
@@ -26,8 +27,14 @@ function PlaygroundWrapper(): React.ReactElement {
 export default function Playground(): React.ReactElement {
   return (
     <Layout
-      title="Playground"
-      description="Interactive Sudoku Witness Encryption Demo"
+      title={translate({
+        id: "playground.title",
+        message: "Playground",
+      })}
+      description={translate({
+        id: "playground.description",
+        message: "Interactive Sudoku Witness Encryption Demo",
+      })}
     >
       <PlaygroundWrapper />
     </Layout>

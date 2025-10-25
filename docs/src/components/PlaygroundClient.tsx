@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import styles from "../pages/playground.module.css";
 import { Sudoku, generator } from "@forfuns/sudoku";
 import { encrypt, decrypt, getPublicInput } from "zkenc-js";
+import Translate from "@docusaurus/Translate";
 
 // Sudoku utilities
 function generateSudoku(): { puzzle: number[] } {
@@ -525,10 +526,16 @@ export default function PlaygroundClient(): React.ReactElement {
   return (
     <div className={styles.playground}>
       <div className={styles.header}>
-        <h1>🎮 Witness Encryption Playground</h1>
+        <h1>
+          <Translate id="playground.header.title">
+            🎮 Witness Encryption Playground
+          </Translate>
+        </h1>
         <p>
-          Experiment with witness encryption using pre-built circuits or upload
-          your own
+          <Translate id="playground.header.description">
+            Experiment with witness encryption using pre-built circuits or
+            upload your own
+          </Translate>
         </p>
       </div>
 
@@ -538,13 +545,13 @@ export default function PlaygroundClient(): React.ReactElement {
           className={activeTab === "sudoku" ? styles.active : ""}
           onClick={() => setActiveTab("sudoku")}
         >
-          🧩 Sudoku Demo
+          <Translate id="playground.tabs.sudoku">🧩 Sudoku Demo</Translate>
         </button>
         <button
           className={activeTab === "custom" ? styles.active : ""}
           onClick={() => setActiveTab("custom")}
         >
-          ⚙️ Custom Circuit
+          <Translate id="playground.tabs.custom">⚙️ Custom Circuit</Translate>
         </button>
       </div>
 
@@ -556,25 +563,31 @@ export default function PlaygroundClient(): React.ReactElement {
               className={mode === "encrypt" ? styles.active : ""}
               onClick={() => setMode("encrypt")}
             >
-              🔐 Encrypt
+              <Translate id="playground.mode.encrypt">🔐 Encrypt</Translate>
             </button>
             <button
               className={mode === "decrypt" ? styles.active : ""}
               onClick={() => setMode("decrypt")}
             >
-              🔓 Decrypt
+              <Translate id="playground.mode.decrypt">🔓 Decrypt</Translate>
             </button>
           </div>
 
           {mode === "encrypt" ? (
             <div className={styles.content}>
               <div className={styles.section}>
-                <h2>1. Generate or Enter Puzzle</h2>
+                <h2>
+                  <Translate id="playground.sudoku.encrypt.step1">
+                    1. Generate or Enter Puzzle
+                  </Translate>
+                </h2>
                 <button
                   onClick={handleGenerateRandom}
                   className={styles.button}
                 >
-                  🎲 Generate Random Puzzle
+                  <Translate id="playground.sudoku.encrypt.generateButton">
+                    🎲 Generate Random Puzzle
+                  </Translate>
                 </button>
                 <div className={styles.puzzleContainer}>
                   {renderSudokuGrid(puzzle, true, "puzzle")}
@@ -582,7 +595,11 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>2. Enter Your Message</h2>
+                <h2>
+                  <Translate id="playground.sudoku.encrypt.step2">
+                    2. Enter Your Message
+                  </Translate>
+                </h2>
                 <textarea
                   className={styles.textarea}
                   value={message}
@@ -598,18 +615,39 @@ export default function PlaygroundClient(): React.ReactElement {
                   disabled={loading || !message}
                   className={styles.primaryButton}
                 >
-                  {loading ? "🔄 Encrypting..." : "🔐 Encrypt Message"}
+                  {loading ? (
+                    <Translate id="playground.sudoku.encrypt.encrypting">
+                      🔄 Encrypting...
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.sudoku.encrypt.encryptButton">
+                      🔐 Encrypt Message
+                    </Translate>
+                  )}
                 </button>
 
                 {ciphertext && (
                   <div className={styles.success}>
-                    <p>✅ Encryption successful!</p>
-                    <p>Ciphertext size: {ciphertext.length} bytes</p>
+                    <p>
+                      <Translate id="playground.sudoku.encrypt.success">
+                        ✅ Encryption successful!
+                      </Translate>
+                    </p>
+                    <p>
+                      <Translate
+                        id="playground.sudoku.encrypt.ciphertextSize"
+                        values={{ size: ciphertext.length }}
+                      >
+                        {"Ciphertext size: {size} bytes"}
+                      </Translate>
+                    </p>
                     <button
                       onClick={handleDownloadCiphertext}
                       className={styles.button}
                     >
-                      📥 Download Ciphertext
+                      <Translate id="playground.sudoku.encrypt.downloadButton">
+                        📥 Download Ciphertext
+                      </Translate>
                     </button>
                   </div>
                 )}
@@ -618,10 +656,16 @@ export default function PlaygroundClient(): React.ReactElement {
           ) : (
             <div className={styles.content}>
               <div className={styles.section}>
-                <h2>1. Load Ciphertext</h2>
+                <h2>
+                  <Translate id="playground.sudoku.decrypt.step1">
+                    1. Load Ciphertext
+                  </Translate>
+                </h2>
                 <div className={styles.uploadArea}>
                   <label className={styles.uploadButton}>
-                    📤 Upload Ciphertext File
+                    <Translate id="playground.sudoku.decrypt.uploadButton">
+                      📤 Upload Ciphertext File
+                    </Translate>
                     <input
                       type="file"
                       accept=".bin"
@@ -631,19 +675,35 @@ export default function PlaygroundClient(): React.ReactElement {
                   </label>
                   {(uploadedCiphertext || ciphertext) && (
                     <p className={styles.uploadSuccess}>
-                      ✅ Ciphertext loaded (
-                      {(uploadedCiphertext || ciphertext)!.length} bytes)
+                      <Translate
+                        id="playground.sudoku.decrypt.ciphertextLoaded"
+                        values={{
+                          size: (uploadedCiphertext || ciphertext)!.length,
+                        }}
+                      >
+                        {"✅ Ciphertext loaded ({size} bytes)"}
+                      </Translate>
                     </p>
                   )}
                 </div>
               </div>
 
               <div className={styles.section}>
-                <h2>2. Enter Puzzle</h2>
+                <h2>
+                  <Translate id="playground.sudoku.decrypt.step2">
+                    2. Enter Puzzle
+                  </Translate>
+                </h2>
                 <p className={styles.hint}>
-                  {puzzle.length === 81 && puzzle.some((n) => n !== 0)
-                    ? "Puzzle loaded from ciphertext. You can edit if needed."
-                    : "Enter the puzzle numbers. Empty cells should be 0."}
+                  {puzzle.length === 81 && puzzle.some((n) => n !== 0) ? (
+                    <Translate id="playground.sudoku.decrypt.puzzleLoaded">
+                      Puzzle loaded from ciphertext. You can edit if needed.
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.sudoku.decrypt.puzzleHint">
+                      Enter the puzzle numbers. Empty cells should be 0.
+                    </Translate>
+                  )}
                 </p>
                 <div className={styles.puzzleContainer}>
                   {renderSudokuGrid(puzzle, true, "puzzle")}
@@ -651,10 +711,16 @@ export default function PlaygroundClient(): React.ReactElement {
               </div>
 
               <div className={styles.section}>
-                <h2>3. Enter Solution</h2>
+                <h2>
+                  <Translate id="playground.sudoku.decrypt.step3">
+                    3. Enter Solution
+                  </Translate>
+                </h2>
                 <p className={styles.hint}>
-                  Fill in the empty cells to solve the puzzle. Given numbers are
-                  locked.
+                  <Translate id="playground.sudoku.decrypt.solutionHint">
+                    Fill in the empty cells to solve the puzzle. Given numbers
+                    are locked.
+                  </Translate>
                 </p>
                 <div style={{ marginBottom: "1rem" }}>
                   <button
@@ -662,7 +728,15 @@ export default function PlaygroundClient(): React.ReactElement {
                     className={styles.button}
                     disabled={loading || !puzzle.length}
                   >
-                    {loading ? "🔄 Solving..." : "🧩 Auto Solve Puzzle"}
+                    {loading ? (
+                      <Translate id="playground.sudoku.decrypt.solving">
+                        🔄 Solving...
+                      </Translate>
+                    ) : (
+                      <Translate id="playground.sudoku.decrypt.autoSolveButton">
+                        🧩 Auto Solve Puzzle
+                      </Translate>
+                    )}
                   </button>
                 </div>
                 <div className={styles.puzzleContainer}>
@@ -680,7 +754,15 @@ export default function PlaygroundClient(): React.ReactElement {
                   disabled={loading || !(uploadedCiphertext || ciphertext)}
                   className={styles.primaryButton}
                 >
-                  {loading ? "🔄 Decrypting..." : "🔓 Decrypt Message"}
+                  {loading ? (
+                    <Translate id="playground.sudoku.decrypt.decrypting">
+                      🔄 Decrypting...
+                    </Translate>
+                  ) : (
+                    <Translate id="playground.sudoku.decrypt.decryptButton">
+                      🔓 Decrypt Message
+                    </Translate>
+                  )}
                 </button>
 
                 {error && mode === "decrypt" && activeTab === "sudoku" && (
@@ -689,7 +771,11 @@ export default function PlaygroundClient(): React.ReactElement {
 
                 {decrypted && (
                   <div className={styles.success}>
-                    <h3>✅ Decrypted Message:</h3>
+                    <h3>
+                      <Translate id="playground.sudoku.decrypt.successTitle">
+                        ✅ Decrypted Message:
+                      </Translate>
+                    </h3>
                     <pre className={styles.decryptedMessage}>{decrypted}</pre>
                   </div>
                 )}
@@ -698,15 +784,33 @@ export default function PlaygroundClient(): React.ReactElement {
           )}
 
           <div className={styles.info}>
-            <h3>ℹ️ About Sudoku Demo</h3>
+            <h3>
+              <Translate id="playground.sudoku.info.title">
+                ℹ️ About Sudoku Demo
+              </Translate>
+            </h3>
             <p>
-              This demo uses a Sudoku circuit. The message can only be decrypted
-              by providing a valid solution.
+              <Translate id="playground.sudoku.info.description">
+                This demo uses a Sudoku circuit. The message can only be
+                decrypted by providing a valid solution.
+              </Translate>
             </p>
             <ul>
-              <li>✅ Uses real zkenc-js library</li>
-              <li>✅ Verifies Sudoku solutions cryptographically</li>
-              <li>✅ Only valid witnesses (correct solutions) can decrypt</li>
+              <li>
+                <Translate id="playground.sudoku.info.feature1">
+                  ✅ Uses real zkenc-js library
+                </Translate>
+              </li>
+              <li>
+                <Translate id="playground.sudoku.info.feature2">
+                  ✅ Verifies Sudoku solutions cryptographically
+                </Translate>
+              </li>
+              <li>
+                <Translate id="playground.sudoku.info.feature3">
+                  ✅ Only valid witnesses (correct solutions) can decrypt
+                </Translate>
+              </li>
             </ul>
           </div>
         </>
@@ -718,24 +822,30 @@ export default function PlaygroundClient(): React.ReactElement {
               className={mode === "encrypt" ? styles.active : ""}
               onClick={() => setMode("encrypt")}
             >
-              🔐 Encrypt
+              <Translate id="playground.mode.encrypt">🔐 Encrypt</Translate>
             </button>
             <button
               className={mode === "decrypt" ? styles.active : ""}
               onClick={() => setMode("decrypt")}
             >
-              🔓 Decrypt
+              <Translate id="playground.mode.decrypt">🔓 Decrypt</Translate>
             </button>
           </div>
 
           {mode === "encrypt" ? (
             <div className={styles.content}>
               <div className={styles.section}>
-                <h2>1. Upload Circuit Files</h2>
+                <h2>
+                  <Translate id="playground.custom.encrypt.step1">
+                    1. Upload Circuit Files
+                  </Translate>
+                </h2>
                 <div className={styles.uploadGrid}>
                   <div>
                     <label className={styles.fileLabel}>
-                      📄 R1CS File (.r1cs)
+                      <Translate id="playground.custom.encrypt.r1csLabel">
+                        📄 R1CS File (.r1cs)
+                      </Translate>
                       <input
                         type="file"
                         accept=".r1cs"
@@ -745,14 +855,22 @@ export default function PlaygroundClient(): React.ReactElement {
                     </label>
                     {customCircuitFiles?.r1csBuffer.length > 0 && (
                       <p className={styles.fileSuccess}>
-                        ✅ R1CS loaded ({customCircuitFiles.r1csBuffer.length}{" "}
-                        bytes)
+                        <Translate
+                          id="playground.custom.encrypt.r1csLoaded"
+                          values={{
+                            size: customCircuitFiles.r1csBuffer.length,
+                          }}
+                        >
+                          {"✅ R1CS loaded ({size} bytes)"}
+                        </Translate>
                       </p>
                     )}
                   </div>
                   <div>
                     <label className={styles.fileLabel}>
-                      ⚙️ WASM File (.wasm)
+                      <Translate id="playground.custom.encrypt.wasmLabel">
+                        ⚙️ WASM File (.wasm)
+                      </Translate>
                       <input
                         type="file"
                         accept=".wasm"
@@ -762,8 +880,14 @@ export default function PlaygroundClient(): React.ReactElement {
                     </label>
                     {customCircuitFiles?.wasmBuffer.length > 0 && (
                       <p className={styles.fileSuccess}>
-                        ✅ WASM loaded ({customCircuitFiles.wasmBuffer.length}{" "}
-                        bytes)
+                        <Translate
+                          id="playground.custom.encrypt.wasmLoaded"
+                          values={{
+                            size: customCircuitFiles.wasmBuffer.length,
+                          }}
+                        >
+                          {"✅ WASM loaded ({size} bytes)"}
+                        </Translate>
                       </p>
                     )}
                   </div>

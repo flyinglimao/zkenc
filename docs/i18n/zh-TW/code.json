@@ -337,5 +337,155 @@
   "theme.tags.tagsPageTitle": {
     "message": "標籤",
     "description": "The title of the tag list page"
+  },
+  "homepage.buttons.playground": {
+    "message": "🎮 試試 Playground"
+  },
+  "homepage.buttons.docs": {
+    "message": "📖 閱讀文件"
+  },
+  "homepage.title": {
+    "message": "Circom 電路的見證加密"
+  },
+  "homepage.description": {
+    "message": "適用於 Circom 電路的條件加密。加密至計算陳述，使用有效見證解密。提供 CLI 工具和 JavaScript 函式庫。"
+  },
+  "playground.loading": {
+    "message": "載入 Playground 中..."
+  },
+  "playground.title": {
+    "message": "Playground"
+  },
+  "playground.description": {
+    "message": "互動式數獨見證加密展示"
+  },
+  "homepage.features.encrypt.description": {
+    "message": "見證加密允許您將資料加密至計算陳述。任何擁有有效解答的人都可以解密——無需金鑰交換，無需可信第三方。只需可驗證的計算。"
+  },
+  "homepage.features.circom.description": {
+    "message": "使用 Circom 電路定義您的解密條件。從簡單的謎題到複雜的存取策略——只要您能將其寫成約束，就能加密至其中。完整支援 R1CS。"
+  },
+  "homepage.features.everywhere.description": {
+    "message": "可在終端機中使用 CLI、在 Node.js 應用程式中使用，或直接在瀏覽器中使用。由 Rust 和 WASM 提供支援，在所有平台上都具有高效能。"
+  },
+  "homepage.features.encrypt.title": {
+    "message": "加密至陳述，而非金鑰"
+  },
+  "homepage.features.circom.title": {
+    "message": "建構於 Circom"
+  },
+  "homepage.features.everywhere.title": {
+    "message": "隨處運作"
+  },
+  "playground.header.title": {
+    "message": "🎮 見證加密 Playground"
+  },
+  "playground.header.description": {
+    "message": "使用預先建構的電路或上傳您自己的電路來實驗見證加密"
+  },
+  "playground.tabs.sudoku": {
+    "message": "🧩 數獨展示"
+  },
+  "playground.tabs.custom": {
+    "message": "⚙️ 自訂電路"
+  },
+  "playground.mode.encrypt": {
+    "message": "🔐 加密"
+  },
+  "playground.mode.decrypt": {
+    "message": "🔓 解密"
+  },
+  "playground.sudoku.encrypt.step1": {
+    "message": "1. 產生或輸入謎題"
+  },
+  "playground.sudoku.encrypt.generateButton": {
+    "message": "🎲 產生隨機謎題"
+  },
+  "playground.sudoku.encrypt.step2": {
+    "message": "2. 輸入您的訊息"
+  },
+  "playground.sudoku.encrypt.encrypting": {
+    "message": "🔄 加密中..."
+  },
+  "playground.sudoku.encrypt.encryptButton": {
+    "message": "🔐 加密訊息"
+  },
+  "playground.sudoku.encrypt.success": {
+    "message": "✅ 加密成功！"
+  },
+  "playground.sudoku.encrypt.ciphertextSize": {
+    "message": "密文大小：{size} 位元組"
+  },
+  "playground.sudoku.encrypt.downloadButton": {
+    "message": "📥 下載密文"
+  },
+  "playground.sudoku.decrypt.step1": {
+    "message": "1. 載入密文"
+  },
+  "playground.sudoku.decrypt.uploadButton": {
+    "message": "📤 上傳密文檔案"
+  },
+  "playground.sudoku.decrypt.ciphertextLoaded": {
+    "message": "✅ 密文已載入（{size} 位元組）"
+  },
+  "playground.sudoku.decrypt.step2": {
+    "message": "2. 輸入謎題"
+  },
+  "playground.sudoku.decrypt.puzzleLoaded": {
+    "message": "已從密文載入謎題。如有需要可以編輯。"
+  },
+  "playground.sudoku.decrypt.puzzleHint": {
+    "message": "輸入謎題數字。空白格子應為 0。"
+  },
+  "playground.sudoku.decrypt.step3": {
+    "message": "3. 輸入解答"
+  },
+  "playground.sudoku.decrypt.solutionHint": {
+    "message": "填入空白格子以解決謎題。已給定的數字會鎖定。"
+  },
+  "playground.sudoku.decrypt.solving": {
+    "message": "🔄 求解中..."
+  },
+  "playground.sudoku.decrypt.autoSolveButton": {
+    "message": "🧩 自動解題"
+  },
+  "playground.sudoku.decrypt.decrypting": {
+    "message": "🔄 解密中..."
+  },
+  "playground.sudoku.decrypt.decryptButton": {
+    "message": "🔓 解密訊息"
+  },
+  "playground.sudoku.decrypt.successTitle": {
+    "message": "✅ 解密的訊息："
+  },
+  "playground.sudoku.info.title": {
+    "message": "ℹ️ 關於數獨展示"
+  },
+  "playground.sudoku.info.description": {
+    "message": "此展示使用數獨電路。訊息只能透過提供有效解答來解密。"
+  },
+  "playground.sudoku.info.feature1": {
+    "message": "✅ 使用真實的 zkenc-js 函式庫"
+  },
+  "playground.sudoku.info.feature2": {
+    "message": "✅ 使用密碼學驗證數獨解答"
+  },
+  "playground.sudoku.info.feature3": {
+    "message": "✅ 只有有效見證（正確解答）才能解密"
+  },
+  "playground.custom.encrypt.step1": {
+    "message": "1. 上傳電路檔案"
+  },
+  "playground.custom.encrypt.r1csLabel": {
+    "message": "📄 R1CS 檔案 (.r1cs)"
+  },
+  "playground.custom.encrypt.r1csLoaded": {
+    "message": "✅ R1CS 已載入（{size} 位元組）"
+  },
+  "playground.custom.encrypt.wasmLabel": {
+    "message": "⚙️ WASM 檔案 (.wasm)"
+  },
+  "playground.custom.encrypt.wasmLoaded": {
+    "message": "✅ WASM 已載入（{size} 位元組）"
   }
 }

@@ -5,6 +5,7 @@ import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
 import Layout from "@theme/Layout";
 import HomepageFeatures from "@site/src/components/HomepageFeatures";
 import Heading from "@theme/Heading";
+import Translate, { translate } from "@docusaurus/Translate";
 
 import styles from "./index.module.css";
 
@@ -22,10 +23,14 @@ function HomepageHeader() {
             className="button button--secondary button--lg"
             to="/playground"
           >
-            🎮 Try Playground
+            <Translate id="homepage.buttons.playground">
+              🎮 Try Playground
+            </Translate>
           </Link>
           <Link className="button button--outline button--lg" to="/docs/intro">
-            📖 Read Documentation
+            <Translate id="homepage.buttons.docs">
+              📖 Read Documentation
+            </Translate>
           </Link>
         </div>
       </div>
@@ -36,8 +41,15 @@ function HomepageHeader() {
 export default function Home(): ReactNode {
   return (
     <Layout
-      title="Witness Encryption for Circom Circuits"
-      description="Conditional encryption for Circom circuits. Encrypt to computational statements, decrypt with valid witnesses. Available as CLI tool and JavaScript library."
+      title={translate({
+        id: "homepage.title",
+        message: "Witness Encryption for Circom Circuits",
+      })}
+      description={translate({
+        id: "homepage.description",
+        message:
+          "Conditional encryption for Circom circuits. Encrypt to computational statements, decrypt with valid witnesses. Available as CLI tool and JavaScript library.",
+      })}
     >
       <HomepageHeader />
       <main>

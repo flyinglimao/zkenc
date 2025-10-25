@@ -112,7 +112,7 @@ ciphertext.serialize_compressed(&mut ct_bytes)?;
 
 **效能：**
 
-- 時間複雜度：O(n * log n)，其中 n = 約束數量
+- 時間複雜度：O(n \* log n)，其中 n = 約束數量
 - 記憶體：O(n) 用於約束系統
 - 典型時間：50-500ms，取決於電路大小
 
