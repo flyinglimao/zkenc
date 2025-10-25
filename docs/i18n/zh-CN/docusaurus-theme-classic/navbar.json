@@ -1,0 +1,26 @@
+{
+  "title": {
+    "message": "zkEnc",
+    "description": "The title in the navbar"
+  },
+  "logo.alt": {
+    "message": "zkEnc Logo",
+    "description": "The alt text of the logo"
+  },
+  "item.label.Documentation": {
+    "message": "文档",
+    "description": "Navbar item with label Documentation"
+  },
+  "item.label.Guides": {
+    "message": "指南",
+    "description": "Navbar item with label Guides"
+  },
+  "item.label.Playground": {
+    "message": "实验场",
+    "description": "Navbar item with label Playground"
+  },
+  "item.label.GitHub": {
+    "message": "GitHub",
+    "description": "Navbar item with label GitHub"
+  }
+}

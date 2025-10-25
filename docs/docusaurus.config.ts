@@ -32,7 +32,29 @@ const config: Config = {
   // may want to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "zh-TW", "zh-CN", "ja"],
+    localeConfigs: {
+      en: {
+        label: "English",
+        direction: "ltr",
+        htmlLang: "en-US",
+      },
+      "zh-TW": {
+        label: "正體中文",
+        direction: "ltr",
+        htmlLang: "zh-TW",
+      },
+      "zh-CN": {
+        label: "简体中文",
+        direction: "ltr",
+        htmlLang: "zh-CN",
+      },
+      ja: {
+        label: "日本語",
+        direction: "ltr",
+        htmlLang: "ja-JP",
+      },
+    },
   },
 
   presets: [
@@ -122,6 +144,10 @@ const config: Config = {
           to: "/playground",
           label: "Playground",
           position: "left",
+        },
+        {
+          type: "localeDropdown",
+          position: "right",
         },
         {
           href: "https://github.com/flyinglimao/zkenc",

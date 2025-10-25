@@ -1,0 +1,14 @@
+{
+  "homepage.tagline": {
+    "message": "适用于 Circom 电路的见证加密",
+    "description": "The homepage tagline"
+  },
+  "homepage.hero.title": {
+    "message": "zkEnc",
+    "description": "The homepage hero title"
+  },
+  "homepage.hero.subtitle": {
+    "message": "使用零知识证明实现可编程条件加密",
+    "description": "The homepage hero subtitle"
+  }
+}

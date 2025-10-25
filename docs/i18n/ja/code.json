@@ -1,0 +1,14 @@
+{
+  "homepage.tagline": {
+    "message": "Circom 回路のためのウィットネス暗号化",
+    "description": "The homepage tagline"
+  },
+  "homepage.hero.title": {
+    "message": "zkEnc",
+    "description": "The homepage hero title"
+  },
+  "homepage.hero.subtitle": {
+    "message": "ゼロ知識証明によるプログラマブルな条件付き暗号化",
+    "description": "The homepage hero subtitle"
+  }
+}

@@ -5,7 +5,13 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start",
+    "start:zh-TW": "docusaurus start --locale zh-TW",
+    "start:zh-CN": "docusaurus start --locale zh-CN",
+    "start:ja": "docusaurus start --locale ja",
     "build": "docusaurus build",
+    "build:zh-TW": "docusaurus build --locale zh-TW",
+    "build:zh-CN": "docusaurus build --locale zh-CN",
+    "build:ja": "docusaurus build --locale ja",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",

@@ -1,0 +1,14 @@
+{
+  "homepage.tagline": {
+    "message": "適用於 Circom 電路的見證加密",
+    "description": "The homepage tagline"
+  },
+  "homepage.hero.title": {
+    "message": "zkEnc",
+    "description": "The homepage hero title"
+  },
+  "homepage.hero.subtitle": {
+    "message": "使用零知識證明實現可編程條件加密",
+    "description": "The homepage hero subtitle"
+  }
+}
