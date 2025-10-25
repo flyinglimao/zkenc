@@ -77,7 +77,7 @@ console.log("復号化されたメッセージ:", decryptedMessage);
 
 ## 高レベル API vs 低レベル API
 
-zkenc-js は2つの API を提供します：
+zkenc-js は 2 つの API を提供します：
 
 ### 高レベル API（推奨）
 

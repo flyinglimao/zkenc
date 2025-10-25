@@ -2,9 +2,9 @@
 sidebar_position: 3
 ---
 
-# zkenc-js APIリファレンス
+# zkenc-js API リファレンス
 
-zkenc-jsの完全なAPIリファレンス、ウィットネス暗号化のためのJavaScript/TypeScriptライブラリです。
+zkenc-js の完全な API リファレンス、ウィットネス暗号化のための JavaScript/TypeScript ライブラリです。
 
 ## インストール
 
@@ -70,13 +70,13 @@ interface EncryptResult {
 }
 ```
 
-## 高レベルAPI
+## 高レベル API
 
-高レベルAPIは、単一の関数呼び出しで完全なウィットネス暗号化機能を提供します。
+高レベル API は、単一の関数呼び出しで完全なウィットネス暗号化機能を提供します。
 
 ### `encrypt()`
 
-ウィットネス暗号化を使用してメッセージを暗号化します。キー生成とAES-256-GCM暗号化を組み合わせます。
+ウィットネス暗号化を使用してメッセージを暗号化します。キー生成と AES-256-GCM 暗号化を組み合わせます。
 
 ```typescript
 async function encrypt(
@@ -88,9 +88,9 @@ async function encrypt(
 
 **パラメータ:**
 
-- `circuitFiles` - 回路ファイル(R1CSとWASM)
-- `publicInputs` - JSONオブジェクトとしての公開入力(公開シグナルのみ)
-- `message` - Uint8Arrayとして暗号化するメッセージ
+- `circuitFiles` - 回路ファイル(R1CS と WASM)
+- `publicInputs` - JSON オブジェクトとしての公開入力(公開シグナルのみ)
+- `message` - Uint8Array として暗号化するメッセージ
 
 **戻り値:**
 
@@ -126,8 +126,8 @@ console.log("暗号文サイズ:", ciphertext.length);
 
 **パフォーマンス:**
 
-- 最初の呼び出し: 約50-100ms(WASM初期化)
-- 以降の呼び出し: 約30-50ms
+- 最初の呼び出し: 約 50-100ms(WASM 初期化)
+- 以降の呼び出し: 約 30-50ms
 
 ### `decrypt()`
 
@@ -143,9 +143,9 @@ async function decrypt(
 
 **パラメータ:**
 
-- `circuitFiles` - 回路ファイル(R1CSとWASM)
+- `circuitFiles` - 回路ファイル(R1CS と WASM)
 - `ciphertext` - `encrypt()`からの結合暗号文
-- `inputs` - JSONオブジェクトとしての完全な入力(公開 + 秘密シグナル)
+- `inputs` - JSON オブジェクトとしての完全な入力(公開 + 秘密シグナル)
 
 **戻り値:**
 
@@ -176,12 +176,12 @@ console.log("復号化:", message);
 
 **パフォーマンス:**
 
-- 最初の呼び出し: 約150-200ms(WASM初期化 + ウィットネス計算)
-- 以降の呼び出し: 約100-150ms
+- 最初の呼び出し: 約 150-200ms(WASM 初期化 + ウィットネス計算)
+- 以降の呼び出し: 約 100-150ms
 
-## 低レベルAPI
+## 低レベル API
 
-低レベルAPIは、ウィットネス暗号化プロセスの細かい制御を提供します。研究やカスタム暗号化スキームに使用します。
+低レベル API は、ウィットネス暗号化プロセスの細かい制御を提供します。研究やカスタム暗号化スキームに使用します。
 
 ### `encap()`
 
@@ -196,12 +196,12 @@ async function encap(
 
 **パラメータ:**
 
-- `circuitFiles` - 回路ファイル(R1CSとWASM)
-- `publicInputs` - JSONオブジェクトとしての公開入力
+- `circuitFiles` - 回路ファイル(R1CS と WASM)
+- `publicInputs` - JSON オブジェクトとしての公開入力
 
 **戻り値:**
 
-- `Promise<EncapResult>` - ウィットネス暗号文(1576バイト)とキー(32バイト)
+- `Promise<EncapResult>` - ウィットネス暗号文(1576 バイト)とキー(32 バイト)
 
 **例:**
 
@@ -238,13 +238,13 @@ async function decap(
 
 **パラメータ:**
 
-- `circuitFiles` - 回路ファイル(R1CSとWASM)
-- `ciphertext` - `encap()`からのウィットネス暗号文(1576バイト)
-- `inputs` - JSONオブジェクトとしての完全な入力(回路を満たす必要)
+- `circuitFiles` - 回路ファイル(R1CS と WASM)
+- `ciphertext` - `encap()`からのウィットネス暗号文(1576 バイト)
+- `inputs` - JSON オブジェクトとしての完全な入力(回路を満たす必要)
 
 **戻り値:**
 
-- `Promise<Uint8Array>` - 回復された暗号化キー(32バイト)
+- `Promise<Uint8Array>` - 回復された暗号化キー(32 バイト)
 
 **例外:**
 
@@ -427,17 +427,17 @@ try {
 
 ## パフォーマンスの考慮事項
 
-### WASM初期化
+### WASM 初期化
 
-任意の関数への最初の呼び出しはWASMモジュールを初期化します(約20-50ms)。以降の呼び出しはより高速です。
+任意の関数への最初の呼び出しは WASM モジュールを初期化します(約 20-50ms)。以降の呼び出しはより高速です。
 
 ### 回路の複雑さ
 
 パフォーマンスは回路サイズに比例します:
 
-- 小規模回路(< 1000制約): < 50ms
-- 中規模回路(1000-10000制約): 50-200ms
-- 大規模回路(> 10000制約): 200ms以上
+- 小規模回路(< 1000 制約): < 50ms
+- 中規模回路(1000-10000 制約): 50-200ms
+- 大規模回路(> 10000 制約): 200ms 以上
 
 ### キャッシング
 
@@ -459,7 +459,7 @@ async function getCircuitFiles(): Promise<CircuitFiles> {
 
 ### ブラウザの最適化
 
-ノンブロッキング操作にWeb Workersを使用:
+ノンブロッキング操作に Web Workers を使用:
 
 ```typescript
 // worker.ts
@@ -507,9 +507,9 @@ const circuitFiles = {
 };
 ```
 
-## TypeScriptサポート
+## TypeScript サポート
 
-zkenc-jsはTypeScriptで書かれており、完全な型定義を提供します:
+zkenc-js は TypeScript で書かれており、完全な型定義を提供します:
 
 ```typescript
 import type { CircuitFiles, EncapResult, EncryptResult } from "zkenc-js";
@@ -527,7 +527,7 @@ async function encryptMessage(
 ## 互換性
 
 - **Node.js**: >= 18.0.0
-- **ブラウザ**: WebAssemblyをサポートするモダンブラウザ
+- **ブラウザ**: WebAssembly をサポートするモダンブラウザ
   - Chrome/Edge >= 90
   - Firefox >= 88
   - Safari >= 15
@@ -537,7 +537,6 @@ async function encryptMessage(
 ## 次のステップ
 
 - **[入門 →](/docs/getting-started/zkenc-js)** - インストールと基本的な使用法
-- **[Node.jsガイド →](/docs/guides/nodejs-integration)** - 完全なNode.js統合
-- **[Reactガイド →](/docs/guides/react-integration)** - 完全なReact統合
+- **[Node.js ガイド →](/docs/guides/nodejs-integration)** - 完全な Node.js 統合
+- **[React ガイド →](/docs/guides/react-integration)** - 完全な React 統合
 - **[プレイグラウンド →](/playground)** - ブラウザで試す
-

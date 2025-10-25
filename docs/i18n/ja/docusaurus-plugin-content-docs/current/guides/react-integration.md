@@ -2,28 +2,28 @@
 sidebar_position: 3
 ---
 
-# React統合ガイド
+# React 統合ガイド
 
-zkenc-jsを使用してウィットネス暗号化を実装したインタラクティブなReactアプリケーションを構築します。
+zkenc-js を使用してウィットネス暗号化を実装したインタラクティブな React アプリケーションを構築します。
 
 ## 構築するもの
 
-以下の機能を持つReactアプリ:
+以下の機能を持つ React アプリ:
 
 - ブラウザでメッセージを暗号化・復号化
 - 数独パズルを回路として使用
-- 直感的なUI
+- 直感的な UI
 - ファイルのアップロードとダウンロードの処理
 
 ## 前提条件
 
 - Node.js 18+
-- ReactとTypeScriptの基本知識
-- Circomでコンパイルされた回路ファイル
+- React と TypeScript の基本知識
+- Circom でコンパイルされた回路ファイル
 
-## ステップ1:プロジェクトセットアップ
+## ステップ 1:プロジェクトセットアップ
 
-新しいVite + React + TypeScriptプロジェクトを作成:
+新しい Vite + React + TypeScript プロジェクトを作成:
 
 ```bash
 npm create vite@latest zkenc-react-app -- --template react-ts
@@ -31,13 +31,13 @@ cd zkenc-react-app
 npm install
 ```
 
-zkenc-jsをインストール:
+zkenc-js をインストール:
 
 ```bash
 npm install zkenc-js
 ```
 
-## ステップ2:回路ファイルの追加
+## ステップ 2:回路ファイルの追加
 
 コンパイル済みの回路ファイルを`public/circuits/`にコピー:
 
@@ -48,9 +48,9 @@ public/
     └── simple.wasm
 ```
 
-これにより、ブラウザがfetch経由でファイルをロードできるようになります。
+これにより、ブラウザが fetch 経由でファイルをロードできるようになります。
 
-## ステップ3:回路ローダーの作成
+## ステップ 3:回路ローダーの作成
 
 `src/utils/circuit.ts`を作成:
 
@@ -79,7 +79,7 @@ export async function loadCircuitFiles(): Promise<CircuitFiles> {
 }
 ```
 
-## ステップ4:暗号化コンポーネントの作成
+## ステップ 4:暗号化コンポーネントの作成
 
 `src/components/EncryptionForm.tsx`を作成:
 
@@ -178,7 +178,7 @@ export function EncryptionForm() {
 }
 ```
 
-## ステップ5:復号化コンポーネントの作成
+## ステップ 5:復号化コンポーネントの作成
 
 `src/components/DecryptionForm.tsx`を作成:
 
@@ -296,7 +296,7 @@ export function DecryptionForm() {
 }
 ```
 
-## ステップ6:メインアプリの作成
+## ステップ 6:メインアプリの作成
 
 `src/App.tsx`を更新:
 
@@ -408,9 +408,9 @@ header {
 }
 ```
 
-## ステップ7:Viteの設定
+## ステップ 7:Vite の設定
 
-WASMを処理するために`vite.config.ts`を更新:
+WASM を処理するために`vite.config.ts`を更新:
 
 ```typescript
 import { defineConfig } from "vite";
@@ -424,7 +424,7 @@ export default defineConfig({
 });
 ```
 
-## ステップ8:実行とテスト
+## ステップ 8:実行とテスト
 
 開発サーバーを起動:
 
@@ -450,7 +450,7 @@ npm run dev
 
 ## 高度:Web Workers
 
-パフォーマンスを向上させるために、Web Workersを使用してメインスレッドのブロックを避けます。
+パフォーマンスを向上させるために、Web Workers を使用してメインスレッドのブロックを避けます。
 
 `src/workers/zkenc.worker.ts`を作成:
 
@@ -479,7 +479,7 @@ self.onmessage = async (e) => {
 };
 ```
 
-コンポーネントでworkerを使用:
+コンポーネントで worker を使用:
 
 ```typescript
 const worker = new Worker(
@@ -547,27 +547,27 @@ npx gh-pages -d dist
 
 ## 次のステップ
 
-- **[Node.js統合 →](/docs/guides/nodejs-integration)** - サーバーサイド暗号化
-- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - CLIとJSを組み合わせる
+- **[Node.js 統合 →](/docs/guides/nodejs-integration)** - サーバーサイド暗号化
+- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - CLI と JS を組み合わせる
 - **[プレイグラウンド →](/playground)** - 完全な例を見る
-- **[APIリファレンス →](/docs/api/zkenc-js)** - すべての関数を探索
+- **[API リファレンス →](/docs/api/zkenc-js)** - すべての関数を探索
 
 ## トラブルシューティング
 
-**回路ファイルが404:**
+**回路ファイルが 404:**
 
 - ファイルが`public/circuits/`にあることを確認
-- ブラウザDevToolsのネットワークタブを確認
+- ブラウザ DevTools のネットワークタブを確認
 - ファイル名が正確に一致することを確認
 
-**WASMの初期化に失敗する:**
+**WASM の初期化に失敗する:**
 
-- vite.config.tsの`optimizeDeps.exclude`に`zkenc-js`を追加
-- Viteキャッシュをクリア: `rm -rf node_modules/.vite`
+- vite.config.ts の`optimizeDeps.exclude`に`zkenc-js`を追加
+- Vite キャッシュをクリア: `rm -rf node_modules/.vite`
 
 **パフォーマンスが遅い:**
 
-- 重い操作にはWeb Workersを使用
+- 重い操作には Web Workers を使用
 - 最初のロード後に回路ファイルをキャッシュ
 - 回路の複雑さを考慮
 
@@ -576,4 +576,3 @@ npx gh-pages -d dist
 - 大きな回路はより多くのメモリを使用
 - 大きなファイルにはストリーミングを使用
 - 非常に大きなファイルにはサーバーサイド暗号化を検討
-

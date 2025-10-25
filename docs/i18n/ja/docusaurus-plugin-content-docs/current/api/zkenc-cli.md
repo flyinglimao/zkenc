@@ -2,9 +2,9 @@
 sidebar_position: 2
 ---
 
-# zkenc-cli APIリファレンス
+# zkenc-cli API リファレンス
 
-zkenc-cliの完全なコマンドラインリファレンス、Rustベースのウィットネス暗号化ツールです。
+zkenc-cli の完全なコマンドラインリファレンス、Rust ベースのウィットネス暗号化ツールです。
 
 ## インストール
 
@@ -18,7 +18,7 @@ cargo build --release --package zkenc-cli
 # バイナリの場所: target/release/zkenc
 ```
 
-### PATHに追加
+### PATH に追加
 
 ```bash
 # Linux/macOS
@@ -30,14 +30,14 @@ sudo cp target/release/zkenc /usr/local/bin/
 
 ## コマンド概要
 
-zkenc-cliは4つの主要なコマンドを提供します:
+zkenc-cli は 4 つの主要なコマンドを提供します:
 
-| コマンド  | 目的                   | 入力                         | 出力             |
-| --------- | ---------------------- | ---------------------------- | ---------------- |
-| `encap`   | 回路を使用してキーを生成 | R1CS + 公開入力               | 暗号文 + キー     |
-| `decap`   | ウィットネスでキーを回復 | R1CS + ウィットネス + 暗号文   | キー             |
-| `encrypt` | キーでメッセージを暗号化 | キー + メッセージ             | 暗号化ファイル    |
-| `decrypt` | キーでメッセージを復号化 | キー + 暗号化ファイル         | 復号化ファイル    |
+| コマンド  | 目的                     | 入力                         | 出力           |
+| --------- | ------------------------ | ---------------------------- | -------------- |
+| `encap`   | 回路を使用してキーを生成 | R1CS + 公開入力              | 暗号文 + キー  |
+| `decap`   | ウィットネスでキーを回復 | R1CS + ウィットネス + 暗号文 | キー           |
+| `encrypt` | キーでメッセージを暗号化 | キー + メッセージ            | 暗号化ファイル |
+| `decrypt` | キーでメッセージを復号化 | キー + 暗号化ファイル        | 復号化ファイル |
 
 ## コマンド
 
@@ -51,8 +51,8 @@ zkenc encap [OPTIONS]
 
 **必須オプション:**
 
-- `-c, --circuit <FILE>` - R1CS回路ファイルへのパス(.r1cs)
-- `-i, --input <FILE>` - 公開入力を含むJSONファイルへのパス
+- `-c, --circuit <FILE>` - R1CS 回路ファイルへのパス(.r1cs)
+- `-i, --input <FILE>` - 公開入力を含む JSON ファイルへのパス
 - `--ciphertext <FILE>` - 暗号文の出力パス
 - `-k, --key <FILE>` - 暗号化キーの出力パス
 
@@ -66,7 +66,7 @@ zkenc encap \
   --key encryption.key
 ```
 
-**入力JSON形式:**
+**入力 JSON 形式:**
 
 ```json
 {
@@ -77,8 +77,8 @@ zkenc encap \
 
 **出力:**
 
-- **暗号文ファイル**: 約1576バイト(ウィットネス暗号化暗号文)
-- **キーファイル**: 約32バイト(AES-256暗号化キー)
+- **暗号文ファイル**: 約 1576 バイト(ウィットネス暗号化暗号文)
+- **キーファイル**: 約 32 バイト(AES-256 暗号化キー)
 
 **出力例:**
 
@@ -110,14 +110,14 @@ zkenc decap [OPTIONS]
 
 **必須オプション:**
 
-- `-c, --circuit <FILE>` - R1CS回路ファイルへのパス(.r1cs)
-- `-w, --witness <FILE>` - ウィットネスファイルへのパス(snarkjsからの.wtns)
-- `--ciphertext <FILE>` - 暗号文ファイルへのパス(encapから)
+- `-c, --circuit <FILE>` - R1CS 回路ファイルへのパス(.r1cs)
+- `-w, --witness <FILE>` - ウィットネスファイルへのパス(snarkjs からの.wtns)
+- `--ciphertext <FILE>` - 暗号文ファイルへのパス(encap から)
 - `-k, --key <FILE>` - 回復されたキーの出力パス
 
 **ウィットネスの生成:**
 
-まず、snarkjsを使用してウィットネスを生成します:
+まず、snarkjs を使用してウィットネスを生成します:
 
 ```bash
 # 完全な入力JSONを作成(公開 + 秘密)
@@ -172,7 +172,7 @@ zkenc encrypt [OPTIONS]
 
 **必須オプション:**
 
-- `-k, --key <FILE>` - 暗号化キーファイルへのパス(encapまたはdecapから)
+- `-k, --key <FILE>` - 暗号化キーファイルへのパス(encap または decap から)
 - `-i, --input <FILE>` - 平文ファイルへのパス
 - `-o, --output <FILE>` - 出力暗号化ファイルへのパス
 
@@ -203,7 +203,7 @@ zkenc encrypt \
    ✅ 暗号化ファイルを保存しました(1266バイト)
 ```
 
-**注意:** 出力サイズ = 入力サイズ + 28バイト(GCMノンス + タグ)
+**注意:** 出力サイズ = 入力サイズ + 28 バイト(GCM ノンス + タグ)
 
 ### `zkenc decrypt`
 
@@ -276,7 +276,7 @@ zkenc decrypt \
 
 ### 簡略化されたフロー(ワンステップ)
 
-便宜上、encap + encryptを組み合わせることができます:
+便宜上、encap + encrypt を組み合わせることができます:
 
 ```bash
 # 暗号化(1つのスクリプトでencap + encrypt)
@@ -310,9 +310,9 @@ zkenc decrypt \
 
 ## ファイル形式
 
-### 入力JSON形式
+### 入力 JSON 形式
 
-**公開入力(encap用):**
+**公開入力(encap 用):**
 
 ```json
 {
@@ -342,8 +342,8 @@ zkenc decrypt \
 
 **必要なファイル:**
 
-- `.r1cs` - R1CS回路ファイル(circomコンパイルから)
-- `.wasm` - WASMウィットネス生成器(snarkjs用)
+- `.r1cs` - R1CS 回路ファイル(circom コンパイルから)
+- `.wasm` - WASM ウィットネス生成器(snarkjs 用)
 
 **回路をコンパイル:**
 
@@ -354,7 +354,7 @@ circom circuit.circom --r1cs --wasm --output build
 
 ### ウィットネスファイル
 
-**形式:** `.wtns`(snarkjsバイナリ形式)
+**形式:** `.wtns`(snarkjs バイナリ形式)
 
 **生成:**
 
@@ -364,13 +364,13 @@ snarkjs wtns calculate circuit.wasm inputs.json witness.wtns
 
 ### 出力ファイル
 
-- **暗号文**(`.ct`): 約1576バイト、ウィットネス暗号化暗号文
-- **キー**(`.key`): 約32バイト、AES-256暗号化キー
-- **暗号化済み**(`.enc`): 元のサイズ + 28バイト、AES-256-GCM暗号文
+- **暗号文**(`.ct`): 約 1576 バイト、ウィットネス暗号化暗号文
+- **キー**(`.key`): 約 32 バイト、AES-256 暗号化キー
+- **暗号化済み**(`.enc`): 元のサイズ + 28 バイト、AES-256-GCM 暗号文
 
 ## 統合例
 
-### Bashスクリプト
+### Bash スクリプト
 
 ```bash
 #!/bin/bash
@@ -395,7 +395,7 @@ echo "検証中..."
 diff "$MESSAGE" decrypted.txt && echo "✅ 成功!"
 ```
 
-### Makefileとの統合
+### Makefile との統合
 
 ```makefile
 .PHONY: encrypt decrypt clean
@@ -422,9 +422,9 @@ clean:
 
 ## クロスツール互換性
 
-zkenc-cliはzkenc-jsと完全に互換性があります。ファイルは両者間で共有できます。
+zkenc-cli は zkenc-js と完全に互換性があります。ファイルは両者間で共有できます。
 
-### CLI暗号化 → JS復号化
+### CLI 暗号化 → JS 復号化
 
 ```bash
 # CLI: 暗号化
@@ -448,7 +448,7 @@ const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
 
 ## パフォーマンス
 
-### Encapパフォーマンス
+### Encap パフォーマンス
 
 | 回路サイズ   | 制約数           | 時間       |
 | ------------ | ---------------- | ---------- |
@@ -457,20 +457,20 @@ const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
 | 大           | 10,000 - 100,000 | 1s - 10s   |
 | 非常に大きい | > 100,000        | > 10s      |
 
-### Decapパフォーマンス
+### Decap パフォーマンス
 
-Encapと同様、加えてウィットネス計算のオーバーヘッド(約50-200ms)
+Encap と同様、加えてウィットネス計算のオーバーヘッド(約 50-200ms)
 
-### Encrypt/Decryptパフォーマンス
+### Encrypt/Decrypt パフォーマンス
 
-非常に高速(< 10ms) - AES操作のみ、回路サイズに依存しない
+非常に高速(< 10ms) - AES 操作のみ、回路サイズに依存しない
 
 ## トラブルシューティング
 
 ### "Failed to load R1CS circuit"
 
 - ファイルパスが正しいことを確認
-- ファイルが有効なR1CS形式であることを確認(circomでコンパイル)
+- ファイルが有効な R1CS 形式であることを確認(circom でコンパイル)
 - 回路を再コンパイルしてみる
 
 ```bash
@@ -479,7 +479,7 @@ circom circuit.circom --r1cs --output build
 
 ### "Failed to parse input JSON"
 
-- JSON構文を検証
+- JSON 構文を検証
 - すべての値が数値または文字列であることを確認
 - シグナル名が回路と一致することを確認
 
@@ -519,7 +519,7 @@ ls -l *.key
 
 ## ベストプラクティス
 
-1. **回路ファイルを安全に保管**: R1CSファイルは暗号化と復号化の両方に必要
+1. **回路ファイルを安全に保管**: R1CS ファイルは暗号化と復号化の両方に必要
 2. **公開/秘密入力を分離**: 暗号化者には公開入力のみを共有
 3. **ウィットネスの有効性を検証**: 復号化前にウィットネス生成をテスト
 4. **一貫したファイル命名を使用**: 規則に従う(`.ct`、`.key`、`.enc`)
@@ -528,13 +528,12 @@ ls -l *.key
 ## セキュリティの考慮事項
 
 - **キー管理**: キーは一時的 - 代わりにウィットネスを保護
-- **回路の整合性**: R1CSファイルが改ざんされていないことを確認
+- **回路の整合性**: R1CS ファイルが改ざんされていないことを確認
 - **ウィットネスのプライバシー**: ウィットネスファイルを共有しない - 秘密鍵のようなもの
 - **転送セキュリティ**: 暗号文配布には安全なチャネルを使用
 
 ## 次のステップ
 
 - **[入門 →](/docs/getting-started/zkenc-cli)** - クイックスタートガイド
-- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - zkenc-jsと併用
-- **[zkenc-core API →](/docs/api/zkenc-core)** - Rustライブラリリファレンス
-
+- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - zkenc-js と併用
+- **[zkenc-core API →](/docs/api/zkenc-core)** - Rust ライブラリリファレンス

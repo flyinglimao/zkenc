@@ -2,13 +2,13 @@
 sidebar_position: 2
 ---
 
-# Node.js統合ガイド
+# Node.js 統合ガイド
 
-このガイドでは、zkenc-jsを使用してウィットネス暗号化を実装する完全なNode.jsアプリケーションの構築方法を説明します。
+このガイドでは、zkenc-js を使用してウィットネス暗号化を実装する完全な Node.js アプリケーションの構築方法を説明します。
 
 ## 構築するもの
 
-以下の機能を持つNode.js CLIツール:
+以下の機能を持つ Node.js CLI ツール:
 
 - 数独回路を使用したファイルの暗号化
 - 有効な数独の解答によるファイルの復号化
@@ -17,11 +17,11 @@ sidebar_position: 2
 
 ## 前提条件
 
-- Node.js 18以上
-- TypeScriptの基本知識
-- Circomのインストール(`circom --version`)
+- Node.js 18 以上
+- TypeScript の基本知識
+- Circom のインストール(`circom --version`)
 
-## ステップ1:プロジェクトセットアップ
+## ステップ 1:プロジェクトセットアップ
 
 新しいプロジェクトを作成:
 
@@ -68,7 +68,7 @@ npm install --save-dev typescript @types/node tsx
 }
 ```
 
-## ステップ2:回路ファイルの準備
+## ステップ 2:回路ファイルの準備
 
 シンプルな回路`circuits/simple.circom`を作成:
 
@@ -100,7 +100,7 @@ circom circuits/simple.circom --r1cs --wasm -o circuits/build
 - `circuits/build/simple.r1cs`
 - `circuits/build/simple_js/simple.wasm`
 
-## ステップ3:回路ファイルのロード
+## ステップ 3:回路ファイルのロード
 
 `src/circuit.ts`を作成:
 
@@ -124,7 +124,7 @@ export async function loadCircuitFiles(): Promise<CircuitFiles> {
 }
 ```
 
-## ステップ4:暗号化の実装
+## ステップ 4:暗号化の実装
 
 `src/encrypt.ts`を作成:
 
@@ -179,7 +179,7 @@ export async function encryptFile(
 }
 ```
 
-## ステップ5:復号化の実装
+## ステップ 5:復号化の実装
 
 `src/decrypt.ts`を作成:
 
@@ -213,7 +213,9 @@ export async function decryptFile(
 
   // 入力が制約を満たすことを確認
   if (publicValue + privateValue !== 100) {
-    throw new Error(`無効なウィットネス: ${publicValue} + ${privateValue} ≠ 100`);
+    throw new Error(
+      `無効なウィットネス: ${publicValue} + ${privateValue} ≠ 100`
+    );
   }
 
   // 復号化
@@ -240,7 +242,7 @@ export async function decryptFile(
 }
 ```
 
-## ステップ6:CLIインターフェースの作成
+## ステップ 6:CLI インターフェースの作成
 
 `src/index.ts`を作成:
 
@@ -297,13 +299,13 @@ program
 program.parse();
 ```
 
-CLI用にcommanderをインストール:
+CLI 用に commander をインストール:
 
 ```bash
 npm install commander
 ```
 
-## ステップ7:アプリケーションのテスト
+## ステップ 7:アプリケーションのテスト
 
 テストメッセージを作成:
 
@@ -381,7 +383,7 @@ npm run dev decrypt -- \
    エラー: 無効なウィットネス: 30 + 50 ≠ 100
 ```
 
-## ステップ8:高度な機能
+## ステップ 8:高度な機能
 
 ### 回路ファイルのキャッシング
 
@@ -550,9 +552,9 @@ pkg . --targets node18-linux-x64,node18-macos-x64,node18-win-x64
 
 ## 次のステップ
 
-- **[React統合 →](/docs/guides/react-integration)** - WebUIを構築
-- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - CLIとJSを組み合わせる
-- **[APIリファレンス →](/docs/api/zkenc-js)** - すべての関数を探索
+- **[React 統合 →](/docs/guides/react-integration)** - WebUI を構築
+- **[クロスツールワークフロー →](/docs/guides/cross-tool-workflow)** - CLI と JS を組み合わせる
+- **[API リファレンス →](/docs/api/zkenc-js)** - すべての関数を探索
 - **[プレイグラウンド →](/playground)** - ブラウザで試す
 
 ## トラブルシューティング
@@ -561,11 +563,11 @@ pkg . --targets node18-linux-x64,node18-macos-x64,node18-win-x64
 
 - ファイルパスが正しいことを確認
 - 回路が正常にコンパイルされたことを確認
-- R1CSとWASMファイルが存在することを確認
+- R1CS と WASM ファイルが存在することを確認
 
 **暗号化が遅い:**
 
-- 最初の呼び出しはWASMを初期化します(約20-50msのオーバーヘッド)
+- 最初の呼び出しは WASM を初期化します(約 20-50ms のオーバーヘッド)
 - 複数の操作のために回路ファイルをキャッシュ
 - 回路の複雑さを考慮
 
@@ -574,4 +576,3 @@ pkg . --targets node18-linux-x64,node18-macos-x64,node18-win-x64
 - ウィットネスが制約を満たすことを確認
 - 公開入力が暗号化時と一致することを確認
 - 暗号文が破損していないことを確認
-

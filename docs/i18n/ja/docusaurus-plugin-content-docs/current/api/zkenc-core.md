@@ -2,13 +2,13 @@
 sidebar_position: 1
 ---
 
-# zkenc-core APIリファレンス
+# zkenc-core API リファレンス
 
-zkenc-coreは、ウィットネス暗号化のための暗号プリミティブを提供するRustライブラリです。zkenc-cliとzkenc-jsの両方がこのコアライブラリの上に構築されている基盤層として機能します。
+zkenc-core は、ウィットネス暗号化のための暗号プリミティブを提供する Rust ライブラリです。zkenc-cli と zkenc-js の両方がこのコアライブラリの上に構築されている基盤層として機能します。
 
 ## 概要
 
-zkenc-coreは、楕円曲線暗号(BN254曲線)を使用してR1CS回路のウィットネス暗号化を実装します。2つのコア関数を提供します:
+zkenc-core は、楕円曲線暗号(BN254 曲線)を使用して R1CS 回路のウィットネス暗号化を実装します。2 つのコア関数を提供します:
 
 - **`encap`**: ウィットネス暗号化されたキーを生成
 - **`decap`**: 有効なウィットネスを使用してキーを回復
@@ -39,8 +39,8 @@ pub struct Ciphertext<E: Pairing> {
 
 **プロパティ:**
 
-- arkworksシリアライゼーションを使用してシリアライズ可能
-- サイズ: BN254曲線で約1576バイト
+- arkworks シリアライゼーションを使用してシリアライズ可能
+- サイズ: BN254 曲線で約 1576 バイト
 - ネットワーク経由で送信またはディスクに保存可能
 
 ### `Key`
@@ -55,7 +55,7 @@ pub struct Key {
 
 **メソッド:**
 
-- `as_bytes() -> &[u8; 32]` - AES暗号化用のキーをバイトとして取得
+- `as_bytes() -> &[u8; 32]` - AES 暗号化用のキーをバイトとして取得
 
 ## コア関数
 
@@ -112,9 +112,9 @@ ciphertext.serialize_compressed(&mut ct_bytes)?;
 
 **パフォーマンス:**
 
-- 時間計算量: O(n \* log n) ここでn = 制約の数
+- 時間計算量: O(n \* log n) ここで n = 制約の数
 - メモリ: O(n) 制約システム用
-- 一般的な時間: 回路サイズに応じて50-500ms
+- 一般的な時間: 回路サイズに応じて 50-500ms
 
 ### `decap`
 
@@ -170,9 +170,9 @@ let key_bytes = key.as_bytes();
 
 **パフォーマンス:**
 
-- 時間計算量: O(n) ここでn = 制約の数
+- 時間計算量: O(n) ここで n = 制約の数
 - メモリ: O(n) 制約システム用
-- 一般的な時間: 回路サイズに応じて100-1000ms
+- 一般的な時間: 回路サイズに応じて 100-1000ms
 
 ## エラー型
 
@@ -206,7 +206,7 @@ pub enum DecapError {
 
 ## 回路インターフェース
 
-zkenc-coreを使用するには、回路が`ConstraintSynthesizer`を実装する必要があります:
+zkenc-core を使用するには、回路が`ConstraintSynthesizer`を実装する必要があります:
 
 ```rust
 use ark_relations::r1cs::{ConstraintSynthesizer, ConstraintSystemRef, SynthesisError};
@@ -337,9 +337,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ## 他のツールとの統合
 
-### zkenc-cliとの統合
+### zkenc-cli との統合
 
-zkenc-cliは内部的にzkenc-coreを使用します:
+zkenc-cli は内部的に zkenc-core を使用します:
 
 ```rust
 use zkenc_core::{encap, decap};
@@ -372,11 +372,11 @@ let (ct, key) = encap::<Bn254, _, _>(circuit, &mut rng)?;
 1. **回路の最適化**: より高速な操作のために制約を最小化
 2. **バッチ操作**: 可能な場合は回路コンパイルを再利用
 3. **メモリ管理**: サイズを削減するために圧縮シリアライゼーションを使用
-4. **並列処理**: encap/decapは複数のメッセージにわたって並列化可能
+4. **並列処理**: encap/decap は複数のメッセージにわたって並列化可能
 
 ## 曲線の選択
 
-現在、zkenc-coreはデフォルトでBN254曲線を使用します:
+現在、zkenc-core はデフォルトで BN254 曲線を使用します:
 
 ```rust
 use ark_bn254::Bn254;
@@ -384,11 +384,11 @@ use ark_bn254::Bn254;
 let (ct, key) = encap::<Bn254, _, _>(circuit, &mut rng)?;
 ```
 
-将来のバージョンでは追加の曲線(BLS12-381など)をサポートする可能性があります。
+将来のバージョンでは追加の曲線(BLS12-381 など)をサポートする可能性があります。
 
 ## セキュリティの考慮事項
 
-1. **RNGセキュリティ**: 常に暗号学的に安全なRNG(`OsRng`)を使用
+1. **RNG セキュリティ**: 常に暗号学的に安全な RNG(`OsRng`)を使用
 2. **ウィットネスのプライバシー**: 秘密ウィットネス値を公開しない
 3. **回路の正確性**: 回路が適切に制約を強制することを確認
 4. **キーの使用**: 適切な対称暗号化(AES-256-GCM)でキーを使用
@@ -396,6 +396,5 @@ let (ct, key) = encap::<Bn254, _, _>(circuit, &mut rng)?;
 ## 次のステップ
 
 - **[zkenc-cli API →](/docs/api/zkenc-cli)** - コマンドラインインターフェース
-- **[zkenc-js API →](/docs/api/zkenc-js)** - JavaScriptバインディング
+- **[zkenc-js API →](/docs/api/zkenc-js)** - JavaScript バインディング
 - **[入門 →](/docs/getting-started/zkenc-cli)** - クイックスタートガイド
-

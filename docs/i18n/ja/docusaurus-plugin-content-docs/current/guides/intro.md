@@ -4,39 +4,39 @@ sidebar_position: 1
 
 # ガイド概要
 
-zkencガイドへようこそ!これらのステップバイステップのチュートリアルは、ウィットネス暗号化をプロジェクトに統合する方法を説明します。
+zkenc ガイドへようこそ!これらのステップバイステップのチュートリアルは、ウィットネス暗号化をプロジェクトに統合する方法を説明します。
 
 ## 学習内容
 
-これらのガイドは、実際のアプリケーションでzkencを使用するための完全で実用的な例を提供します:
+これらのガイドは、実際のアプリケーションで zkenc を使用するための完全で実用的な例を提供します:
 
-### 📦 Node.js統合
+### 📦 Node.js 統合
 
-ウィットネス暗号化を使用した完全なNode.jsアプリケーションの構築方法を学びます。
+ウィットネス暗号化を使用した完全な Node.js アプリケーションの構築方法を学びます。
 
-- Circom回路のロードとコンパイル
+- Circom 回路のロードとコンパイル
 - ファイルの暗号化と復号化
 - 回路入力の適切な処理
 - エラーハンドリングとベストプラクティス
 
-[Node.jsガイドを始める →](/docs/guides/nodejs-integration)
+[Node.js ガイドを始める →](/docs/guides/nodejs-integration)
 
-### ⚛️ React統合
+### ⚛️ React 統合
 
-ウィットネス暗号化を使用したインタラクティブなReactアプリケーションを構築します。
+ウィットネス暗号化を使用したインタラクティブな React アプリケーションを構築します。
 
-- Vite + React + TypeScriptのセットアップ
+- Vite + React + TypeScript のセットアップ
 - ブラウザでの回路ファイルの処理
-- 暗号化/復号化UIの作成
-- Web Workersによるパフォーマンス最適化
+- 暗号化/復号化 UI の作成
+- Web Workers によるパフォーマンス最適化
 
-[Reactガイドを始める →](/docs/guides/react-integration)
+[React ガイドを始める →](/docs/guides/react-integration)
 
 ### 🔄 クロスツールワークフロー
 
-zkenc-cliとzkenc-jsを組み合わせて、最大の柔軟性を実現します。
+zkenc-cli と zkenc-js を組み合わせて、最大の柔軟性を実現します。
 
-- CLIで暗号化、JavaScriptで復号化
+- CLI で暗号化、JavaScript で復号化
 - 環境間での暗号文の共有
 - ワークフローに合わせたツールの強みの組み合わせ
 - バッチ処理と自動化
@@ -49,9 +49,9 @@ zkenc-cliとzkenc-jsを組み合わせて、最大の柔軟性を実現します
 
 1. **基本的な知識:**
 
-   - JavaScript/TypeScript(JSガイド用)
-   - コマンドラインツール(CLIガイド用)
-   - Circom回路(基本的な理解)
+   - JavaScript/TypeScript(JS ガイド用)
+   - コマンドラインツール(CLI ガイド用)
+   - Circom 回路(基本的な理解)
 
 2. **必要なツールのインストール:**
 
@@ -167,7 +167,7 @@ const decrypted = await zkenc.decrypt(
 
 問題が発生した場合:
 
-1. **APIリファレンスを確認:**
+1. **API リファレンスを確認:**
 
    - [zkenc-js API](/docs/api/zkenc-js)
    - [zkenc-cli API](/docs/api/zkenc-cli)
@@ -181,34 +181,34 @@ const decrypted = await zkenc.decrypt(
 
    - 各ガイドには完全で実行可能な例が含まれています
 
-4. **Issueを開く:**
+4. **Issue を開く:**
    - [GitHub Issues](https://github.com/flyinglimao/zkenc/issues)
 
 ## ガイドを選択
 
 <div className="guides-grid">
 
-### Node.js開発者向け
+### Node.js 開発者向け
 
 以下を構築する場合に最適:
 
-- CLIツール
+- CLI ツール
 - バックエンドサービス
 - ファイル暗号化ツール
 - バッチプロセッサ
 
-[Node.js統合 →](/docs/guides/nodejs-integration)
+[Node.js 統合 →](/docs/guides/nodejs-integration)
 
-### React開発者向け
+### React 開発者向け
 
 以下を構築する場合に最適:
 
-- Webアプリケーション
-- インタラクティブなUI
+- Web アプリケーション
+- インタラクティブな UI
 - ブラウザベースのツール
 - Progressive Web Apps
 
-[React統合 →](/docs/guides/react-integration)
+[React 統合 →](/docs/guides/react-integration)
 
 ### 自動化向け
 
@@ -227,8 +227,8 @@ const decrypted = await zkenc.decrypt(
 
 始める準備はできましたか?上記のガイドを選択するか、以下をご覧ください:
 
-- **zkencが初めての方は?** [zkenc-js入門](/docs/getting-started/zkenc-js)から始めましょう
+- **zkenc が初めての方は?** [zkenc-js 入門](/docs/getting-started/zkenc-js)から始めましょう
 - **実験してみたい方は?** [プレイグラウンド](/playground)を試してください
-- **API詳細が必要な方は?** [APIリファレンス](/docs/api/zkenc-js)を確認してください
+- **API 詳細が必要な方は?** [API リファレンス](/docs/api/zkenc-js)を確認してください
 
 ハッピーコーディング! 🚀
