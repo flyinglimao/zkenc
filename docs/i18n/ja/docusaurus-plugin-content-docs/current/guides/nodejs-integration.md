@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Node.js 統合ガイド
 
-このガイドでは、zkenc-js を使用してウィットネス暗号化を実装する完全な Node.js アプリケーションの構築方法を説明します。
+このガイドでは、zkenc-js を使用して証拠暗号化を実装する完全な Node.js アプリケーションの構築方法を説明します。
 
 ## 構築するもの
 
@@ -257,7 +257,7 @@ const program = new Command();
 
 program
   .name("zkenc-example")
-  .description("zkenc-jsを使用したウィットネス暗号化の例")
+  .description("zkenc-jsを使用した証拠暗号化の例")
   .version("1.0.0");
 
 program

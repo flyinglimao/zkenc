@@ -28,7 +28,7 @@ zkenc-cli と zkenc-js は**完全に互換性があり**、同じ結合暗号�
 **両方のツールは同じ結合形式を使用:**
 
 ```
-[1バイトフラグ][4バイトウィットネスCT長][ウィットネス暗号文]
+[1バイトフラグ][4バイトウィットネスCT長][証拠暗号文]
 [4バイト公開入力長(フラグ=1の場合)][公開入力JSON(フラグ=1の場合)]
 [暗号化メッセージ]
 ```
@@ -71,7 +71,7 @@ zkenc encrypt \
 
 出力された`encrypted.bin`は以下を含む結合暗号文です:
 
-- ウィットネス暗号化暗号文
+- 証拠暗号化暗号文
 - 公開入力(デフォルトで埋め込み)
 - AES 暗号化メッセージ
 
@@ -347,7 +347,7 @@ const treasure = await zkenc.decrypt(circuitFiles, ciphertext, solution);
 ### CLI 低レベルコマンド
 
 ```bash
-# ステップ1:ウィットネス暗号文とキーを生成
+# ステップ1:証拠暗号文とキーを生成
 zkenc encap \
   --circuit circuit.r1cs \
   --input public.json \

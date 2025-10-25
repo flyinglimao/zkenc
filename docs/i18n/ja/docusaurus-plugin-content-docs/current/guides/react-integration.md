@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # React 統合ガイド
 
-zkenc-js を使用してウィットネス暗号化を実装したインタラクティブな React アプリケーションを構築します。
+zkenc-js を使用して証拠暗号化を実装したインタラクティブな React アプリケーションを構築します。
 
 ## 構築するもの
 
@@ -313,7 +313,7 @@ function App() {
     <div className="app">
       <header>
         <h1>zkencデモ</h1>
-        <p>ブラウザでのウィットネス暗号化</p>
+        <p>ブラウザでの証拠暗号化</p>
       </header>
 
       <div className="mode-selector">

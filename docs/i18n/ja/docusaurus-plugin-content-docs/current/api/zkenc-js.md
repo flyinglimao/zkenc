@@ -4,7 +4,7 @@ sidebar_position: 3
 
 # zkenc-js API リファレンス
 
-zkenc-js の完全な API リファレンス、ウィットネス暗号化のための JavaScript/TypeScript ライブラリです。
+zkenc-js の完全な API リファレンス、証拠暗号化のための JavaScript/TypeScript ライブラリです。
 
 ## インストール
 
@@ -22,7 +22,7 @@ import { zkenc, CircuitFiles, EncapResult, EncryptResult } from "zkenc-js";
 
 ### `CircuitFiles`
 
-ウィットネス暗号化操作に必要な回路ファイル。
+証拠暗号化操作に必要な回路ファイル。
 
 ```typescript
 interface CircuitFiles {
@@ -72,11 +72,11 @@ interface EncryptResult {
 
 ## 高レベル API
 
-高レベル API は、単一の関数呼び出しで完全なウィットネス暗号化機能を提供します。
+高レベル API は、単一の関数呼び出しで完全な証拠暗号化機能を提供します。
 
 ### `encrypt()`
 
-ウィットネス暗号化を使用してメッセージを暗号化します。キー生成と AES-256-GCM 暗号化を組み合わせます。
+証拠暗号化を使用してメッセージを暗号化します。キー生成と AES-256-GCM 暗号化を組み合わせます。
 
 ```typescript
 async function encrypt(
@@ -99,10 +99,10 @@ async function encrypt(
 **暗号文形式:**
 
 ```
-[4バイト: ウィットネスCT長][ウィットネス暗号文][AES暗号化メッセージ]
+[4バイト: ウィットネスCT長][証拠暗号文][AES暗号化メッセージ]
 │                          │                     │
 │                          │                     └─ AES-256-GCM暗号化
-│                          └─ ウィットネス暗号化(1576バイト)
+│                          └─ 証拠暗号化(1576バイト)
 └─ ビッグエンディアン長(常に1576)
 ```
 
@@ -181,11 +181,11 @@ console.log("復号化:", message);
 
 ## 低レベル API
 
-低レベル API は、ウィットネス暗号化プロセスの細かい制御を提供します。研究やカスタム暗号化スキームに使用します。
+低レベル API は、証拠暗号化プロセスの細かい制御を提供します。研究やカスタム暗号化スキームに使用します。
 
 ### `encap()`
 
-ウィットネス暗号化を使用して暗号化キーを生成(カプセル化)。
+証拠暗号化を使用して暗号化キーを生成(カプセル化)。
 
 ```typescript
 async function encap(
@@ -201,7 +201,7 @@ async function encap(
 
 **戻り値:**
 
-- `Promise<EncapResult>` - ウィットネス暗号文(1576 バイト)とキー(32 バイト)
+- `Promise<EncapResult>` - 証拠暗号文(1576 バイト)とキー(32 バイト)
 
 **例:**
 
@@ -239,7 +239,7 @@ async function decap(
 **パラメータ:**
 
 - `circuitFiles` - 回路ファイル(R1CS と WASM)
-- `ciphertext` - `encap()`からのウィットネス暗号文(1576 バイト)
+- `ciphertext` - `encap()`からの証拠暗号文(1576 バイト)
 - `inputs` - JSON オブジェクトとしての完全な入力(回路を満たす必要)
 
 **戻り値:**

@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # zkenc-js を始める
 
-zkenc-js は、Node.js とブラウザ環境の両方で動作する、ウィットネス暗号化のための JavaScript/TypeScript ライブラリです。
+zkenc-js は、Node.js とブラウザ環境の両方で動作する、証拠暗号化のための JavaScript/TypeScript ライブラリです。
 
 ## インストール
 
@@ -81,10 +81,10 @@ zkenc-js は 2 つの API を提供します：
 
 ### 高レベル API（推奨）
 
-高レベル API（`encrypt` と `decrypt`）は、完全なウィットネス暗号化フローを処理します：
+高レベル API（`encrypt` と `decrypt`）は、完全な証拠暗号化フローを処理します：
 
 ```typescript
-// 暗号化：ウィットネス暗号化と AES を組み合わせる
+// 暗号化：証拠暗号化と AES を組み合わせる
 const { ciphertext, key } = await zkenc.encrypt(
   circuitFiles,
   publicInputs,
