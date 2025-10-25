@@ -4,6 +4,7 @@ import styles from "../pages/playground.module.css";
 import { Sudoku, generator } from "@forfuns/sudoku";
 import { encrypt, decrypt, getPublicInput } from "zkenc-js";
 import Translate from "@docusaurus/Translate";
+import useBaseUrl from "@docusaurus/useBaseUrl";
 
 // Sudoku utilities
 function generateSudoku(): { puzzle: number[] } {
@@ -69,13 +70,17 @@ export default function PlaygroundClient(): React.ReactElement {
   const [customDecrypted, setCustomDecrypted] = useState("");
   const [includePublicInput, setIncludePublicInput] = useState(true);
 
+  const sudokuR1cs = useBaseUrl("/circuits/sudoku.r1cs");
+  const sudokuWasm = useBaseUrl("/circuits/sudoku.wasm");
+
   // Load circuit files on mount
   useEffect(() => {
     async function loadCircuits() {
       try {
+        console.log(sudokuR1cs);
         const [r1csRes, wasmRes] = await Promise.all([
-          fetch("/circuits/sudoku.r1cs"),
-          fetch("/circuits/sudoku.wasm"),
+          fetch(sudokuR1cs),
+          fetch(sudokuWasm),
         ]);
 
         if (!r1csRes.ok || !wasmRes.ok) {
