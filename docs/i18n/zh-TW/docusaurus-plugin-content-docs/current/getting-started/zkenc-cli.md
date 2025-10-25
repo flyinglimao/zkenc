@@ -182,10 +182,6 @@ cat decrypted.txt
 # 輸出：Hello, zkenc!
 ```
 
-# 輸出：Hello, zkenc!
-
-````
-
 ## 命令參考
 
 ### `zkenc encap`
@@ -198,7 +194,7 @@ zkenc encap \
   --input <JSON_FILE> \
   --ciphertext <OUTPUT_CT> \
   --key <OUTPUT_KEY>
-````
+```
 
 **參數：**
 

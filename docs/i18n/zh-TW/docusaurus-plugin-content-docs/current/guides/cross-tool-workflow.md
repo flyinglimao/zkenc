@@ -75,6 +75,10 @@ zkenc encrypt \
 - 公開輸入（預設嵌入）
 - AES 加密訊息
 
+**檔案大小：**
+
+- `encrypted.bin`（組合）≈ 見證 CT（1576 位元組）+ 公開輸入 + 訊息 + 額外開銷
+
 ### 步驟 4：使用 JS 解密
 
 ```typescript
@@ -176,6 +180,202 @@ cat decrypted.txt
 
 **就這樣！**CLI 可以直接讀取 JS 加密的檔案。
 
+## 工作流程 3：混合處理
+
+**使用情境：**使用 CLI 進行批次操作，使用 JS 進行互動式 UI。
+
+### 範例：照片加密服務
+
+**伺服器 (CLI)：**
+
+```bash
+#!/bin/bash
+# encrypt-photos.sh
+
+for photo in uploads/*.jpg; do
+  echo "正在處理 $photo..."
+
+  # 產生唯一的公開輸入
+  PUBLIC_VALUE=$(date +%s)
+  echo "{\"timestamp\": \"$PUBLIC_VALUE\"}" > inputs.json
+
+  # 一步完成加密
+  zkenc encrypt \
+    --circuit circuit.r1cs \
+    --input inputs.json \
+    --message "$photo" \
+    --output "${photo}.enc"
+
+  # 儲存中繼資料
+  echo "$photo,$PUBLIC_VALUE" >> metadata.csv
+
+  rm inputs.json
+done
+```
+
+**客戶端 (JS)：**
+
+```typescript
+// 解密選定的照片
+async function decryptPhoto(photoId: string, privateValue: number) {
+  // 取得加密照片（組合格式）
+  const response = await fetch(`/api/photos/${photoId}/encrypted`);
+  const ciphertext = new Uint8Array(await response.arrayBuffer());
+
+  // 從中繼資料取得公開值
+  const metadata = await fetch(`/api/photos/${photoId}/metadata`).then((r) =>
+    r.json()
+  );
+
+  // 一步完成解密
+  const fullInputs = {
+    timestamp: metadata.timestamp,
+    userSecret: privateValue,
+  };
+
+  const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+
+  // 顯示照片
+  const blob = new Blob([decrypted], { type: "image/jpeg" });
+  const url = URL.createObjectURL(blob);
+  imageElement.src = url;
+}
+```
+
+**注意：**如果嵌入了公開輸入，可以使用 `getPublicInput()` 從密文中提取：
+
+```typescript
+import { getPublicInput } from "zkenc-js";
+
+// 提取嵌入的公開輸入
+const publicInputs = getPublicInput(ciphertext);
+console.log(publicInputs.timestamp); // 不需要取得中繼資料！
+```
+
+## 工作流程 4：多平台分發
+
+**使用情境：**加密一次，在任何平台上解密。
+
+### 設定
+
+```bash
+# 編譯電路
+circom puzzle.circom --r1cs --wasm -o dist
+
+# 建立分發套件
+mkdir -p package/circuits
+cp dist/puzzle.r1cs package/circuits/
+cp dist/puzzle_js/puzzle.wasm package/circuits/
+cp README.md package/
+```
+
+### 加密一次
+
+```bash
+# 建立謎題
+cat > puzzle.json <<EOF
+{
+  "puzzle": ["5", "3", "0", "0", "7", "0", "0", "0", "0"]
+}
+EOF
+
+# 加密訊息（建立組合格式）
+zkenc encrypt \
+  --circuit package/circuits/puzzle.r1cs \
+  --input puzzle.json \
+  --message treasure.txt \
+  --output package/treasure.enc
+```
+
+### 分發
+
+```
+package/
+├── circuits/
+│   ├── puzzle.r1cs     # 電路檔案
+│   └── puzzle.wasm      # 見證產生器
+├── treasure.enc         # 組合密文（兩種工具都能用！）
+└── README.md            # 使用說明
+```
+
+### 使用者可以用任一工具解密
+
+**CLI 使用者：**
+
+```bash
+# 產生解答見證
+cat > solution.json <<EOF
+{
+  "puzzle": ["5", "3", "0", ...],
+  "solution": ["5", "3", "4", "6", "7", "8", "9", "1", "2", ...]
+}
+EOF
+
+snarkjs wtns calculate puzzle.wasm solution.json solution.wtns
+
+# 直接解密
+zkenc decrypt \
+  --circuit puzzle.r1cs \
+  --witness solution.wtns \
+  --ciphertext treasure.enc \
+  --output treasure.txt
+```
+
+**JS 使用者：**
+
+```typescript
+// 載入相同的加密檔案
+const ciphertext = await fetch('treasure.enc')
+  .then(r => r.arrayBuffer())
+  .then(b => new Uint8Array(b));
+
+const solution = {
+  puzzle: ["5", "3", "0", ...],
+  solution: ["5", "3", "4", "6", "7", "8", "9", "1", "2", ...],
+};
+
+// 直接解密
+const treasure = await zkenc.decrypt(circuitFiles, ciphertext, solution);
+```
+
+**不需要轉換！**兩種工具讀取相同的檔案格式。
+
+## 進階：使用低階 API
+
+對於進階使用情境，你仍可以單獨使用低階 `encap`/`decap` 命令：
+
+### CLI 低階命令
+
+```bash
+# 步驟 1：產生見證密文和金鑰
+zkenc encap \
+  --circuit circuit.r1cs \
+  --input public.json \
+  --ciphertext witness.ct \
+  --key key.bin
+
+# 步驟 2：使用任何 AES 工具或自訂實作加密
+# （key.bin 是適用於 AES-256 的 32 位元組金鑰）
+
+# 步驟 3：解密 - 恢復金鑰
+zkenc decap \
+  --circuit circuit.r1cs \
+  --witness solution.wtns \
+  --ciphertext witness.ct \
+  --key recovered_key.bin
+
+# 步驟 4：使用步驟 2 中使用的相同方法解密
+```
+
+### 何時使用低階 API
+
+- 自訂加密方案
+- 與現有加密管線整合
+- 教學目的
+- 單獨除錯加密/解密
+
+**注意：**對於大多數使用情境，建議使用高階 `encrypt`/`decrypt` 命令。
+
 ## 最佳實踐
 
 1. **使用高階 API**：使用 `encrypt`/`decrypt` 命令以確保簡單性和相容性
@@ -199,6 +399,13 @@ cat decrypted.txt
 - 檢查私密輸入是否滿足電路約束
 - 確保使用相同的電路版本
 - 使用 `snarkjs wtns check` 驗證見證
+
+**檔案格式問題：**
+
+- 檔案已經相容 - 不需要轉換！
+- 所有檔案操作都使用二進位模式
+- 避免使用可能損毀二進位檔案的文字編輯器
+- 如需檢查檔案，使用 `xxd` 或 `hexdump`
 
 **公開輸入不匹配：**
 
