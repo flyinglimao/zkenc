@@ -1,22 +1,30 @@
 {
   "link.title.Documentation": {
     "message": "文件",
-    "description": "The title of the footer links column with title=Documentation"
+    "description": "The title of the footer links column with title=Documentation in the footer"
   },
   "link.title.Resources": {
     "message": "資源",
-    "description": "The title of the footer links column with title=Resources"
+    "description": "The title of the footer links column with title=Resources in the footer"
   },
   "link.item.label.Getting Started": {
     "message": "開始使用",
-    "description": "The label of footer link with label=Getting Started"
+    "description": "The label of footer link with label=Getting Started linking to /docs/getting-started/zkenc-js"
   },
   "link.item.label.API Reference": {
     "message": "API 參考",
-    "description": "The label of footer link with label=API Reference"
+    "description": "The label of footer link with label=API Reference linking to /docs/api/zkenc-js"
   },
   "copyright": {
     "message": "版權所有 © 2025 zkenc. 使用 Docusaurus 構建。",
     "description": "The footer copyright"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/flyinglimao/zkenc"
+  },
+  "link.item.label.npm - zkenc-js": {
+    "message": "npm - zkenc-js",
+    "description": "The label of footer link with label=npm - zkenc-js linking to https://www.npmjs.com/package/zkenc-js"
   }
 }

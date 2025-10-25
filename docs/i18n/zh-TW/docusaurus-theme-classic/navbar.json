@@ -5,7 +5,7 @@
   },
   "logo.alt": {
     "message": "zkEnc Logo",
-    "description": "The alt text of the logo"
+    "description": "The alt text of navbar logo"
   },
   "item.label.Documentation": {
     "message": "文件",
