@@ -13,12 +13,14 @@ describe("zkenc WASM integration", () => {
   // Load test fixtures
   const r1csBuffer = new Uint8Array(readFileSync(join(testDir, "sudoku.r1cs")));
   const wasmBuffer = new Uint8Array(readFileSync(join(testDir, "sudoku.wasm")));
+  const symContent = readFileSync(join(testDir, "sudoku.sym"), "utf-8");
   const sudokuInput = JSON.parse(
     readFileSync(join(testDir, "sudoku_general.json"), "utf-8")
   );
 
   it("should perform encap with public inputs", async () => {
-    const result = await encap({ r1csBuffer, wasmBuffer }, sudokuInput);
+    // Only use public inputs (puzzle) for encap
+    const result = await encap({ r1csBuffer, symContent }, { puzzle: sudokuInput.puzzle });
 
     expect(result.ciphertext).toBeInstanceOf(Uint8Array);
     expect(result.ciphertext.length).toBeGreaterThan(0);
@@ -27,13 +29,13 @@ describe("zkenc WASM integration", () => {
   });
 
   it("should perform decap with valid witness", async () => {
-    // First encap
+    // First encap with only public inputs
     const { ciphertext, key: originalKey } = await encap(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle }
     );
 
-    // Then decap with same inputs
+    // Then decap with full inputs (needs WASM for witness calculation)
     const recoveredKey = await decap({ r1csBuffer, wasmBuffer }, ciphertext, {
       puzzle: sudokuInput.puzzle,
       solution: sudokuInput.solution,
@@ -49,11 +51,11 @@ describe("zkenc WASM integration", () => {
   it("should produce different ciphertexts for same inputs", async () => {
     // Encap twice with same inputs
     const result1 = await encap(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle }
     );
     const result2 = await encap(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle }
     );
 
@@ -75,7 +77,7 @@ describe("zkenc WASM integration", () => {
 
     // 1. Encap to get key
     const { ciphertext: zkCiphertext, key } = await encap(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle }
     );
 
@@ -110,7 +112,7 @@ describe("zkenc WASM integration", () => {
 
     // 1. Encrypt: combines encap + AES encryption
     const { ciphertext, key } = await encrypt(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle },
       message
     );
@@ -142,12 +144,12 @@ describe("zkenc WASM integration", () => {
 
     // Encrypt twice with same inputs
     const result1 = await encrypt(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle },
       message
     );
     const result2 = await encrypt(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle },
       message
     );
@@ -168,7 +170,7 @@ describe("zkenc WASM integration", () => {
 
     // Encrypt with correct puzzle
     const { ciphertext } = await encrypt(
-      { r1csBuffer, wasmBuffer },
+      { r1csBuffer, symContent },
       { puzzle: sudokuInput.puzzle },
       message
     );
@@ -179,7 +181,7 @@ describe("zkenc WASM integration", () => {
     );
 
     await expect(
-      decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
+      decrypt({ r1csBuffer, symContent }, ciphertext, {
         puzzle: sudokuInput.puzzle,
         solution: invalidSolution,
       })

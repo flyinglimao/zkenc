@@ -10,8 +10,10 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
   // Load circuit files
   const r1csPath = join(FIXTURES_DIR, "sudoku.r1cs");
   const wasmPath = join(FIXTURES_DIR, "sudoku.wasm");
+  const symPath = join(FIXTURES_DIR, "sudoku.sym");
   const r1csBytes = new Uint8Array(readFileSync(r1csPath));
   const wasmBytes = new Uint8Array(readFileSync(wasmPath));
+  const symContent = readFileSync(symPath, "utf-8");
 
   // Load test data from fixture - use sudoku_general with incomplete puzzle
   const inputPath = join(FIXTURES_DIR, "sudoku_general.json");
@@ -27,10 +29,10 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
   const plaintextBytes = new TextEncoder().encode(plaintext);
 
   it("should complete full encrypt/decrypt workflow with valid witness", async () => {
-    // Step 1: Encap - generate ciphertext and key using only public inputs (puzzle)
-    const publicInputs = { puzzle: validPuzzle, solution: validSolution };
+    // Step 1: Encap - generate ciphertext and key using public inputs with sym file
+    const publicInputs = { puzzle: validPuzzle };
     const { ciphertext, key: encapKey } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
@@ -67,7 +69,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
     // Generate ciphertext with valid puzzle
     const publicInputs = { puzzle: validPuzzle, solution: validSolution };
     const { ciphertext } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
@@ -89,12 +91,12 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
     puzzle2[0] = 9; // Change one cell
 
     const { ciphertext: ct1 } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       { puzzle: puzzle1, solution: validSolution }
     );
 
     const { ciphertext: ct2 } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       { puzzle: puzzle2, solution: validSolution }
     );
 
@@ -106,12 +108,12 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
     const publicInputs = { puzzle: validPuzzle, solution: validSolution };
 
     const { ciphertext: ct1 } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
     const { ciphertext: ct2 } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
@@ -128,7 +130,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
 
     // Encap and encrypt
     const { ciphertext, key: encapKey } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
     const encrypted = await aesGcmEncrypt(encapKey, largePlaintext);
@@ -151,7 +153,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
 
     // Generate valid ciphertext
     const { ciphertext } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
@@ -171,7 +173,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
   it("should reject decap with incomplete inputs", async () => {
     const publicInputs = { puzzle: validPuzzle, solution: validSolution };
     const { ciphertext } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
 
@@ -196,7 +198,7 @@ describe("E2E Tests - Sudoku Witness Encryption", () => {
 
     // Encap and encrypt
     const { ciphertext, key: encapKey } = await encap(
-      { r1csBuffer: r1csBytes, wasmBuffer: wasmBytes },
+      { r1csBuffer: r1csBytes, symContent },
       publicInputs
     );
     const encrypted = await aesGcmEncrypt(encapKey, binaryData);
