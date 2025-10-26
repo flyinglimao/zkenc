@@ -20,7 +20,10 @@ describe("zkenc WASM integration", () => {
 
   it("should perform encap with public inputs", async () => {
     // Only use public inputs (puzzle) for encap
-    const result = await encap({ r1csBuffer, symContent }, { puzzle: sudokuInput.puzzle });
+    const result = await encap(
+      { r1csBuffer, symContent },
+      { puzzle: sudokuInput.puzzle }
+    );
 
     expect(result.ciphertext).toBeInstanceOf(Uint8Array);
     expect(result.ciphertext.length).toBeGreaterThan(0);
