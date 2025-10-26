@@ -373,46 +373,34 @@ fn build_lc(
 // WASM API
 //////////////////////////////////////////////////////////////////////////////
 
-/// Perform encapsulation with R1CS circuit and public inputs
+/// Perform encapsulation with R1CS circuit and witness (public inputs only)
 ///
 /// # Arguments
 /// * `r1cs_bytes` - R1CS circuit file bytes
-/// * `public_inputs_json` - JSON string with public inputs (no witness)
+/// * `witness_bytes` - Witness file bytes (snarkjs wtns format) containing public inputs
 ///
 /// # Returns
 /// Ciphertext and 32-byte symmetric key
 #[wasm_bindgen]
-pub fn wasm_encap(r1cs_bytes: &[u8], public_inputs_json: &str) -> Result<EncapResult, JsValue> {
+pub fn wasm_encap(r1cs_bytes: &[u8], witness_bytes: &[u8]) -> Result<EncapResult, JsValue> {
     // Parse R1CS
     let (header, constraints) = parse_r1cs(r1cs_bytes)
         .map_err(|e| JsValue::from_str(&format!("R1CS parse error: {}", e)))?;
 
-    // Parse public inputs from JSON
-    let public_inputs: serde_json::Value = serde_json::from_str(public_inputs_json)
-        .map_err(|e| JsValue::from_str(&format!("JSON parse error: {}", e)))?;
+    // Parse witness file
+    let witness_values = parse_witness(witness_bytes)
+        .map_err(|e| JsValue::from_str(&format!("Witness parse error: {}", e)))?;
 
-    // Flatten JSON to field elements
-    let mut public_values = Vec::new();
-    flatten_json(&public_inputs, &mut public_values).map_err(|e| JsValue::from_str(&e))?;
-
-    // Ensure we have exactly n_public_inputs values
+    // Extract only public inputs from witness
+    // Wire 0 = constant 1, Wires 1..n_pub = public inputs
     let n_pub = header.n_public_inputs() as usize;
-    if public_values.len() < n_pub {
-        return Err(JsValue::from_str(&format!(
-            "Not enough public inputs: expected {}, got {}",
-            n_pub,
-            public_values.len()
-        )));
-    }
-    public_values.truncate(n_pub);
-
-    // Create witness map with only public inputs (for encap)
-    // Wire 0 = 1 (constant), Wire 1..n_pub = public inputs
-    // Private wires are intentionally left unassigned
+    
+    // Create witness map with constant and public inputs only
     let mut witness_map = HashMap::new();
-    witness_map.insert(0, Fr::from(1u64)); // wire 0 = 1
-    for (i, value) in public_values.iter().enumerate() {
-        witness_map.insert((i + 1) as u32, *value);
+    for i in 0..=(n_pub as u32) {
+        if (i as usize) < witness_values.len() {
+            witness_map.insert(i, witness_values[i as usize]);
+        }
     }
 
     // Create circuit with only public inputs assigned
@@ -499,42 +487,6 @@ pub fn wasm_decap(
     Ok(key.0.to_vec())
 }
 
-/// Helper: Flatten JSON to field elements
-fn flatten_json(value: &serde_json::Value, result: &mut Vec<Fr>) -> Result<(), String> {
-    match value {
-        serde_json::Value::Number(n) => {
-            if let Some(i) = n.as_u64() {
-                result.push(Fr::from(i));
-            } else if let Some(i) = n.as_i64() {
-                if i < 0 {
-                    return Err(format!("Negative numbers not supported: {}", i));
-                }
-                result.push(Fr::from(i as u64));
-            } else {
-                return Err(format!("Invalid number: {}", n));
-            }
-            Ok(())
-        }
-        serde_json::Value::String(s) => {
-            // Try to parse as field element using PrimeField::from_str
-            // This supports large numbers that don't fit in u64
-            let field_elem = Fr::from_str(s)
-                .map_err(|_| format!("Failed to parse string as field element: {}", s))?;
-            result.push(field_elem);
-            Ok(())
-        }
-        serde_json::Value::Array(arr) => {
-            for item in arr {
-                flatten_json(item, result)?;
-            }
-            Ok(())
-        }
-        serde_json::Value::Object(obj) => {
-            for (_key, val) in obj {
-                flatten_json(val, result)?;
-            }
-            Ok(())
-        }
-        _ => Err("Unsupported JSON value type".to_string()),
-    }
-}
+// Note: flatten_json function was removed as it's no longer needed.
+// encap now uses witness file with sym-based mapping for correct signal ordering.
+// This ensures JSON key order does not affect wire index mapping.
