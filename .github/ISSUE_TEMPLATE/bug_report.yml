@@ -1,0 +1,98 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: circom-input
+    attributes:
+      label: Circom Circuit
+      description: Please provide the Circom circuit code that reproduces the issue.
+      placeholder: |
+        pragma circom 2.0.0;
+
+        template Example() {
+          // Your circuit code here
+        }
+
+        component main = Example();
+      render: circom
+    validations:
+      required: true
+
+  - type: textarea
+    id: public-input
+    attributes:
+      label: Public Input
+      description: Please provide the public input used.
+      placeholder: |
+        {
+          "publicSignals": []
+        }
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: private-input
+    attributes:
+      label: Private Input (Witness)
+      description: Please provide the private input/witness used.
+      placeholder: |
+        {
+          "privateInput": []
+        }
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Please provide information about your environment.
+      placeholder: |
+        - OS: [e.g., macOS, Linux, Windows]
+        - zkenc version: [e.g., 0.1.0]
+        - Circom version: [e.g., 2.1.8]
+        - Node.js version: [e.g., 18.0.0]
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context about the problem here (screenshots, logs, etc.).
+    validations:
+      required: false
