@@ -1,6 +1,6 @@
 {
   "name": "zkenc-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "JavaScript/TypeScript bindings for zkenc witness encryption",
   "type": "module",
   "main": "dist/index.js",
