@@ -16,7 +16,6 @@ use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use ark_std::rand::rngs::StdRng;
 use ark_std::rand::SeedableRng;
 use std::collections::HashMap;
-use std::str::FromStr;
 use wasm_bindgen::prelude::*;
 
 use zkenc_core::{decap, encap, Ciphertext};
