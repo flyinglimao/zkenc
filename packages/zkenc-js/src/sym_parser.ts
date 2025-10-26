@@ -1,9 +1,9 @@
 /**
  * Parser for Circom .sym files
- * 
+ *
  * The .sym file format is:
  * <label_id>,<wire_id>,<component_id>,<signal_name>
- * 
+ *
  * Example:
  * 1,1,172,main.root
  * 2,2,172,main.message
@@ -19,16 +19,16 @@ export interface SymbolEntry {
 
 /**
  * Parse Circom .sym file to get signal name to wire ID mapping
- * 
+ *
  * @param symContent - Content of the .sym file as string
  * @returns Map from signal name to wire ID
  */
 export function parseSymFile(symContent: string): Map<string, number> {
-  const lines = symContent.trim().split('\n');
+  const lines = symContent.trim().split("\n");
   const wireMap = new Map<string, number>();
 
   for (const line of lines) {
-    const parts = line.split(',');
+    const parts = line.split(",");
     if (parts.length !== 4) {
       continue; // Skip invalid lines
     }
@@ -51,7 +51,7 @@ export function parseSymFile(symContent: string): Map<string, number> {
 /**
  * Extract input signals from wire mapping
  * Filters for signals that start with "main." and are inputs
- * 
+ *
  * @param wireMap - Wire mapping from parseSymFile
  * @param maxWireId - Maximum wire ID to consider as input (typically n_pub_in + n_pub_out)
  * @returns Map from simplified signal name (without "main.") to wire ID
@@ -69,7 +69,7 @@ export function getInputSignals(
     }
 
     // Extract input signals (those starting with "main.")
-    if (signalName.startsWith('main.')) {
+    if (signalName.startsWith("main.")) {
       const simplifiedName = signalName.substring(5); // Remove "main." prefix
       inputSignals.set(simplifiedName, wireId);
     }
@@ -80,7 +80,7 @@ export function getInputSignals(
 
 /**
  * Map JSON inputs to wire values using symbol file
- * 
+ *
  * @param inputs - JSON inputs as key-value pairs
  * @param wireMap - Wire mapping from parseSymFile
  * @returns Map from wire ID to field element value (as string)
@@ -91,11 +91,7 @@ export function mapInputsToWires(
 ): Map<number, string | string[]> {
   const wireValues = new Map<number, string | string[]>();
 
-  function flattenInput(
-    key: string,
-    value: any,
-    prefix: string = ''
-  ): void {
+  function flattenInput(key: string, value: any, prefix: string = ""): void {
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
     if (Array.isArray(value)) {
@@ -107,7 +103,7 @@ export function mapInputsToWires(
           wireValues.set(wireId, value[i].toString());
         }
       }
-    } else if (typeof value === 'object' && value !== null) {
+    } else if (typeof value === "object" && value !== null) {
       // Recursively handle nested objects
       for (const [nestedKey, nestedValue] of Object.entries(value)) {
         flattenInput(nestedKey, nestedValue, fullKey);
