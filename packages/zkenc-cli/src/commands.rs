@@ -11,6 +11,7 @@ use ark_bn254::{Bn254, Fr};
 use ark_serialize::{CanonicalDeserialize, CanonicalSerialize};
 use std::collections::HashMap;
 use std::fs;
+use std::str::FromStr;
 
 use crate::circuit::CircomCircuit;
 use crate::crypto;
@@ -401,11 +402,11 @@ fn parse_circuit_inputs(json_str: &str) -> Result<Vec<Fr>> {
                 result.push(num);
             }
             serde_json::Value::String(s) => {
-                // Try to parse as number
-                let num = s
-                    .parse::<u64>()
-                    .context("Failed to parse string as number")?;
-                result.push(Fr::from(num));
+                // Parse as field element using FromStr
+                // This supports large numbers that don't fit in u64
+                let field_elem = Fr::from_str(s)
+                    .map_err(|_| anyhow::anyhow!("Failed to parse string as field element: {}", s))?;
+                result.push(field_elem);
             }
             serde_json::Value::Array(arr) => {
                 for item in arr {
@@ -417,14 +418,10 @@ fn parse_circuit_inputs(json_str: &str) -> Result<Vec<Fr>> {
         Ok(())
     }
 
-    // Process in sorted key order for consistency
-    let mut keys: Vec<_> = obj.keys().collect();
-    keys.sort();
-
-    for key in keys {
-        if let Some(val) = obj.get(key) {
-            flatten_value(val, &mut result)?;
-        }
+    // Process in insertion order (as defined in JSON)
+    // serde_json preserves the order from the JSON file
+    for (_key, val) in obj.iter() {
+        flatten_value(val, &mut result)?;
     }
 
     Ok(result)
@@ -444,10 +441,26 @@ mod tests {
 
         let inputs = parse_circuit_inputs(json).unwrap();
         assert_eq!(inputs.len(), 5); // a(1) + b(3) + c(1)
+        // Order matches JSON insertion order: a, b, c
         assert_eq!(inputs[0], Fr::from(5u64)); // a
         assert_eq!(inputs[1], Fr::from(1u64)); // b[0]
         assert_eq!(inputs[2], Fr::from(2u64)); // b[1]
         assert_eq!(inputs[3], Fr::from(3u64)); // b[2]
         assert_eq!(inputs[4], Fr::from(42u64)); // c
+    }
+
+    #[test]
+    fn test_parse_inputs_preserves_order() {
+        // Test that insertion order is preserved, not alphabetical
+        let json = r#"{
+            "z_field": 10,
+            "a_field": 20
+        }"#;
+
+        let inputs = parse_circuit_inputs(json).unwrap();
+        assert_eq!(inputs.len(), 2);
+        // Should be z_field first, then a_field (insertion order, not sorted)
+        assert_eq!(inputs[0], Fr::from(10u64)); // z_field
+        assert_eq!(inputs[1], Fr::from(20u64)); // a_field
     }
 }
