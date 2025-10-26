@@ -9,5 +9,8 @@ export type {
   EncapResult,
   EncryptResult,
   CircuitFiles,
+  CircuitFilesForEncap,
   EncryptOptions,
 } from "./zkenc.js";
+export { parseSymFile, getInputSignals, mapInputsToWires } from "./sym_parser.js";
+export type { SymbolEntry } from "./sym_parser.js";
