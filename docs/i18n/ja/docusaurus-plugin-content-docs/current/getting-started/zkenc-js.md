@@ -25,10 +25,11 @@ zkenc-js を使用する前に、以下が必要です：
 1. **コンパイルされた Circom 回路**（以下のファイル）：
    - `.r1cs` ファイル（回路制約）
    - `.wasm` ファイル（ウィットネスジェネレーター）
+   - `.sym` ファイル（シンボルファイル）**← 暗号化に必須**
 2. **回路ファイル**は Circom 回路をコンパイルすることで取得できます：
 
 ```bash
-circom your_circuit.circom --r1cs --wasm
+circom your_circuit.circom --r1cs --wasm --sym
 ```
 
 ## クイック例
@@ -42,6 +43,7 @@ import { zkenc, CircuitFiles } from "zkenc-js";
 const circuitFiles: CircuitFiles = {
   r1cs: await fs.readFile("circuit.r1cs"),
   wasm: await fs.readFile("circuit.wasm"),
+  sym: await fs.readFile("circuit.sym"),
 };
 
 // 回路の公開入力を定義

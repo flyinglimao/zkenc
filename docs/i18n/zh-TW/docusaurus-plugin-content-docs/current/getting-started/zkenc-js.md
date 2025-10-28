@@ -23,13 +23,18 @@ pnpm add zkenc-js
 使用 zkenc-js 之前，你需要：
 
 1. **已編譯的 Circom 電路**，包含以下檔案：
+
    - `.r1cs` 檔案（電路約束）
-   - `.wasm` 檔案（見證產生器）
+   - `.wasm` 檔案（見證產生器，用於 decap）
+   - `.sym` 檔案（符號檔案，用於 encap）**← encap 時必需**
+
 2. **電路檔案**可透過編譯 Circom 電路取得：
 
 ```bash
-circom your_circuit.circom --r1cs --wasm
+circom your_circuit.circom --r1cs --wasm --sym
 ```
+
+**注意：**`.sym` 旗標在 v0.2.0 中為必需，以確保 JSON 鍵順序獨立性。
 
 ## 快速範例
 
@@ -42,6 +47,7 @@ import { zkenc, CircuitFiles } from "zkenc-js";
 const circuitFiles: CircuitFiles = {
   r1cs: await fs.readFile("circuit.r1cs"),
   wasm: await fs.readFile("circuit.wasm"),
+  sym: await fs.readFile("circuit.sym", "utf-8"), // v0.2.0+ 必需用於 encap
 };
 
 // 定義電路的公開輸入

@@ -23,9 +23,14 @@ cargo install --path .
 使用 zkenc-cli 之前，你需要：
 
 1. **已编译的 Circom 电路**，包含：
+
    - `.r1cs` 文件（电路约束）
    - `.wasm` 文件（见证生成器）
+   - `.sym` 文件（信号到线路的映射）**← 加密时必需**
+
 2. **输入文件**采用 JSON 格式
+
+使用 `--sym` 旗标编译你的电路以产生所有必需的文件。
 
 ## 快速开始
 
@@ -50,13 +55,14 @@ component main = Example();
 ### 2. 编译电路
 
 ```bash
-circom example.circom --r1cs --wasm --output circuit_output
+circom example.circom --r1cs --wasm --sym --output circuit_output
 ```
 
 这会建立：
 
 - `circuit_output/example.r1cs`
 - `circuit_output/example_js/example.wasm`
+- `circuit_output/example.sym`（zkenc-cli 的符号文件）
 
 ### 3. 准备输入文件
 
@@ -85,6 +91,7 @@ circom example.circom --r1cs --wasm --output circuit_output
 echo "Hello, zkenc!" > message.txt
 zkenc encrypt \
   --circuit circuit_output/example.r1cs \
+  --sym circuit_output/example.sym \
   --input public_inputs.json \
   --message message.txt \
   --output encrypted.bin
@@ -198,7 +205,8 @@ zkenc encap \
 
 **参数：**
 
-- `--circuit <FILE>` - R1CS 电路文件路径（Circom 生成的 `.r1cs`）
+- `--circuit <FILE>` - R1CS 电路文件路径
+- `--sym <FILE>` - 符号文件路径（`.sym` 文件）
 - `--input <FILE>` - 包含公开输入的 JSON 文件路径
 - `--ciphertext <FILE>` - 密文的输出路径
 - `--key <FILE>` - 加密密钥的输出路径
@@ -208,6 +216,7 @@ zkenc encap \
 ```bash
 zkenc encap \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --ciphertext ciphertext.bin \
   --key key.bin
@@ -253,6 +262,7 @@ zkenc decap \
 ```bash
 zkenc encrypt \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --message <MESSAGE_FILE> \
   --output <OUTPUT_FILE> \
@@ -262,6 +272,7 @@ zkenc encrypt \
 **参数：**
 
 - `--circuit <FILE>` - R1CS 电路文件路径（Circom 生成的 `.r1cs`）
+- `--sym <FILE>` - 符号文件路径（`.sym` 文件）
 - `--input <FILE>` - 包含公开输入的 JSON 文件路径
 - `--message <FILE>` - 明文消息文件路径
 - `--output <FILE>` - 组合密文的输出路径
@@ -280,6 +291,7 @@ zkenc encrypt \
 ```bash
 zkenc encrypt \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --message secret.txt \
   --output encrypted.bin
@@ -448,6 +460,7 @@ snarkjs wtns check circuit.r1cs witness.wtns
 # 一步骤加密图片
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message photo.jpg \
   --output encrypted_photo.bin
@@ -468,6 +481,7 @@ zkenc decrypt \
 # 步骤 1：从电路生成密钥
 zkenc encap \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --ciphertext witness_ct.bin \
   --key key.bin
@@ -494,6 +508,7 @@ zkenc decap \
 ```bash
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message message.txt \
   --output encrypted.bin \
@@ -517,6 +532,7 @@ zkenc encrypt \
 for file in documents/*.txt; do
   zkenc encrypt \
     --circuit circuit.r1cs \
+    --sym circuit.sym \
     --input public.json \
     --message "$file" \
     --output "encrypted/$(basename $file).enc"
@@ -535,6 +551,7 @@ zkenc-cli 与 zkenc-js **完全兼容**！你可以使用一个工具加密，�
 # 使用 CLI 加密
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message message.txt \
   --output encrypted.bin
@@ -575,6 +592,7 @@ zkenc decrypt \
 # 只有解开谜题的使用者才能解密
 zkenc encrypt \
   --circuit puzzle.r1cs \
+  --sym puzzle.sym \
   --input question.json \
   --message "秘密答案：42" \
   --output secret.bin
@@ -586,6 +604,7 @@ zkenc encrypt \
 # 需要计算工作来生成见证
 zkenc encrypt \
   --circuit timelock.r1cs \
+  --sym timelock.sym \
   --input params.json \
   --message future_message.txt \
   --output locked.bin
@@ -597,6 +616,7 @@ zkenc encrypt \
 # 加密并嵌入公开输入
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym
   --input public.json \
   --message secret.txt \
   --output package.bin

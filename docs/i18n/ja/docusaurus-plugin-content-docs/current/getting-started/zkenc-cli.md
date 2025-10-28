@@ -26,8 +26,11 @@ zkenc-cli を使用する前に、以下が必要です：
 
    - `.r1cs` ファイル（回路制約）
    - `.wasm` ファイル（ウィットネスジェネレーター）
+   - `.sym` ファイル（シンボルファイル）**← 暗号化に必須**
 
 2. **入力ファイル**（JSON 形式）
+
+使用する回路をコンパイルするには `--sym` フラグを使用して、必要なすべてのファイルを生成してください。
 
 ## クイックスタート
 
@@ -52,13 +55,14 @@ component main = Example();
 ### 2. 回路をコンパイル
 
 ```bash
-circom example.circom --r1cs --wasm --output circuit_output
+circom example.circom --r1cs --wasm --sym --output circuit_output
 ```
 
 これにより以下が作成されます：
 
 - `circuit_output/example.r1cs`
 - `circuit_output/example_js/example.wasm`
+- `circuit_output/example.sym`（zkenc-cli のシンボルファイル）
 
 ### 3. 入力ファイルを準備
 
@@ -87,6 +91,7 @@ circom example.circom --r1cs --wasm --output circuit_output
 echo "Hello, zkenc!" > message.txt
 zkenc encrypt \
   --circuit circuit_output/example.r1cs \
+  --sym circuit_output/example.sym \
   --input public_inputs.json \
   --message message.txt \
   --output encrypted.bin
@@ -201,6 +206,7 @@ zkenc encap \
 **引数：**
 
 - `--circuit <FILE>` - R1CS 回路ファイルへのパス（Circom の `.r1cs`）
+- `--sym <FILE>` - シンボルファイルへのパス（`.sym` ファイル）
 - `--input <FILE>` - 公開入力を含む JSON ファイルへのパス
 - `--ciphertext <FILE>` - 暗号文の出力パス
 - `--key <FILE>` - 暗号化鍵の出力パス
@@ -210,6 +216,7 @@ zkenc encap \
 ```bash
 zkenc encap \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --ciphertext ciphertext.bin \
   --key key.bin
@@ -255,6 +262,7 @@ zkenc decap \
 ```bash
 zkenc encrypt \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --message <MESSAGE_FILE> \
   --output <OUTPUT_FILE> \
@@ -264,6 +272,7 @@ zkenc encrypt \
 **引数：**
 
 - `--circuit <FILE>` - R1CS 回路ファイルへのパス（Circom の `.r1cs`）
+- `--sym <FILE>` - シンボルファイルへのパス（`.sym` ファイル）
 - `--input <FILE>` - 公開入力を含む JSON ファイルへのパス
 - `--message <FILE>` - 平文メッセージファイルへのパス
 - `--output <FILE>` - 結合暗号文の出力パス
@@ -282,6 +291,7 @@ zkenc encrypt \
 ```bash
 zkenc encrypt \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --message secret.txt \
   --output encrypted.bin
@@ -450,6 +460,7 @@ snarkjs wtns check circuit.r1cs witness.wtns
 # 画像を1ステップで暗号化
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message photo.jpg \
   --output encrypted_photo.bin
@@ -470,6 +481,7 @@ zkenc decrypt \
 # ステップ 1: 回路から鍵を生成
 zkenc encap \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --ciphertext witness_ct.bin \
   --key key.bin
@@ -496,6 +508,7 @@ zkenc decap \
 ```bash
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message message.txt \
   --output encrypted.bin \
@@ -519,6 +532,7 @@ zkenc encrypt \
 for file in documents/*.txt; do
   zkenc encrypt \
     --circuit circuit.r1cs \
+    --sym circuit.sym \
     --input public.json \
     --message "$file" \
     --output "encrypted/$(basename $file).enc"
@@ -537,6 +551,7 @@ zkenc-cli は zkenc-js と**完全に互換性があります**！ 一方のツ�
 # CLI で暗号化
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym \
   --input public.json \
   --message message.txt \
   --output encrypted.bin
@@ -577,6 +592,7 @@ zkenc decrypt \
 # パズルを解くユーザーのみが復号化できる
 zkenc encrypt \
   --circuit puzzle.r1cs \
+  --sym puzzle.sym \
   --input question.json \
   --message "秘密の答え: 42" \
   --output secret.bin
@@ -588,6 +604,7 @@ zkenc encrypt \
 # ウィットネスを生成するために計算作業が必要
 zkenc encrypt \
   --circuit timelock.r1cs \
+  --sym timelock.sym \
   --input params.json \
   --message future_message.txt \
   --output locked.bin
@@ -599,6 +616,7 @@ zkenc encrypt \
 # 公開入力を埋め込んで暗号化
 zkenc encrypt \
   --circuit circuit.r1cs \
+  --sym circuit.sym
   --input public.json \
   --message secret.txt \
   --output package.bin

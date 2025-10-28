@@ -20,15 +20,16 @@ pnpm add zkenc-js
 
 ## 前置需求
 
-使用 zkenc-js 之前，你需要：
+使用 zkenc-js 之前,你需要：
 
 1. **已编译的 Circom 电路**，包含以下文件：
    - `.r1cs` 文件（电路约束）
    - `.wasm` 文件（见证生成器）
+   - `.sym` 文件（符号文件）**← 加密时必需**
 2. **电路文件**可通过编译 Circom 电路取得：
 
 ```bash
-circom your_circuit.circom --r1cs --wasm
+circom your_circuit.circom --r1cs --wasm --sym
 ```
 
 ## 快速范例
@@ -42,6 +43,7 @@ import { zkenc, CircuitFiles } from "zkenc-js";
 const circuitFiles: CircuitFiles = {
   r1cs: await fs.readFile("circuit.r1cs"),
   wasm: await fs.readFile("circuit.wasm"),
+  sym: await fs.readFile("circuit.sym"),
 };
 
 // 定义电路的公开输入

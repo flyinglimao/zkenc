@@ -32,12 +32,12 @@ sudo cp target/release/zkenc /usr/local/bin/
 
 zkenc-cli provides four main commands:
 
-| Command   | Purpose                    | Input                             | Output           |
-| --------- | -------------------------- | --------------------------------- | ---------------- |
-| `encap`   | Generate key using circuit | R1CS + SYM + public inputs        | Ciphertext + Key |
-| `decap`   | Recover key with witness   | R1CS + witness + ciphertext       | Key              |
-| `encrypt` | Encrypt message (high-level) | R1CS + SYM + inputs + message   | Combined CT      |
-| `decrypt` | Decrypt message (high-level) | R1CS + witness + combined CT    | Decrypted file   |
+| Command   | Purpose                      | Input                         | Output           |
+| --------- | ---------------------------- | ----------------------------- | ---------------- |
+| `encap`   | Generate key using circuit   | R1CS + SYM + public inputs    | Ciphertext + Key |
+| `decap`   | Recover key with witness     | R1CS + witness + ciphertext   | Key              |
+| `encrypt` | Encrypt message (high-level) | R1CS + SYM + inputs + message | Combined CT      |
+| `decrypt` | Decrypt message (high-level) | R1CS + witness + combined CT  | Decrypted file   |
 
 ## Commands
 

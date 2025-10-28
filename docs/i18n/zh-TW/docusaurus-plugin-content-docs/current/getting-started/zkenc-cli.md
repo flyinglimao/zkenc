@@ -23,9 +23,14 @@ cargo install --path .
 使用 zkenc-cli 之前，你需要：
 
 1. **已編譯的 Circom 電路**，包含：
+
    - `.r1cs` 檔案（電路約束）
    - `.wasm` 檔案（見證產生器）
+   - `.sym` 檔案（信號到線路的映射）**← 加密時必需**
+
 2. **輸入檔案**採用 JSON 格式
+
+使用 `--sym` 旗標編譯你的電路以產生所有必需的檔案。
 
 ## 快速開始
 
@@ -50,13 +55,14 @@ component main = Example();
 ### 2. 編譯電路
 
 ```bash
-circom example.circom --r1cs --wasm --output circuit_output
+circom example.circom --r1cs --wasm --sym --output circuit_output
 ```
 
 這會建立：
 
 - `circuit_output/example.r1cs`
 - `circuit_output/example_js/example.wasm`
+- `circuit_output/example.sym`（zkenc-cli 的符號檔案）
 
 ### 3. 準備輸入檔案
 
@@ -85,6 +91,7 @@ circom example.circom --r1cs --wasm --output circuit_output
 echo "Hello, zkenc!" > message.txt
 zkenc encrypt \
   --circuit circuit_output/example.r1cs \
+  --sym circuit_output/example.sym \
   --input public_inputs.json \
   --message message.txt \
   --output encrypted.bin
@@ -92,7 +99,7 @@ zkenc encrypt \
 
 此命令會：
 
-- 從公開輸入產生見證加密金鑰（encap）
+- 從公開輸入使用 .sym 檔案產生見證加密金鑰（encap）
 - 使用 AES-256-GCM 加密你的訊息
 - 將所有內容組合成單一密文檔案
 - 預設將公開輸入嵌入密文中
@@ -105,6 +112,9 @@ zkenc encrypt \
    - Constraints: 2
    - Public inputs: 1
    - Wires: 4
+
+📂 Loading symbol file...
+   - Signal mapping loaded
 
 📋 Loading public inputs from JSON...
    - Parsed 1 field elements
@@ -191,6 +201,7 @@ cat decrypted.txt
 ```bash
 zkenc encap \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --ciphertext <OUTPUT_CT> \
   --key <OUTPUT_KEY>
@@ -199,6 +210,7 @@ zkenc encap \
 **參數：**
 
 - `--circuit <FILE>` - R1CS 電路檔案路徑（Circom 產生的 `.r1cs`）
+- `--sym <FILE>` - 符號檔案路徑（Circom 產生的 `.sym`）**← 必需**
 - `--input <FILE>` - 包含公開輸入的 JSON 檔案路徑
 - `--ciphertext <FILE>` - 密文的輸出路徑
 - `--key <FILE>` - 加密金鑰的輸出路徑
@@ -208,6 +220,7 @@ zkenc encap \
 ```bash
 zkenc encap \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --ciphertext ciphertext.bin \
   --key key.bin
@@ -253,6 +266,7 @@ zkenc decap \
 ```bash
 zkenc encrypt \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --message <MESSAGE_FILE> \
   --output <OUTPUT_FILE> \
@@ -262,6 +276,7 @@ zkenc encrypt \
 **參數：**
 
 - `--circuit <FILE>` - R1CS 電路檔案路徑（Circom 產生的 `.r1cs`）
+- `--sym <FILE>` - 符號檔案路徑（Circom 產生的 `.sym`）**← 必需**
 - `--input <FILE>` - 包含公開輸入的 JSON 檔案路徑
 - `--message <FILE>` - 明文訊息檔案路徑
 - `--output <FILE>` - 組合密文的輸出路徑
@@ -271,7 +286,7 @@ zkenc encrypt \
 
 此命令將 encap 和 AES 加密結合成單一步驟：
 
-1. 從公開輸入產生見證加密金鑰
+1. 從公開輸入使用 .sym 檔案產生見證加密金鑰以正確對應輸入
 2. 使用 AES-256-GCM 加密訊息
 3. 建立組合密文，格式為：`[旗標][見證長度][見證密文][公開輸入長度][公開輸入][加密訊息]`
 
@@ -280,6 +295,7 @@ zkenc encrypt \
 ```bash
 zkenc encrypt \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --message secret.txt \
   --output encrypted.bin
