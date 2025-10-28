@@ -24,14 +24,15 @@ fn test_sudoku_e2e() -> Result<()> {
 
     // File paths
     let circuit_path = test_dir.join("r1cs/sudoku.r1cs");
+    let sym_path = test_dir.join("r1cs/sudoku.sym");
     let input_path = test_dir.join("inputs/sudoku_basic.json");
     let witness_path = test_dir.join("inputs/sudoku_sudoku_basic.wtns");
 
-    let ciphertext_path = temp_dir.join("ciphertext.bin");
+    let ciphertext_path = temp_dir.join("witness.ct");
     let key1_path = temp_dir.join("key_encap.bin");
     let key2_path = temp_dir.join("key_decap.bin");
     let message_path = temp_dir.join("message.txt");
-    let encrypted_path = temp_dir.join("encrypted.bin");
+    let combined_ciphertext_path = temp_dir.join("combined.bin");
     let decrypted_path = temp_dir.join("decrypted.txt");
 
     // Create test message
@@ -47,6 +48,7 @@ fn test_sudoku_e2e() -> Result<()> {
     println!("------------------");
     zkenc_cli::commands::encap_command(
         circuit_path.to_str().unwrap(),
+        sym_path.to_str().unwrap(),
         input_path.to_str().unwrap(),
         ciphertext_path.to_str().unwrap(),
         key1_path.to_str().unwrap(),
@@ -62,18 +64,21 @@ fn test_sudoku_e2e() -> Result<()> {
     println!("   - Ciphertext: {} bytes", ct_size);
     println!("   - Key: {} bytes", key_size);
 
-    // === Step 2: Encrypt ===
+    // === Step 2: Encrypt (high-level) ===
     println!("\n🔒 Step 2: Encrypt");
     println!("------------------");
     zkenc_cli::commands::encrypt_command(
-        key1_path.to_str().unwrap(),
+        circuit_path.to_str().unwrap(),
+        sym_path.to_str().unwrap(),
+        input_path.to_str().unwrap(),
         message_path.to_str().unwrap(),
-        encrypted_path.to_str().unwrap(),
+        combined_ciphertext_path.to_str().unwrap(),
+        true,
     )?;
 
-    assert!(encrypted_path.exists(), "Encrypted file should exist");
-    let encrypted_size = fs::metadata(&encrypted_path)?.len();
-    println!("\n✅ Encrypt complete: {} bytes", encrypted_size);
+    assert!(combined_ciphertext_path.exists(), "Combined ciphertext file should exist");
+    let combined_size = fs::metadata(&combined_ciphertext_path)?.len();
+    println!("\n✅ Encrypt complete: {} bytes", combined_size);
 
     // === Step 3: Decap ===
     println!("\n🔓 Step 3: Decap");
@@ -88,12 +93,13 @@ fn test_sudoku_e2e() -> Result<()> {
     assert!(key2_path.exists(), "Recovered key file should exist");
     println!("\n✅ Decap complete");
 
-    // === Step 4: Decrypt ===
+    // === Step 4: Decrypt (high-level) ===
     println!("\n🔓 Step 4: Decrypt");
     println!("------------------");
     zkenc_cli::commands::decrypt_command(
-        key2_path.to_str().unwrap(),
-        encrypted_path.to_str().unwrap(),
+        circuit_path.to_str().unwrap(),
+        witness_path.to_str().unwrap(),
+        combined_ciphertext_path.to_str().unwrap(),
         decrypted_path.to_str().unwrap(),
     )?;
 
@@ -149,6 +155,7 @@ fn test_sudoku_e2e_wrong_witness() -> Result<()> {
     fs::create_dir_all(&temp_dir)?;
 
     let circuit_path = test_dir.join("r1cs/sudoku.r1cs");
+    let sym_path = test_dir.join("r1cs/sudoku.sym");
     let input_path = test_dir.join("inputs/sudoku_basic.json");
     let wrong_witness_path = test_dir.join("inputs/sudoku_sudoku_general.wtns"); // Different witness
 
@@ -159,6 +166,7 @@ fn test_sudoku_e2e_wrong_witness() -> Result<()> {
     println!("🔐 Encap with correct inputs...");
     zkenc_cli::commands::encap_command(
         circuit_path.to_str().unwrap(),
+        sym_path.to_str().unwrap(),
         input_path.to_str().unwrap(),
         ciphertext_path.to_str().unwrap(),
         key_path.to_str().unwrap(),

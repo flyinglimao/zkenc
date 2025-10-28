@@ -17,11 +17,12 @@ use crate::circuit::CircomCircuit;
 use crate::crypto;
 use crate::r1cs::R1csFile;
 use crate::witness::WitnessFile;
-use zkenc_core::{decap, encap, Ciphertext, Key};
+use zkenc_core::{decap, encap, Ciphertext};
 
 /// Encap command: Generate ciphertext and key from circuit + public inputs
 pub fn encap_command(
     circuit_path: &str,
+    sym_path: &str,
     input_path: &str,
     ciphertext_path: &str,
     key_path: &str,
@@ -33,19 +34,31 @@ pub fn encap_command(
     println!("   - Public inputs: {}", r1cs.n_pub_in);
     println!("   - Wires: {}", r1cs.n_wires);
 
-    // Parse public inputs from JSON
+    // Parse symbol file to get signal name -> wire ID mapping
+    println!("\n📂 Loading symbol file...");
+    let sym_content = fs::read_to_string(sym_path).context("Failed to read symbol file")?;
+    let wire_map =
+        super::sym_parser::parse_sym_file(&sym_content).context("Failed to parse symbol file")?;
+    let input_signals = super::sym_parser::get_input_signals(&wire_map, Some(r1cs.n_pub_in));
+
+    // Parse public inputs from JSON with key names
     println!("\n📋 Loading public inputs from JSON...");
     let input_json = fs::read_to_string(input_path).context("Failed to read input JSON file")?;
-    let inputs = parse_circuit_inputs(&input_json).context("Failed to parse input JSON")?;
+    let inputs =
+        parse_circuit_inputs_with_keys(&input_json).context("Failed to parse input JSON")?;
 
     println!("   - Parsed {} field elements", inputs.len());
 
-    // Create witness map with constant (wire 0) and public inputs
+    // Map JSON inputs to wire values using symbol file
     let mut witness = HashMap::new();
     witness.insert(0, Fr::from(1u64)); // Wire 0 is always 1 (constant)
 
-    for (i, value) in inputs.iter().enumerate() {
-        witness.insert((i + 1) as u32, *value);
+    // Use symbol file to map inputs correctly (key order independent)
+    for (key, value) in inputs.iter() {
+        // Try to find the wire ID for this input key
+        if let Some(&wire_id) = input_signals.get(key) {
+            witness.insert(wire_id, *value);
+        }
     }
 
     println!("\n🔐 Running Encap...");
@@ -143,6 +156,7 @@ pub fn decap_command(
 /// This format is compatible with zkenc-js encrypt() function
 pub fn encrypt_command(
     circuit_path: &str,
+    sym_path: &str,
     input_path: &str,
     message_path: &str,
     output_path: &str,
@@ -150,26 +164,38 @@ pub fn encrypt_command(
 ) -> Result<()> {
     // Step 1: Run encap to get witness ciphertext and key
     println!("🔐 Step 1: Running Encap...");
-    println!("� Loading R1CS circuit...");
+    println!("📂 Loading R1CS circuit...");
     let r1cs = R1csFile::from_file(circuit_path).context("Failed to load R1CS circuit")?;
 
     println!("   - Constraints: {}", r1cs.n_constraints);
     println!("   - Public inputs: {}", r1cs.n_pub_in);
     println!("   - Wires: {}", r1cs.n_wires);
 
-    // Parse public inputs from JSON
+    // Parse symbol file to get signal name -> wire ID mapping
+    println!("\n📂 Loading symbol file...");
+    let sym_content = fs::read_to_string(sym_path).context("Failed to read symbol file")?;
+    let wire_map =
+        super::sym_parser::parse_sym_file(&sym_content).context("Failed to parse symbol file")?;
+    let input_signals = super::sym_parser::get_input_signals(&wire_map, Some(r1cs.n_pub_in));
+
+    // Parse public inputs from JSON with key names
     println!("\n📋 Loading public inputs from JSON...");
     let input_json = fs::read_to_string(input_path).context("Failed to read input JSON file")?;
-    let inputs = parse_circuit_inputs(&input_json).context("Failed to parse input JSON")?;
+    let inputs =
+        parse_circuit_inputs_with_keys(&input_json).context("Failed to parse input JSON")?;
 
     println!("   - Parsed {} field elements", inputs.len());
 
-    // Create witness map with constant (wire 0) and public inputs
+    // Create witness map with constant (wire 0) and public inputs (using sym mapping)
     let mut witness = HashMap::new();
     witness.insert(0, Fr::from(1u64)); // Wire 0 is always 1 (constant)
 
-    for (i, value) in inputs.iter().enumerate() {
-        witness.insert((i + 1) as u32, *value);
+    // Use symbol file to map inputs correctly (key order independent)
+    for (key, value) in inputs.iter() {
+        // Try to find the wire ID for this input key
+        if let Some(&wire_id) = input_signals.get(key) {
+            witness.insert(wire_id, *value);
+        }
     }
 
     let mut circuit =
@@ -201,7 +227,10 @@ pub fn encrypt_command(
 
     let encrypted_message =
         crypto::encrypt_gcm(key.as_bytes(), &message).context("Message encryption failed")?;
-    println!("   ✅ Message encrypted ({} bytes)", encrypted_message.len());
+    println!(
+        "   ✅ Message encrypted ({} bytes)",
+        encrypted_message.len()
+    );
 
     // Step 3: Combine into zkenc-js compatible format
     println!("\n� Step 3: Creating combined ciphertext...");
@@ -217,10 +246,8 @@ pub fn encrypt_command(
     // Format: [flag(1)][witnessLen(4)][witnessCT][publicLen(4)?][publicInput?][encryptedMsg]
     let flag: u8 = if include_public_input { 1 } else { 0 };
     let header_size = if include_public_input { 9 } else { 5 };
-    let total_size = header_size
-        + witness_ct_bytes.len()
-        + public_input_bytes.len()
-        + encrypted_message.len();
+    let total_size =
+        header_size + witness_ct_bytes.len() + public_input_bytes.len() + encrypted_message.len();
 
     let mut combined = Vec::with_capacity(total_size);
 
@@ -325,10 +352,7 @@ pub fn decrypt_command(
 
     // Extract encrypted message
     let encrypted_message = &combined[offset..];
-    println!(
-        "   - Encrypted message: {} bytes",
-        encrypted_message.len()
-    );
+    println!("   - Encrypted message: {} bytes", encrypted_message.len());
 
     // Step 2: Load circuit and witness
     println!("\n🔓 Step 2: Running Decap...");
@@ -404,8 +428,9 @@ fn parse_circuit_inputs(json_str: &str) -> Result<Vec<Fr>> {
             serde_json::Value::String(s) => {
                 // Parse as field element using FromStr
                 // This supports large numbers that don't fit in u64
-                let field_elem = Fr::from_str(s)
-                    .map_err(|_| anyhow::anyhow!("Failed to parse string as field element: {}", s))?;
+                let field_elem = Fr::from_str(s).map_err(|_| {
+                    anyhow::anyhow!("Failed to parse string as field element: {}", s)
+                })?;
                 result.push(field_elem);
             }
             serde_json::Value::Array(arr) => {
@@ -427,6 +452,57 @@ fn parse_circuit_inputs(json_str: &str) -> Result<Vec<Fr>> {
     Ok(result)
 }
 
+/// Parse circuit inputs from JSON, preserving key names
+fn parse_circuit_inputs_with_keys(json_str: &str) -> Result<HashMap<String, Fr>> {
+    let value: serde_json::Value = serde_json::from_str(json_str).context("Invalid JSON")?;
+
+    let obj = value.as_object().context("JSON must be an object")?;
+
+    let mut result = HashMap::new();
+
+    // Flatten all values in the JSON object with their keys
+    fn flatten_value(
+        val: &serde_json::Value,
+        key: &str,
+        result: &mut HashMap<String, Fr>,
+    ) -> Result<()> {
+        match val {
+            serde_json::Value::Number(n) => {
+                let num = if let Some(u) = n.as_u64() {
+                    Fr::from(u)
+                } else if let Some(i) = n.as_i64() {
+                    Fr::from(i as u64)
+                } else {
+                    anyhow::bail!("Unsupported number format");
+                };
+                result.insert(key.to_string(), num);
+            }
+            serde_json::Value::String(s) => {
+                // Parse as field element using FromStr
+                let field_elem = Fr::from_str(s).map_err(|_| {
+                    anyhow::anyhow!("Failed to parse string as field element: {}", s)
+                })?;
+                result.insert(key.to_string(), field_elem);
+            }
+            serde_json::Value::Array(arr) => {
+                for (idx, item) in arr.iter().enumerate() {
+                    let array_key = format!("{}[{}]", key, idx);
+                    flatten_value(item, &array_key, result)?;
+                }
+            }
+            _ => anyhow::bail!("Unsupported JSON type"),
+        }
+        Ok(())
+    }
+
+    // Process all keys in JSON
+    for (key, val) in obj.iter() {
+        flatten_value(val, key, &mut result)?;
+    }
+
+    Ok(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -441,7 +517,7 @@ mod tests {
 
         let inputs = parse_circuit_inputs(json).unwrap();
         assert_eq!(inputs.len(), 5); // a(1) + b(3) + c(1)
-        // Order matches JSON insertion order: a, b, c
+                                     // Order matches JSON insertion order: a, b, c
         assert_eq!(inputs[0], Fr::from(5u64)); // a
         assert_eq!(inputs[1], Fr::from(1u64)); // b[0]
         assert_eq!(inputs[2], Fr::from(2u64)); // b[1]

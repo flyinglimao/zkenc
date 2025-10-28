@@ -8,6 +8,7 @@ use zkenc_cli::r1cs;
 use zkenc_cli::witness;
 
 mod commands;
+mod sym_parser;
 
 /// zkenc CLI - Zero-Knowledge Encryption Tool
 #[derive(Parser)]
@@ -25,6 +26,9 @@ enum Commands {
         /// R1CS circuit file path (.r1cs)
         #[arg(short, long)]
         circuit: String,
+        /// Symbol file path (.sym from Circom) - Required for correct input mapping
+        #[arg(short, long)]
+        sym: String,
         /// Public input JSON file (e.g., sudoku puzzle)
         #[arg(short, long)]
         input: String,
@@ -55,6 +59,9 @@ enum Commands {
         /// R1CS circuit file path (.r1cs)
         #[arg(short, long)]
         circuit: String,
+        /// Symbol file path (.sym from Circom) - Required for correct input mapping
+        #[arg(short, long)]
+        sym: String,
         /// Public input JSON file
         #[arg(short, long)]
         input: String,
@@ -91,11 +98,12 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Encap {
             circuit,
+            sym,
             input,
             ciphertext,
             key,
         } => {
-            commands::encap_command(&circuit, &input, &ciphertext, &key)?;
+            commands::encap_command(&circuit, &sym, &input, &ciphertext, &key)?;
         }
         Commands::Decap {
             circuit,
@@ -108,12 +116,13 @@ fn main() -> Result<()> {
 
         Commands::Encrypt {
             circuit,
+            sym,
             input,
             message,
             output,
             no_public_input,
         } => {
-            commands::encrypt_command(&circuit, &input, &message, &output, !no_public_input)?;
+            commands::encrypt_command(&circuit, &sym, &input, &message, &output, !no_public_input)?;
         }
         Commands::Decrypt {
             circuit,
