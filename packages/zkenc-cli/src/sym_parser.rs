@@ -32,15 +32,21 @@ pub fn parse_sym_file(sym_content: &str) -> Result<HashMap<String, u32>> {
         }
 
         // Parse wire_id as i32 first to handle negative values
-        let wire_id_signed: i32 = parts[1].trim().parse()
-            .map_err(|e| anyhow::anyhow!("Line {}: Failed to parse wire_id '{}': {}", line_num + 1, parts[1], e))?;
-        
+        let wire_id_signed: i32 = parts[1].trim().parse().map_err(|e| {
+            anyhow::anyhow!(
+                "Line {}: Failed to parse wire_id '{}': {}",
+                line_num + 1,
+                parts[1],
+                e
+            )
+        })?;
+
         // Only include signals with valid wire IDs (wireId >= 0)
         // Wire ID -1 means internal signal, not an input/output
         if wire_id_signed < 0 {
             continue;
         }
-        
+
         let wire_id = wire_id_signed as u32;
         let signal_name = parts[3].trim().to_string();
 

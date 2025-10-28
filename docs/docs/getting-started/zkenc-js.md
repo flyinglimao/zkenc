@@ -25,11 +25,14 @@ Before using zkenc-js, you need:
 1. **A compiled Circom circuit** with the following files:
    - `.r1cs` file (circuit constraints)
    - `.wasm` file (witness generator)
+   - `.sym` file (signal-to-wire mapping) **← Required for encap**
 2. **Circuit files** can be obtained by compiling a Circom circuit:
 
 ```bash
-circom your_circuit.circom --r1cs --wasm
+circom your_circuit.circom --r1cs --wasm --sym
 ```
+
+**Note:** The `--sym` flag is essential for proper encapsulation. The `.sym` file maps signal names to wire indices, ensuring your JSON inputs are correctly processed regardless of key order.
 
 ## Quick Example
 
@@ -42,6 +45,7 @@ import { zkenc, CircuitFiles } from "zkenc-js";
 const circuitFiles: CircuitFiles = {
   r1cs: await fs.readFile("circuit.r1cs"),
   wasm: await fs.readFile("circuit.wasm"),
+  sym: await fs.readFile("circuit.sym", "utf-8"), // Symbol file required for encap
 };
 
 // Define public inputs for the circuit
@@ -107,8 +111,12 @@ The low-level API (`encap` and `decap`) provides fine-grained control:
 
 ```typescript
 // Encapsulate: generate key based on circuit
+// Note: encap uses the .sym file for input mapping
 const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
-  circuitFiles,
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    symContent: await fs.readFile("circuit.sym", "utf-8"), // Symbol file required here
+  },
   publicInputs
 );
 
@@ -116,8 +124,12 @@ const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
 const encryptedMessage = await aesEncrypt(key, message);
 
 // Decapsulate: recover key with valid witness
+// Note: decap uses the .wasm file for witness calculation
 const recoveredKey = await zkenc.decap(
-  circuitFiles,
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    wasmBuffer: await fs.readFile("circuit.wasm"), // WASM file required here
+  },
   witnessCiphertext,
   fullInputs
 );
@@ -145,6 +157,7 @@ import fs from "fs/promises";
 const circuitFiles = {
   r1cs: await fs.readFile("circuit.r1cs"),
   wasm: await fs.readFile("circuit.wasm"),
+  sym: await fs.readFile("circuit.sym", "utf-8"), // Load symbol file for encap
 };
 ```
 
@@ -156,14 +169,16 @@ In browser environments, you need to load files differently:
 import { zkenc } from "zkenc-js";
 
 // Load files using fetch
-const [r1csResponse, wasmResponse] = await Promise.all([
+const [r1csResponse, wasmResponse, symResponse] = await Promise.all([
   fetch("/circuits/circuit.r1cs"),
   fetch("/circuits/circuit.wasm"),
+  fetch("/circuits/circuit.sym"),
 ]);
 
 const circuitFiles = {
   r1cs: new Uint8Array(await r1csResponse.arrayBuffer()),
   wasm: new Uint8Array(await wasmResponse.arrayBuffer()),
+  sym: await symResponse.text(), // Symbol file is text
 };
 ```
 

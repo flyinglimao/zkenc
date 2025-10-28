@@ -76,7 +76,10 @@ fn test_sudoku_e2e() -> Result<()> {
         true,
     )?;
 
-    assert!(combined_ciphertext_path.exists(), "Combined ciphertext file should exist");
+    assert!(
+        combined_ciphertext_path.exists(),
+        "Combined ciphertext file should exist"
+    );
     let combined_size = fs::metadata(&combined_ciphertext_path)?.len();
     println!("\n✅ Encrypt complete: {} bytes", combined_size);
 

@@ -32,12 +32,12 @@ sudo cp target/release/zkenc /usr/local/bin/
 
 zkenc-cli provides four main commands:
 
-| Command   | Purpose                    | Input                       | Output           |
-| --------- | -------------------------- | --------------------------- | ---------------- |
-| `encap`   | Generate key using circuit | R1CS + public inputs        | Ciphertext + Key |
-| `decap`   | Recover key with witness   | R1CS + witness + ciphertext | Key              |
-| `encrypt` | Encrypt message with key   | Key + message               | Encrypted file   |
-| `decrypt` | Decrypt message with key   | Key + encrypted file        | Decrypted file   |
+| Command   | Purpose                    | Input                             | Output           |
+| --------- | -------------------------- | --------------------------------- | ---------------- |
+| `encap`   | Generate key using circuit | R1CS + SYM + public inputs        | Ciphertext + Key |
+| `decap`   | Recover key with witness   | R1CS + witness + ciphertext       | Key              |
+| `encrypt` | Encrypt message (high-level) | R1CS + SYM + inputs + message   | Combined CT      |
+| `decrypt` | Decrypt message (high-level) | R1CS + witness + combined CT    | Decrypted file   |
 
 ## Commands
 
@@ -52,6 +52,7 @@ zkenc encap [OPTIONS]
 **Required Options:**
 
 - `-c, --circuit <FILE>` - Path to R1CS circuit file (.r1cs)
+- `-s, --sym <FILE>` - Path to symbol file (.sym) **← Required**
 - `-i, --input <FILE>` - Path to JSON file with public inputs
 - `--ciphertext <FILE>` - Output path for ciphertext
 - `-k, --key <FILE>` - Output path for encryption key
@@ -61,6 +62,7 @@ zkenc encap [OPTIONS]
 ```bash
 zkenc encap \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input public_inputs.json \
   --ciphertext witness.ct \
   --key encryption.key
@@ -87,6 +89,9 @@ zkenc encap \
    - Constraints: 12847
    - Public inputs: 81
    - Wires: 13129
+
+📂 Loading symbol file...
+   - Signal mapping loaded
 
 📋 Loading public inputs from JSON...
    - Parsed 81 field elements

@@ -26,8 +26,11 @@ Before using zkenc-cli, you need:
 
    - `.r1cs` file (circuit constraints)
    - `.wasm` file (witness generator)
+   - `.sym` file (signal-to-wire mapping) **← Required for encrypt**
 
 2. **Input files** in JSON format
+
+Compile your circuit with the `--sym` flag to generate all necessary files.
 
 ## Quick Start
 
@@ -52,13 +55,14 @@ component main = Example();
 ### 2. Compile the Circuit
 
 ```bash
-circom example.circom --r1cs --wasm --output circuit_output
+circom example.circom --r1cs --wasm --sym --output circuit_output
 ```
 
 This creates:
 
 - `circuit_output/example.r1cs`
 - `circuit_output/example_js/example.wasm`
+- `circuit_output/example.sym` (symbol file for zkenc-cli)
 
 ### 3. Prepare Input Files
 
@@ -87,6 +91,7 @@ Use `encrypt` to perform witness encryption in one step:
 echo "Hello, zkenc!" > message.txt
 zkenc encrypt \
   --circuit circuit_output/example.r1cs \
+  --sym circuit_output/example.sym \
   --input public_inputs.json \
   --message message.txt \
   --output encrypted.bin
@@ -94,7 +99,7 @@ zkenc encrypt \
 
 This command:
 
-- Generates a witness-encrypted key from public inputs (encap)
+- Generates a witness-encrypted key from public inputs using .sym file (encap)
 - Encrypts your message with AES-256-GCM
 - Combines everything into a single ciphertext file
 - Embeds public inputs in the ciphertext (by default)
@@ -107,6 +112,9 @@ Output:
    - Constraints: 2
    - Public inputs: 1
    - Wires: 4
+
+📋 Loading symbol file...
+   - Signal mapping loaded
 
 📋 Loading public inputs from JSON...
    - Parsed 1 field elements
@@ -193,6 +201,7 @@ Generate ciphertext and encryption key from circuit and public inputs.
 ```bash
 zkenc encap \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --ciphertext <OUTPUT_CT> \
   --key <OUTPUT_KEY>
@@ -201,6 +210,7 @@ zkenc encap \
 **Arguments:**
 
 - `--circuit <FILE>` - Path to R1CS circuit file (`.r1cs` from Circom)
+- `--sym <FILE>` - Path to symbol file (`.sym` from Circom) **← Required**
 - `--input <FILE>` - Path to JSON file with public inputs
 - `--ciphertext <FILE>` - Output path for ciphertext
 - `--key <FILE>` - Output path for encryption key
@@ -210,6 +220,7 @@ zkenc encap \
 ```bash
 zkenc encap \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --ciphertext ciphertext.bin \
   --key key.bin
@@ -255,6 +266,7 @@ Encrypt a message using witness encryption (high-level, one-step operation).
 ```bash
 zkenc encrypt \
   --circuit <R1CS_FILE> \
+  --sym <SYM_FILE> \
   --input <JSON_FILE> \
   --message <MESSAGE_FILE> \
   --output <OUTPUT_FILE> \
@@ -264,6 +276,7 @@ zkenc encrypt \
 **Arguments:**
 
 - `--circuit <FILE>` - Path to R1CS circuit file (`.r1cs` from Circom)
+- `--sym <FILE>` - Path to symbol file (`.sym` from Circom) **← Required**
 - `--input <FILE>` - Path to JSON file with public inputs
 - `--message <FILE>` - Path to plaintext message file
 - `--output <FILE>` - Output path for combined ciphertext
@@ -273,7 +286,7 @@ zkenc encrypt \
 
 This command combines encap and AES encryption into a single step:
 
-1. Generates witness-encrypted key from public inputs
+1. Generates witness-encrypted key from public inputs (using .sym file for correct input mapping)
 2. Encrypts message with AES-256-GCM
 3. Creates combined ciphertext with format: `[flag][witnessLen][witnessCT][publicLen][publicInput][encryptedMsg]`
 
@@ -282,6 +295,7 @@ This command combines encap and AES encryption into a single step:
 ```bash
 zkenc encrypt \
   --circuit sudoku.r1cs \
+  --sym sudoku.sym \
   --input puzzle.json \
   --message secret.txt \
   --output encrypted.bin
