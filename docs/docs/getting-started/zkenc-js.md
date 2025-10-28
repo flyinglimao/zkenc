@@ -39,14 +39,13 @@ circom your_circuit.circom --r1cs --wasm --sym
 Here's a simple example using zkenc-js:
 
 ```typescript
-import { zkenc, CircuitFiles } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
+import fs from "fs/promises";
 
 // Load your circuit files
-const circuitFiles: CircuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-  sym: await fs.readFile("circuit.sym", "utf-8"), // Symbol file required for encap
-};
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8"); // Symbol file for encap
 
 // Define public inputs for the circuit
 const publicInputs = {
@@ -56,9 +55,9 @@ const publicInputs = {
 // Message to encrypt
 const message = new TextEncoder().encode("Hello, zkenc!");
 
-// Encrypt the message
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+// Encrypt the message (uses r1csBuffer and symContent)
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
@@ -72,8 +71,12 @@ const fullInputs = {
   privateValue: 123, // This is the secret witness
 };
 
-// Decrypt the message
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// Decrypt the message (uses r1csBuffer and wasmBuffer)
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 
 const decryptedMessage = new TextDecoder().decode(decrypted);
 console.log("Decrypted message:", decryptedMessage);
@@ -88,15 +91,19 @@ zkenc-js provides two APIs:
 The high-level API (`encrypt` and `decrypt`) handles the complete witness encryption flow:
 
 ```typescript
-// Encrypt: combines witness encryption with AES
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+// Encrypt: combines witness encryption with AES (uses r1csBuffer + symContent)
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
 
-// Decrypt: recovers key and decrypts message
-const message = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// Decrypt: recovers key and decrypts message (uses r1csBuffer + wasmBuffer)
+const message = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 **Use cases:**
@@ -111,11 +118,11 @@ The low-level API (`encap` and `decap`) provides fine-grained control:
 
 ```typescript
 // Encapsulate: generate key based on circuit
-// Note: encap uses the .sym file for input mapping
-const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
+// Note: encap requires r1csBuffer and symContent for input mapping
+const { ciphertext: witnessCiphertext, key } = await encap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
-    symContent: await fs.readFile("circuit.sym", "utf-8"), // Symbol file required here
+    symContent: await fs.readFile("circuit.sym", "utf-8"), // Symbol file required
   },
   publicInputs
 );
@@ -124,11 +131,11 @@ const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
 const encryptedMessage = await aesEncrypt(key, message);
 
 // Decapsulate: recover key with valid witness
-// Note: decap uses the .wasm file for witness calculation
-const recoveredKey = await zkenc.decap(
+// Note: decap requires r1csBuffer and wasmBuffer for witness calculation
+const recoveredKey = await decap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
-    wasmBuffer: await fs.readFile("circuit.wasm"), // WASM file required here
+    wasmBuffer: await fs.readFile("circuit.wasm"), // WASM file required
   },
   witnessCiphertext,
   fullInputs
@@ -151,14 +158,12 @@ const decryptedMessage = await aesDecrypt(recoveredKey, encryptedMessage);
 zkenc-js works out of the box in Node.js:
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-  sym: await fs.readFile("circuit.sym", "utf-8"), // Load symbol file for encap
-};
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8"); // UTF-8 string for symbol file
 ```
 
 ### Browser
@@ -166,7 +171,7 @@ const circuitFiles = {
 In browser environments, you need to load files differently:
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 
 // Load files using fetch
 const [r1csResponse, wasmResponse, symResponse] = await Promise.all([
@@ -175,11 +180,23 @@ const [r1csResponse, wasmResponse, symResponse] = await Promise.all([
   fetch("/circuits/circuit.sym"),
 ]);
 
-const circuitFiles = {
-  r1cs: new Uint8Array(await r1csResponse.arrayBuffer()),
-  wasm: new Uint8Array(await wasmResponse.arrayBuffer()),
-  sym: await symResponse.text(), // Symbol file is text
-};
+const r1csBuffer = new Uint8Array(await r1csResponse.arrayBuffer());
+const wasmBuffer = new Uint8Array(await wasmResponse.arrayBuffer());
+const symContent = await symResponse.text(); // Symbol file as UTF-8 text
+
+// Use for encryption (r1csBuffer + symContent)
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
+  publicInputs,
+  message
+);
+
+// Use for decryption (r1csBuffer + wasmBuffer)
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 ### React

@@ -37,7 +37,7 @@ import { readFileSync } from "fs";
 // Load your Circom circuit files
 const r1csBuffer = readFileSync("circuit.r1cs");
 const wasmBuffer = readFileSync("circuit.wasm");
-const symBuffer = readFileSync("circuit.sym");
+const symContent = readFileSync("circuit.sym", "utf-8"); // Read as UTF-8 string
 
 // Public inputs (the statement)
 const publicInputs = {
@@ -59,7 +59,7 @@ const completeInputs = {
 // 1. Encrypt: Automatically handles encap + AES encryption
 const message = new TextEncoder().encode("Secret message");
 const { ciphertext, key } = await encrypt(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, wasmBuffer, symContent },
   publicInputs,
   message
   // Optional: { includePublicInput: false } to exclude public inputs
@@ -72,7 +72,7 @@ console.log(extractedInputs); // { puzzle: [...] }
 
 // 3. Decrypt: Automatically handles decap + AES decryption
 const decrypted = await decrypt(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, wasmBuffer, symContent },
   ciphertext,
   completeInputs // Must include valid witness
 );
@@ -90,7 +90,7 @@ import { encap, decap } from "zkenc-js";
 
 // 1. Encap: Generate witness-encrypted key
 const { ciphertext, key } = await encap(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, symContent },
   publicInputs
 );
 
@@ -99,7 +99,7 @@ const { ciphertext, key } = await encap(
 
 // 3. Decap: Recover key with valid witness
 const recoveredKey = await decap(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, wasmBuffer },
   ciphertext,
   completeInputs
 );
@@ -119,8 +119,8 @@ import { readFileSync } from "fs";
 // Load Sudoku circuit (defines the computational statement)
 const r1csBuffer = readFileSync("sudoku.r1cs");
 const wasmBuffer = readFileSync("sudoku.wasm");
-const symBuffer = readFileSync("sudoku.sym");
-const circuitFiles = { r1csBuffer, wasmBuffer, symBuffer };
+const symContent = readFileSync("sudoku.sym", "utf-8");
+const circuitFiles = { r1csBuffer, wasmBuffer, symContent };
 
 // The puzzle (public input)
 const puzzle = [
@@ -166,10 +166,9 @@ Encrypt message using witness encryption (combines encap + AES encryption).
 
 **Parameters:**
 
-- `circuitFiles: CircuitFiles` - Circuit files
+- `circuitFiles: CircuitFilesForEncap` - Circuit files for encryption
   - `r1csBuffer: Uint8Array` - R1CS circuit file
-  - `wasmBuffer: Uint8Array` - Circom WASM file
-  - `symBuffer: Uint8Array` - Circom symbol file
+  - `symContent: string` - Circom symbol file (UTF-8 string)
 - `publicInputs: Record<string, any>` - Public inputs as JSON object
 - `message: Uint8Array` - Message to encrypt
 - `options?: EncryptOptions` - Optional encryption options
@@ -185,7 +184,7 @@ Encrypt message using witness encryption (combines encap + AES encryption).
 ```typescript
 const message = new TextEncoder().encode("Secret");
 const { ciphertext, key } = await encrypt(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, symContent },
   { puzzle: puzzleData },
   message,
   { includePublicInput: true } // Optional, true by default
@@ -200,7 +199,9 @@ Decrypt message using witness decryption (combines decap + AES decryption).
 
 **Parameters:**
 
-- `circuitFiles: CircuitFiles` - Circuit files
+- `circuitFiles: CircuitFiles` - Circuit files for decryption
+  - `r1csBuffer: Uint8Array` - R1CS circuit file
+  - `wasmBuffer: Uint8Array` - Circom WASM file
 - `ciphertext: Uint8Array` - Combined ciphertext from encrypt
 - `inputs: Record<string, any>` - Complete inputs (public + witness)
 
@@ -211,14 +212,10 @@ Decrypt message using witness decryption (combines decap + AES decryption).
 **Example:**
 
 ```typescript
-const decrypted = await decrypt(
-  { r1csBuffer, wasmBuffer, symBuffer },
-  ciphertext,
-  {
-    puzzle: puzzleData,
-    solution: solutionData,
-  }
-);
+const decrypted = await decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
+  puzzle: puzzleData,
+  solution: solutionData,
+});
 const message = new TextDecoder().decode(decrypted);
 ```
 
@@ -256,7 +253,9 @@ Generate witness-encrypted key (low-level, paper-aligned API).
 
 **Parameters:**
 
-- `circuitFiles: CircuitFiles` - Circuit files
+- `circuitFiles: CircuitFilesForEncap` - Circuit files for encapsulation
+  - `r1csBuffer: Uint8Array` - R1CS circuit file
+  - `symContent: string` - Circom symbol file (UTF-8 string)
 - `publicInputs: Record<string, any>` - Public inputs as JSON object
 
 **Returns:** `Promise<EncapResult>`
@@ -268,7 +267,7 @@ Generate witness-encrypted key (low-level, paper-aligned API).
 
 ```typescript
 const { ciphertext, key } = await encap(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, symContent },
   { puzzle: puzzleData }
 );
 // Use key for custom encryption...
@@ -282,7 +281,9 @@ Recover encryption key using valid witness (low-level, paper-aligned API).
 
 **Parameters:**
 
-- `circuitFiles: CircuitFiles` - Circuit files
+- `circuitFiles: CircuitFiles` - Circuit files for decapsulation
+  - `r1csBuffer: Uint8Array` - R1CS circuit file
+  - `wasmBuffer: Uint8Array` - Circom WASM file
 - `ciphertext: Uint8Array` - Witness ciphertext from encap
 - `inputs: Record<string, any>` - Complete inputs (public + witness)
 
@@ -293,7 +294,7 @@ Recover encryption key using valid witness (low-level, paper-aligned API).
 **Example:**
 
 ```typescript
-const key = await decap({ r1csBuffer, wasmBuffer, symBuffer }, ciphertext, {
+const key = await decap({ r1csBuffer, wasmBuffer }, ciphertext, {
   puzzle: puzzleData,
   solution: solutionData,
 });
@@ -312,11 +313,11 @@ const symResponse = await fetch("/circuits/sudoku.sym");
 
 const r1csBuffer = new Uint8Array(await r1csResponse.arrayBuffer());
 const wasmBuffer = new Uint8Array(await wasmResponse.arrayBuffer());
-const symBuffer = new Uint8Array(await symResponse.arrayBuffer());
+const symContent = await symResponse.text(); // Read as UTF-8 string
 
 // Use normally
 const { ciphertext, key } = await encap(
-  { r1csBuffer, wasmBuffer, symBuffer },
+  { r1csBuffer, symContent },
   publicInputs
 );
 ```

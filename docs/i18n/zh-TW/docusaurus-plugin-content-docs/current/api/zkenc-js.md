@@ -15,14 +15,24 @@ npm install zkenc-js
 ## 匯入
 
 ```typescript
-import { zkenc, CircuitFiles, EncapResult, EncryptResult } from "zkenc-js";
+import {
+  encrypt,
+  decrypt,
+  encap,
+  decap,
+  getPublicInput,
+  type CircuitFiles,
+  type CircuitFilesForEncap,
+  type EncapResult,
+  type EncryptResult,
+} from "zkenc-js";
 ```
 
 ## 型別
 
 ### `CircuitFiles`
 
-見證加密操作所需的電路檔案。
+解密操作所需的電路檔案（使用 WASM 進行見證計算）。
 
 ```typescript
 interface CircuitFiles {
@@ -41,6 +51,30 @@ import fs from "fs/promises";
 const circuitFiles: CircuitFiles = {
   r1csBuffer: await fs.readFile("circuit.r1cs"),
   wasmBuffer: await fs.readFile("circuit.wasm"),
+};
+```
+
+### `CircuitFilesForEncap`
+
+加密操作所需的電路檔案（使用符號檔案進行輸入對應）。
+
+```typescript
+interface CircuitFilesForEncap {
+  /** R1CS 電路檔案緩衝區（.r1cs）*/
+  r1csBuffer: Uint8Array;
+  /** 符號檔案內容（.sym）作為 UTF-8 字串 */
+  symContent: string;
+}
+```
+
+**範例：**
+
+```typescript
+import fs from "fs/promises";
+
+const circuitFilesForEncap: CircuitFilesForEncap = {
+  r1csBuffer: await fs.readFile("circuit.r1cs"),
+  symContent: await fs.readFile("circuit.sym", "utf-8"), // UTF-8 字串
 };
 ```
 
@@ -80,10 +114,43 @@ interface EncryptResult {
 
 ```typescript
 async function encrypt(
-  circuitFiles: CircuitFiles,
+  circuitFiles: CircuitFilesForEncap,
   publicInputs: Record<string, any>,
-  message: Uint8Array
+  message: Uint8Array,
+  options?: EncryptOptions
 ): Promise<EncryptResult>;
+```
+
+**參數：**
+
+- `circuitFiles` - 用於加密的電路檔案（R1CS 和符號檔案）
+  - `r1csBuffer: Uint8Array` - R1CS 電路檔案
+  - `symContent: string` - 符號檔案內容（UTF-8）
+- `publicInputs` - 公開輸入，作為 JSON 物件（僅公開訊號）
+- `message` - 要加密的訊息，作為 Uint8Array
+- `options` - 可選的加密選項
+  - `includePublicInput?: boolean` - 在密文中包含公開輸入（預設：true）
+
+**回傳：**
+
+- `Promise<EncryptResult>` - 組合密文和加密金鑰
+
+**範例：**
+
+```typescript
+const { ciphertext, key } = await encrypt(
+  {
+    r1csBuffer: await fs.readFile("sudoku.r1cs"),
+    symContent: await fs.readFile("sudoku.sym", "utf-8"),
+  },
+  {
+    puzzle: [5, 3, 0, 0, 7, 0, 0, 0, 0 /* ... */],
+  },
+  new TextEncoder().encode("秘密訊息"),
+  { includePublicInput: true } // 預設值
+);
+
+console.log("密文大小：", ciphertext.length);
 ```
 
 **參數：**
@@ -109,7 +176,7 @@ async function encrypt(
 **範例：**
 
 ```typescript
-const { ciphertext, key } = await zkenc.encrypt(
+const { ciphertext, key } = await encrypt(
   {
     r1csBuffer: await fs.readFile("sudoku.r1cs"),
     wasmBuffer: await fs.readFile("sudoku.wasm"),
@@ -158,7 +225,7 @@ async function decrypt(
 **範例：**
 
 ```typescript
-const decrypted = await zkenc.decrypt(
+const decrypted = await decrypt(
   {
     r1csBuffer: await fs.readFile("sudoku.r1cs"),
     wasmBuffer: await fs.readFile("sudoku.wasm"),
@@ -206,7 +273,7 @@ async function encap(
 **範例：**
 
 ```typescript
-const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
+const { ciphertext: witnessCiphertext, key } = await encap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
     wasmBuffer: await fs.readFile("circuit.wasm"),
@@ -253,7 +320,7 @@ async function decap(
 **範例：**
 
 ```typescript
-const recoveredKey = await zkenc.decap(
+const recoveredKey = await decap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
     wasmBuffer: await fs.readFile("circuit.wasm"),
@@ -274,24 +341,26 @@ const decryptedMessage = await customDecrypt(recoveredKey, encryptedMessage);
 ### 基本文字加密
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
-  r1csBuffer: await fs.readFile("circuit.r1cs"),
-  wasmBuffer: await fs.readFile("circuit.wasm"),
-};
+// 用於加密（encap 使用符號檔案）
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const symContent = await fs.readFile("circuit.sym", "utf-8");
 
 // 加密
 const message = new TextEncoder().encode("你好，世界！");
-const { ciphertext } = await zkenc.encrypt(
-  circuitFiles,
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   { publicInput: 42 },
   message
 );
 
+// 用於解密（decap 使用 WASM 檔案）
+const wasmBuffer = await fs.readFile("circuit.wasm");
+
 // 解密
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, {
+const decrypted = await decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
   publicInput: 42,
   privateInput: 123,
 });
@@ -301,11 +370,22 @@ console.log(new TextDecoder().decode(decrypted));
 
 ### 二進位資料加密
 
+````typescript
+### 二進位資料加密
+
 ```typescript
+import { encrypt, decrypt } from "zkenc-js";
+import fs from "fs/promises";
+
+// 載入電路檔案
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+
 // 加密檔案
 const fileData = await fs.readFile("document.pdf");
-const { ciphertext } = await zkenc.encrypt(
-  circuitFiles,
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   fileData
 );
@@ -314,14 +394,31 @@ await fs.writeFile("document.pdf.enc", ciphertext);
 
 // 解密檔案
 const encryptedData = await fs.readFile("document.pdf.enc");
-const decryptedData = await zkenc.decrypt(
-  circuitFiles,
+const decryptedData = await decrypt(
+  { r1csBuffer, wasmBuffer },
   encryptedData,
   fullInputs
 );
 
 await fs.writeFile("document_decrypted.pdf", decryptedData);
+````
+
+### 一次載入電路檔案
+
+```typescript
+import { encrypt } from "zkenc-js";
+import fs from "fs/promises";
+
+// 載入一次用於加密操作
+const encapFiles = {
+  r1csBuffer: await fs.readFile("circuit.r1cs"),
+  symContent: await fs.readFile("circuit.sym", "utf-8"),
+};
+
+// 重複使用於多個加密操作
 ```
+
+````
 
 ### 一次載入電路檔案
 
@@ -334,20 +431,17 @@ const circuitFiles = {
 
 // 重複使用於多個操作
 const results = await Promise.all([
-  zkenc.encrypt(circuitFiles, inputs1, message1),
-  zkenc.encrypt(circuitFiles, inputs2, message2),
-  zkenc.encrypt(circuitFiles, inputs3, message3),
+  encrypt(circuitFiles, inputs1, message1),
+  encrypt(circuitFiles, inputs2, message2),
+  encrypt(circuitFiles, inputs3, message3),
 ]);
-```
+````
 
 ### 進階：低階 API 搭配自訂加密
 
 ```typescript
 // 產生金鑰
-const { ciphertext: witnessCt, key } = await zkenc.encap(
-  circuitFiles,
-  publicInputs
-);
+const { ciphertext: witnessCt, key } = await encap(circuitFiles, publicInputs);
 
 // 使用你自己的加密方式
 import { customEncrypt, customDecrypt } from "./my-crypto";
@@ -361,7 +455,7 @@ await fs.writeFile("message.ct", encrypted);
 const witnessCt = await fs.readFile("witness.ct");
 const encrypted = await fs.readFile("message.ct");
 
-const recoveredKey = await zkenc.decap(circuitFiles, witnessCt, fullInputs);
+const recoveredKey = await decap(circuitFiles, witnessCt, fullInputs);
 const decrypted = await customDecrypt(recoveredKey, encrypted);
 ```
 
@@ -412,7 +506,7 @@ const inputs = {
 
 ```typescript
 try {
-  const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, inputs);
+  const decrypted = await decrypt(circuitFiles, ciphertext, inputs);
   console.log("成功：", new TextDecoder().decode(decrypted));
 } catch (error) {
   if (error.message.includes("Invalid ciphertext")) {
@@ -469,7 +563,7 @@ self.onmessage = async (e) => {
   const { circuitFiles, ciphertext, inputs } = e.data;
 
   try {
-    const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, inputs);
+    const decrypted = await decrypt(circuitFiles, ciphertext, inputs);
     self.postMessage({ success: true, decrypted });
   } catch (error) {
     self.postMessage({ success: false, error: error.message });
@@ -520,7 +614,7 @@ async function encryptMessage(
   inputs: Record<string, any>,
   msg: string
 ): Promise<EncryptResult> {
-  return zkenc.encrypt(files, inputs, new TextEncoder().encode(msg));
+  return encrypt(files, inputs, new TextEncoder().encode(msg));
 }
 ```
 

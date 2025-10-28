@@ -37,14 +37,13 @@ circom your_circuit.circom --r1cs --wasm --sym
 zkenc-js を使用した簡単な例です：
 
 ```typescript
-import { zkenc, CircuitFiles } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
+import fs from "fs/promises";
 
-// 回路ファイルをロード
-const circuitFiles: CircuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-  sym: await fs.readFile("circuit.sym"),
-};
+// 回路ファイルをロード（暗号化には .sym が必要、復号化には .wasm が必要）
+const r1csBuffer = new Uint8Array(await fs.readFile("circuit.r1cs"));
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+const wasmBuffer = new Uint8Array(await fs.readFile("circuit.wasm"));
 
 // 回路の公開入力を定義
 const publicInputs = {
@@ -54,9 +53,9 @@ const publicInputs = {
 // 暗号化するメッセージ
 const message = new TextEncoder().encode("Hello, zkenc!");
 
-// メッセージを暗号化
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+// メッセージを暗号化（.r1cs と .sym を使用）
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
@@ -70,8 +69,12 @@ const fullInputs = {
   privateValue: 123, // これが秘密のウィットネスです
 };
 
-// メッセージを復号化
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// メッセージを復号化（.r1cs と .wasm を使用）
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 
 const decryptedMessage = new TextDecoder().decode(decrypted);
 console.log("復号化されたメッセージ:", decryptedMessage);
@@ -86,15 +89,21 @@ zkenc-js は 2 つの API を提供します：
 高レベル API（`encrypt` と `decrypt`）は、完全な証拠暗号化フローを処理します：
 
 ```typescript
-// 暗号化：証拠暗号化と AES を組み合わせる
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+import { encrypt, decrypt } from "zkenc-js";
+
+// 暗号化：証拠暗号化と AES を組み合わせる（.r1cs と .sym を使用）
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
 
-// 復号化：鍵を復元してメッセージを復号化
-const message = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// 復号化：鍵を復元してメッセージを復号化（.r1cs と .wasm を使用）
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 **使用例：**
@@ -108,18 +117,20 @@ const message = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
 低レベル API（`encap` と `decap`）は、きめ細かい制御を提供します：
 
 ```typescript
-// カプセル化：回路に基づいて鍵を生成
-const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
-  circuitFiles,
+import { encap, decap } from "zkenc-js";
+
+// カプセル化：回路に基づいて鍵を生成（.r1cs と .sym を使用）
+const { ciphertext: witnessCiphertext, key } = await encap(
+  { r1csBuffer, symContent },
   publicInputs
 );
 
 // AES でメッセージを手動で暗号化
 const encryptedMessage = await aesEncrypt(key, message);
 
-// カプセル化解除：有効なウィットネスで鍵を復元
-const recoveredKey = await zkenc.decap(
-  circuitFiles,
+// カプセル化解除：有効なウィットネスで鍵を復元（.r1cs と .wasm を使用）
+const recoveredKey = await decap(
+  { r1csBuffer, wasmBuffer },
   witnessCiphertext,
   fullInputs
 );
@@ -141,13 +152,15 @@ const decryptedMessage = await aesDecrypt(recoveredKey, encryptedMessage);
 zkenc-js は Node.js ですぐに動作します：
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-};
+// 暗号化用のファイル
+const r1csBuffer = new Uint8Array(await fs.readFile("circuit.r1cs"));
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+
+// 復号化用のファイル
+const wasmBuffer = new Uint8Array(await fs.readFile("circuit.wasm"));
 ```
 
 ### ブラウザ
@@ -155,18 +168,21 @@ const circuitFiles = {
 ブラウザ環境では、ファイルを異なる方法でロードする必要があります：
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 
 // fetch を使用してファイルをロード
-const [r1csResponse, wasmResponse] = await Promise.all([
+const [r1csResponse, wasmResponse, symResponse] = await Promise.all([
   fetch("/circuits/circuit.r1cs"),
   fetch("/circuits/circuit.wasm"),
+  fetch("/circuits/circuit.sym"),
 ]);
 
-const circuitFiles = {
-  r1cs: new Uint8Array(await r1csResponse.arrayBuffer()),
-  wasm: new Uint8Array(await wasmResponse.arrayBuffer()),
-};
+// 暗号化用のファイル（.r1cs と .sym）
+const r1csBuffer = new Uint8Array(await r1csResponse.arrayBuffer());
+const symContent = await symResponse.text(); // .sym はテキストファイル
+
+// 復号化用のファイル（.r1cs と .wasm）
+const wasmBuffer = new Uint8Array(await wasmResponse.arrayBuffer());
 ```
 
 ### React

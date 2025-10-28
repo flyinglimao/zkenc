@@ -54,12 +54,14 @@ export default function PlaygroundClient(): React.ReactElement {
   const [circuitFiles, setCircuitFiles] = useState<{
     r1csBuffer: Uint8Array;
     wasmBuffer: Uint8Array;
+    symContent: string;
   } | null>(null);
 
   // Custom circuit state
   const [customCircuitFiles, setCustomCircuitFiles] = useState<{
     r1csBuffer: Uint8Array;
     wasmBuffer: Uint8Array;
+    symContent?: string;
   } | null>(null);
   const [customPublicInput, setCustomPublicInput] = useState("");
   const [customPrivateInput, setCustomPrivateInput] = useState("");
@@ -72,26 +74,29 @@ export default function PlaygroundClient(): React.ReactElement {
 
   const sudokuR1cs = useBaseUrl("/circuits/sudoku.r1cs");
   const sudokuWasm = useBaseUrl("/circuits/sudoku.wasm");
+  const sudokuSym = useBaseUrl("/circuits/sudoku.sym");
 
   // Load circuit files on mount
   useEffect(() => {
     async function loadCircuits() {
       try {
         console.log(sudokuR1cs);
-        const [r1csRes, wasmRes] = await Promise.all([
+        const [r1csRes, wasmRes, symRes] = await Promise.all([
           fetch(sudokuR1cs),
           fetch(sudokuWasm),
+          fetch(sudokuSym),
         ]);
 
-        if (!r1csRes.ok || !wasmRes.ok) {
+        if (!r1csRes.ok || !wasmRes.ok || !symRes.ok) {
           setError("Failed to load circuit files");
           return;
         }
 
         const r1csBuffer = new Uint8Array(await r1csRes.arrayBuffer());
         const wasmBuffer = new Uint8Array(await wasmRes.arrayBuffer());
+        const symContent = await symRes.text(); // Read sym as UTF-8 string
 
-        setCircuitFiles({ r1csBuffer, wasmBuffer });
+        setCircuitFiles({ r1csBuffer, wasmBuffer, symContent });
       } catch (err) {
         setError("Error loading circuits: " + (err as Error).message);
       }
@@ -287,6 +292,7 @@ export default function PlaygroundClient(): React.ReactElement {
       setCustomCircuitFiles((prev) => ({
         r1csBuffer,
         wasmBuffer: prev?.wasmBuffer || new Uint8Array(),
+        symContent: prev?.symContent,
       }));
       setError("");
     };
@@ -304,10 +310,28 @@ export default function PlaygroundClient(): React.ReactElement {
       setCustomCircuitFiles((prev) => ({
         r1csBuffer: prev?.r1csBuffer || new Uint8Array(),
         wasmBuffer,
+        symContent: prev?.symContent,
       }));
       setError("");
     };
     reader.readAsArrayBuffer(file);
+  };
+
+  const handleCustomSymUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const symContent = reader.result as string;
+      setCustomCircuitFiles((prev) => ({
+        r1csBuffer: prev?.r1csBuffer || new Uint8Array(),
+        wasmBuffer: prev?.wasmBuffer || new Uint8Array(),
+        symContent,
+      }));
+      setError("");
+    };
+    reader.readAsText(file); // Read as UTF-8 string
   };
 
   const handleCustomEncrypt = async () => {
@@ -319,9 +343,9 @@ export default function PlaygroundClient(): React.ReactElement {
     if (
       !customCircuitFiles ||
       !customCircuitFiles.r1csBuffer.length ||
-      !customCircuitFiles.wasmBuffer.length
+      !customCircuitFiles.symContent
     ) {
-      setError("Please upload both R1CS and WASM files");
+      setError("Please upload both R1CS and SYM files");
       return;
     }
 
@@ -338,9 +362,12 @@ export default function PlaygroundClient(): React.ReactElement {
       const encoder = new TextEncoder();
       const messageBytes = encoder.encode(customMessage);
 
-      // Use high-level API
+      // Use high-level API - encrypt only needs r1csBuffer and symContent
       const { ciphertext: encryptedData } = await encrypt(
-        customCircuitFiles,
+        {
+          r1csBuffer: customCircuitFiles.r1csBuffer,
+          symContent: customCircuitFiles.symContent,
+        },
         publicInputs,
         messageBytes,
         { includePublicInput }
@@ -845,6 +872,11 @@ export default function PlaygroundClient(): React.ReactElement {
                     1. Upload Circuit Files
                   </Translate>
                 </h2>
+                <p className={styles.hint}>
+                  <Translate id="playground.custom.encrypt.filesHint">
+                    For encryption, you only need R1CS and SYM files.
+                  </Translate>
+                </p>
                 <div className={styles.uploadGrid}>
                   <div>
                     <label className={styles.fileLabel}>
@@ -873,25 +905,25 @@ export default function PlaygroundClient(): React.ReactElement {
                   </div>
                   <div>
                     <label className={styles.fileLabel}>
-                      <Translate id="playground.custom.encrypt.wasmLabel">
-                        ⚙️ WASM File (.wasm)
+                      <Translate id="playground.custom.encrypt.symLabel">
+                        🔑 Symbol File (.sym)
                       </Translate>
                       <input
                         type="file"
-                        accept=".wasm"
-                        onChange={handleCustomWasmUpload}
+                        accept=".sym"
+                        onChange={handleCustomSymUpload}
                         className={styles.fileInput}
                       />
                     </label>
-                    {customCircuitFiles?.wasmBuffer.length > 0 && (
+                    {customCircuitFiles?.symContent && (
                       <p className={styles.fileSuccess}>
                         <Translate
-                          id="playground.custom.encrypt.wasmLoaded"
+                          id="playground.custom.encrypt.symLoaded"
                           values={{
-                            size: customCircuitFiles.wasmBuffer.length,
+                            size: customCircuitFiles.symContent.length,
                           }}
                         >
-                          {"✅ WASM loaded ({size} bytes)"}
+                          {"✅ Symbol loaded ({size} chars)"}
                         </Translate>
                       </p>
                     )}

@@ -314,17 +314,35 @@ zkenc encrypt \
 
 ```typescript
 // Decrypt with zkenc-js (Node.js or browser)
-import { zkenc } from "zkenc-js";
+import { decrypt } from "zkenc-js";
+import fs from "fs/promises";
 
 const ciphertext = await fs.readFile("encrypted.bin");
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+const r1csBuffer = new Uint8Array(await fs.readFile("circuit.r1cs"));
+const wasmBuffer = new Uint8Array(await fs.readFile("circuit.wasm"));
+
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 ### JS → CLI
 
 ```typescript
 // Encrypt with zkenc-js
-const { ciphertext } = await zkenc.encrypt(circuitFiles, publicInputs, message);
+import { encrypt } from "zkenc-js";
+import fs from "fs/promises";
+
+const r1csBuffer = new Uint8Array(await fs.readFile("circuit.r1cs"));
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
+  publicInputs,
+  message
+);
 await fs.writeFile("encrypted.bin", ciphertext);
 ```
 

@@ -37,14 +37,13 @@ circom your_circuit.circom --r1cs --wasm --sym
 以下是使用 zkenc-js 的简单范例：
 
 ```typescript
-import { zkenc, CircuitFiles } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
+import fs from "fs/promises";
 
 // 载入你的电路文件
-const circuitFiles: CircuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-  sym: await fs.readFile("circuit.sym"),
-};
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8"); // 用于 encap 的符号文件
 
 // 定义电路的公开输入
 const publicInputs = {
@@ -54,9 +53,9 @@ const publicInputs = {
 // 要加密的消息
 const message = new TextEncoder().encode("Hello, zkenc!");
 
-// 加密消息
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+// 加密消息（使用 r1csBuffer 和 symContent）
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
@@ -70,8 +69,12 @@ const fullInputs = {
   privateValue: 123, // 这是秘密见证
 };
 
-// 解密消息
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// 解密消息（使用 r1csBuffer 和 wasmBuffer）
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 
 const decryptedMessage = new TextDecoder().decode(decrypted);
 console.log("解密消息：", decryptedMessage);
@@ -86,15 +89,19 @@ zkenc-js 提供两种 API：
 高级 API（`encrypt` 和 `decrypt`）处理完整的见证加密流程：
 
 ```typescript
-// 加密：结合见证加密与 AES
-const { ciphertext, key } = await zkenc.encrypt(
-  circuitFiles,
+// 加密：结合见证加密与 AES（使用 r1csBuffer + symContent）
+const { ciphertext, key } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   message
 );
 
-// 解密：恢复密钥并解密消息
-const message = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
+// 解密：恢复密钥并解密消息（使用 r1csBuffer + wasmBuffer）
+const message = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 **使用情境：**
@@ -109,8 +116,12 @@ const message = await zkenc.decrypt(circuitFiles, ciphertext, fullInputs);
 
 ```typescript
 // 封装：基于电路生成密钥
-const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
-  circuitFiles,
+// 注意：encap 需要 r1csBuffer 和 symContent 以进行输入映射
+const { ciphertext: witnessCiphertext, key } = await encap(
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    symContent: await fs.readFile("circuit.sym", "utf-8"), // 符号文件必需
+  },
   publicInputs
 );
 
@@ -118,8 +129,12 @@ const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
 const encryptedMessage = await aesEncrypt(key, message);
 
 // 解封装：使用有效见证恢复密钥
-const recoveredKey = await zkenc.decap(
-  circuitFiles,
+// 注意：decap 需要 r1csBuffer 和 wasmBuffer 以计算见证
+const recoveredKey = await decap(
+  {
+    r1csBuffer: await fs.readFile("circuit.r1cs"),
+    wasmBuffer: await fs.readFile("circuit.wasm"), // WASM 文件必需
+  },
   witnessCiphertext,
   fullInputs
 );
@@ -141,13 +156,12 @@ const decryptedMessage = await aesDecrypt(recoveredKey, encryptedMessage);
 zkenc-js 在 Node.js 中可直接使用：
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
-  r1cs: await fs.readFile("circuit.r1cs"),
-  wasm: await fs.readFile("circuit.wasm"),
-};
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8"); // UTF-8 字符串格式的符号文件
 ```
 
 ### 浏览器
@@ -155,18 +169,32 @@ const circuitFiles = {
 在浏览器环境中，你需要用不同的方式载入文件：
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 
 // 使用 fetch 载入文件
-const [r1csResponse, wasmResponse] = await Promise.all([
+const [r1csResponse, wasmResponse, symResponse] = await Promise.all([
   fetch("/circuits/circuit.r1cs"),
   fetch("/circuits/circuit.wasm"),
+  fetch("/circuits/circuit.sym"),
 ]);
 
-const circuitFiles = {
-  r1cs: new Uint8Array(await r1csResponse.arrayBuffer()),
-  wasm: new Uint8Array(await wasmResponse.arrayBuffer()),
-};
+const r1csBuffer = new Uint8Array(await r1csResponse.arrayBuffer());
+const wasmBuffer = new Uint8Array(await wasmResponse.arrayBuffer());
+const symContent = await symResponse.text(); // 符号文件读取为 UTF-8 文本
+
+// 用于加密（r1csBuffer + symContent）
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
+  publicInputs,
+  message
+);
+
+// 用于解密（r1csBuffer + wasmBuffer）
+const decrypted = await decrypt(
+  { r1csBuffer, wasmBuffer },
+  ciphertext,
+  fullInputs
+);
 ```
 
 ### React

@@ -15,14 +15,24 @@ npm install zkenc-js
 ## Import
 
 ```typescript
-import { zkenc, CircuitFiles, EncapResult, EncryptResult } from "zkenc-js";
+import {
+  encrypt,
+  decrypt,
+  encap,
+  decap,
+  getPublicInput,
+  type CircuitFiles,
+  type CircuitFilesForEncap,
+  type EncapResult,
+  type EncryptResult,
+} from "zkenc-js";
 ```
 
 ## Types
 
 ### `CircuitFiles`
 
-Circuit files required for witness encryption operations.
+Circuit files required for decryption operations (uses WASM for witness calculation).
 
 ```typescript
 interface CircuitFiles {
@@ -41,6 +51,30 @@ import fs from "fs/promises";
 const circuitFiles: CircuitFiles = {
   r1csBuffer: await fs.readFile("circuit.r1cs"),
   wasmBuffer: await fs.readFile("circuit.wasm"),
+};
+```
+
+### `CircuitFilesForEncap`
+
+Circuit files required for encryption operations (uses symbol file for input mapping).
+
+```typescript
+interface CircuitFilesForEncap {
+  /** R1CS circuit file buffer (.r1cs) */
+  r1csBuffer: Uint8Array;
+  /** Symbol file content (.sym) as UTF-8 string */
+  symContent: string;
+}
+```
+
+**Example:**
+
+```typescript
+import fs from "fs/promises";
+
+const circuitFilesForEncap: CircuitFilesForEncap = {
+  r1csBuffer: await fs.readFile("circuit.r1cs"),
+  symContent: await fs.readFile("circuit.sym", "utf-8"), // UTF-8 string
 };
 ```
 
@@ -80,17 +114,22 @@ Encrypt a message using witness encryption. Combines key generation with AES-256
 
 ```typescript
 async function encrypt(
-  circuitFiles: CircuitFiles,
+  circuitFiles: CircuitFilesForEncap,
   publicInputs: Record<string, any>,
-  message: Uint8Array
+  message: Uint8Array,
+  options?: EncryptOptions
 ): Promise<EncryptResult>;
 ```
 
 **Parameters:**
 
-- `circuitFiles` - Circuit files (R1CS and WASM)
+- `circuitFiles` - Circuit files for encryption (R1CS and symbol file)
+  - `r1csBuffer: Uint8Array` - R1CS circuit file
+  - `symContent: string` - Symbol file content (UTF-8)
 - `publicInputs` - Public inputs as a JSON object (only public signals)
 - `message` - Message to encrypt as Uint8Array
+- `options` - Optional encryption options
+  - `includePublicInput?: boolean` - Include public inputs in ciphertext (default: true)
 
 **Returns:**
 
@@ -99,29 +138,32 @@ async function encrypt(
 **Ciphertext Format:**
 
 ```
-[4 bytes: witness CT length][witness ciphertext][AES-encrypted message]
-│                           │                   │
-│                           │                   └─ AES-256-GCM encrypted
-│                           └─ Witness encryption (1576 bytes)
-└─ Big-endian length (always 1576)
+[1B flag][4B witness CT len][witness CT][4B pub input len?][pub input?][AES CT]
+│         │                  │           │                  │            │
+│         │                  │           │                  │            └─ AES-256-GCM encrypted
+│         │                  │           │                  └─ Public inputs (if flag=1)
+│         │                  │           └─ Public input length (if flag=1)
+│         │                  └─ Witness encryption (1576 bytes)
+│         └─ Witness CT length (always 1576)
+└─ Include public input flag (0 or 1)
 ```
 
 **Example:**
 
 ```typescript
-const { ciphertext, key } = await zkenc.encrypt(
+const { ciphertext, key } = await encrypt(
   {
     r1csBuffer: await fs.readFile("sudoku.r1cs"),
-    wasmBuffer: await fs.readFile("sudoku.wasm"),
+    symContent: await fs.readFile("sudoku.sym", "utf-8"),
   },
   {
     puzzle: [5, 3, 0, 0, 7, 0, 0, 0, 0 /* ... */],
   },
-  new TextEncoder().encode("Secret message")
+  new TextEncoder().encode("Secret message"),
+  { includePublicInput: true } // Default
 );
 
 console.log("Ciphertext size:", ciphertext.length);
-// Ciphertext size: 1608 bytes (4 + 1576 + 28)
 ```
 
 **Performance:**
@@ -158,7 +200,7 @@ async function decrypt(
 **Example:**
 
 ```typescript
-const decrypted = await zkenc.decrypt(
+const decrypted = await decrypt(
   {
     r1csBuffer: await fs.readFile("sudoku.r1cs"),
     wasmBuffer: await fs.readFile("sudoku.wasm"),
@@ -189,14 +231,16 @@ Generate encryption key using witness encryption (encapsulation).
 
 ```typescript
 async function encap(
-  circuitFiles: CircuitFiles,
+  circuitFiles: CircuitFilesForEncap,
   publicInputs: Record<string, any>
 ): Promise<EncapResult>;
 ```
 
 **Parameters:**
 
-- `circuitFiles` - Circuit files (R1CS and WASM)
+- `circuitFiles` - Circuit files for encapsulation (R1CS and symbol file)
+  - `r1csBuffer: Uint8Array` - R1CS circuit file
+  - `symContent: string` - Symbol file content (UTF-8)
 - `publicInputs` - Public inputs as JSON object
 
 **Returns:**
@@ -206,10 +250,10 @@ async function encap(
 **Example:**
 
 ```typescript
-const { ciphertext: witnessCiphertext, key } = await zkenc.encap(
+const { ciphertext: witnessCiphertext, key } = await encap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
-    wasmBuffer: await fs.readFile("circuit.wasm"),
+    symContent: await fs.readFile("circuit.sym", "utf-8"),
   },
   { publicValue: 42 }
 );
@@ -253,7 +297,7 @@ async function decap(
 **Example:**
 
 ```typescript
-const recoveredKey = await zkenc.decap(
+const recoveredKey = await decap(
   {
     r1csBuffer: await fs.readFile("circuit.r1cs"),
     wasmBuffer: await fs.readFile("circuit.wasm"),
@@ -274,24 +318,26 @@ const decryptedMessage = await customDecrypt(recoveredKey, encryptedMessage);
 ### Basic Text Encryption
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
-  r1csBuffer: await fs.readFile("circuit.r1cs"),
-  wasmBuffer: await fs.readFile("circuit.wasm"),
-};
+// For encryption (encap uses symbol file)
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const symContent = await fs.readFile("circuit.sym", "utf-8");
 
 // Encrypt
 const message = new TextEncoder().encode("Hello, World!");
-const { ciphertext } = await zkenc.encrypt(
-  circuitFiles,
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   { publicInput: 42 },
   message
 );
 
+// For decryption (decap uses WASM file)
+const wasmBuffer = await fs.readFile("circuit.wasm");
+
 // Decrypt
-const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, {
+const decrypted = await decrypt({ r1csBuffer, wasmBuffer }, ciphertext, {
   publicInput: 42,
   privateInput: 123,
 });
@@ -302,10 +348,18 @@ console.log(new TextDecoder().decode(decrypted));
 ### Binary Data Encryption
 
 ```typescript
+import { encrypt, decrypt } from "zkenc-js";
+import fs from "fs/promises";
+
+// Load circuit files
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+
 // Encrypt a file
 const fileData = await fs.readFile("document.pdf");
-const { ciphertext } = await zkenc.encrypt(
-  circuitFiles,
+const { ciphertext } = await encrypt(
+  { r1csBuffer, symContent },
   publicInputs,
   fileData
 );
@@ -314,8 +368,8 @@ await fs.writeFile("document.pdf.enc", ciphertext);
 
 // Decrypt the file
 const encryptedData = await fs.readFile("document.pdf.enc");
-const decryptedData = await zkenc.decrypt(
-  circuitFiles,
+const decryptedData = await decrypt(
+  { r1csBuffer, wasmBuffer },
   encryptedData,
   fullInputs
 );
@@ -326,26 +380,37 @@ await fs.writeFile("document_decrypted.pdf", decryptedData);
 ### Storing Circuit Files Once
 
 ```typescript
-// Load once
-const circuitFiles = {
+import { encrypt } from "zkenc-js";
+import fs from "fs/promises";
+
+// Load once for encryption operations
+const encapFiles = {
   r1csBuffer: await fs.readFile("circuit.r1cs"),
-  wasmBuffer: await fs.readFile("circuit.wasm"),
+  symContent: await fs.readFile("circuit.sym", "utf-8"),
 };
 
-// Reuse for multiple operations
+// Reuse for multiple encryptions
 const results = await Promise.all([
-  zkenc.encrypt(circuitFiles, inputs1, message1),
-  zkenc.encrypt(circuitFiles, inputs2, message2),
-  zkenc.encrypt(circuitFiles, inputs3, message3),
+  encrypt(encapFiles, inputs1, message1),
+  encrypt(encapFiles, inputs2, message2),
+  encrypt(encapFiles, inputs3, message3),
 ]);
 ```
 
 ### Advanced: Low-Level with Custom Encryption
 
 ```typescript
-// Generate key
-const { ciphertext: witnessCt, key } = await zkenc.encap(
-  circuitFiles,
+import { encap, decap } from "zkenc-js";
+import fs from "fs/promises";
+
+// Load circuit files
+const r1csBuffer = await fs.readFile("circuit.r1cs");
+const wasmBuffer = await fs.readFile("circuit.wasm");
+const symContent = await fs.readFile("circuit.sym", "utf-8");
+
+// Generate key (uses r1cs + sym)
+const { ciphertext: witnessCt, key } = await encap(
+  { r1csBuffer, symContent },
   publicInputs
 );
 
@@ -358,11 +423,16 @@ await fs.writeFile("witness.ct", witnessCt);
 await fs.writeFile("message.ct", encrypted);
 
 // Later: decrypt
-const witnessCt = await fs.readFile("witness.ct");
-const encrypted = await fs.readFile("message.ct");
+const witnessCt2 = await fs.readFile("witness.ct");
+const encrypted2 = await fs.readFile("message.ct");
 
-const recoveredKey = await zkenc.decap(circuitFiles, witnessCt, fullInputs);
-const decrypted = await customDecrypt(recoveredKey, encrypted);
+// Recover key (uses r1cs + wasm)
+const recoveredKey = await decap(
+  { r1csBuffer, wasmBuffer },
+  witnessCt2,
+  fullInputs
+);
+const decrypted = await customDecrypt(recoveredKey, encrypted2);
 ```
 
 ## Input Format
@@ -411,8 +481,14 @@ const inputs = {
 ## Error Handling
 
 ```typescript
+import { decrypt } from "zkenc-js";
+
 try {
-  const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, inputs);
+  const decrypted = await decrypt(
+    { r1csBuffer, wasmBuffer },
+    ciphertext,
+    inputs
+  );
   console.log("Success:", new TextDecoder().decode(decrypted));
 } catch (error) {
   if (error.message.includes("Invalid ciphertext")) {
@@ -441,19 +517,32 @@ Performance scales with circuit size:
 
 ### Caching
 
-Cache circuit files in memory:
+Cache circuit files in memory to avoid repeated file reads:
 
 ```typescript
-let cachedCircuitFiles: CircuitFiles | null = null;
+import type { CircuitFiles, CircuitFilesForEncap } from "zkenc-js";
 
-async function getCircuitFiles(): Promise<CircuitFiles> {
-  if (!cachedCircuitFiles) {
-    cachedCircuitFiles = {
+let cachedEncapFiles: CircuitFilesForEncap | null = null;
+let cachedDecapFiles: CircuitFiles | null = null;
+
+async function getEncapFiles(): Promise<CircuitFilesForEncap> {
+  if (!cachedEncapFiles) {
+    cachedEncapFiles = {
+      r1csBuffer: await fs.readFile("circuit.r1cs"),
+      symContent: await fs.readFile("circuit.sym", "utf-8"),
+    };
+  }
+  return cachedEncapFiles;
+}
+
+async function getDecapFiles(): Promise<CircuitFiles> {
+  if (!cachedDecapFiles) {
+    cachedDecapFiles = {
       r1csBuffer: await fs.readFile("circuit.r1cs"),
       wasmBuffer: await fs.readFile("circuit.wasm"),
     };
   }
-  return cachedCircuitFiles;
+  return cachedDecapFiles;
 }
 ```
 
@@ -463,13 +552,17 @@ Use Web Workers for non-blocking operations:
 
 ```typescript
 // worker.ts
-import { zkenc } from "zkenc-js";
+import { decrypt } from "zkenc-js";
 
 self.onmessage = async (e) => {
-  const { circuitFiles, ciphertext, inputs } = e.data;
+  const { r1csBuffer, wasmBuffer, ciphertext, inputs } = e.data;
 
   try {
-    const decrypted = await zkenc.decrypt(circuitFiles, ciphertext, inputs);
+    const decrypted = await decrypt(
+      { r1csBuffer, wasmBuffer },
+      ciphertext,
+      inputs
+    );
     self.postMessage({ success: true, decrypted });
   } catch (error) {
     self.postMessage({ success: false, error: error.message });
@@ -482,10 +575,17 @@ self.onmessage = async (e) => {
 ### Node.js
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 import fs from "fs/promises";
 
-const circuitFiles = {
+// For encryption
+const encapFiles = {
+  r1csBuffer: await fs.readFile("circuit.r1cs"),
+  symContent: await fs.readFile("circuit.sym", "utf-8"),
+};
+
+// For decryption
+const decapFiles = {
   r1csBuffer: await fs.readFile("circuit.r1cs"),
   wasmBuffer: await fs.readFile("circuit.wasm"),
 };
@@ -494,16 +594,25 @@ const circuitFiles = {
 ### Browser
 
 ```typescript
-import { zkenc } from "zkenc-js";
+import { encrypt, decrypt } from "zkenc-js";
 
-const [r1cs, wasm] = await Promise.all([
-  fetch("/circuits/circuit.r1cs").then((r) => r.arrayBuffer()),
-  fetch("/circuits/circuit.wasm").then((r) => r.arrayBuffer()),
+// Fetch circuit files
+const [r1csRes, wasmRes, symRes] = await Promise.all([
+  fetch("/circuits/circuit.r1cs"),
+  fetch("/circuits/circuit.wasm"),
+  fetch("/circuits/circuit.sym"),
 ]);
 
-const circuitFiles = {
-  r1csBuffer: new Uint8Array(r1cs),
-  wasmBuffer: new Uint8Array(wasm),
+// For encryption
+const encapFiles = {
+  r1csBuffer: new Uint8Array(await r1csRes.arrayBuffer()),
+  symContent: await symRes.text(), // Read as UTF-8 text
+};
+
+// For decryption
+const decapFiles = {
+  r1csBuffer: new Uint8Array(await r1csRes.arrayBuffer()),
+  wasmBuffer: new Uint8Array(await wasmRes.arrayBuffer()),
 };
 ```
 
@@ -512,15 +621,21 @@ const circuitFiles = {
 zkenc-js is written in TypeScript and provides full type definitions:
 
 ```typescript
-import type { CircuitFiles, EncapResult, EncryptResult } from "zkenc-js";
+import { encrypt } from "zkenc-js";
+import type {
+  CircuitFiles,
+  CircuitFilesForEncap,
+  EncapResult,
+  EncryptResult,
+} from "zkenc-js";
 
 // Type-safe usage
 async function encryptMessage(
-  files: CircuitFiles,
+  files: CircuitFilesForEncap,
   inputs: Record<string, any>,
   msg: string
 ): Promise<EncryptResult> {
-  return zkenc.encrypt(files, inputs, new TextEncoder().encode(msg));
+  return encrypt(files, inputs, new TextEncoder().encode(msg));
 }
 ```
 
